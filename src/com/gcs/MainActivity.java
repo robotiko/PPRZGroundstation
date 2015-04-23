@@ -1,5 +1,6 @@
 package com.gcs;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -53,6 +54,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 	@Override
 	public void onMapReady(GoogleMap map) {
-		map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+//		map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+		
+		//Change the map type to satellite
+		map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+		
+		//Change the map location
+		final LatLng LR = new LatLng(51.990694, 4.375749);
+		map.moveCamera(CameraUpdateFactory.newLatLngZoom(LR, 18.0f));
 	}
 }
