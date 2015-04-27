@@ -7,6 +7,9 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
@@ -58,12 +61,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		
 //		map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
 		
-		//Change the map location
-		final LatLng LR = new LatLng(51.990694, 4.375749);
-		map.moveCamera(CameraUpdateFactory.newLatLngZoom(LR, 18.0f));
-		
 		//Change the map type to satellite
 		map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+		
+		//Go to current location
+		map.setMyLocationEnabled(true);
+		LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+		Criteria criteria = new Criteria();
+		String provider = locationManager.getBestProvider(criteria, true);
+		Location myLocation = locationManager.getLastKnownLocation(provider);
+		LatLng currentLocation =  new LatLng(myLocation.getLatitude(),myLocation.getLongitude());
+		map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 18.0f));
 		
 		//Disable rotation gestures
 		map.getUiSettings().setRotateGesturesEnabled(false);
@@ -72,7 +80,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		map.getUiSettings().setZoomControlsEnabled(true);
 		
 		//Show my location button
-		map.setMyLocationEnabled(true);
 		map.getUiSettings().setMyLocationButtonEnabled(true);
 		
 	}
