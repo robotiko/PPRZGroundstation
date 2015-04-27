@@ -54,6 +54,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 	@Override
 	public void onMapReady(GoogleMap map) {
+		// TODO: Work on available map gestures and maps-buttons on the side of the map
+		
 //		map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
 		
 		//Change the map type to satellite
