@@ -58,11 +58,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		
 //		map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
 		
-		//Change the map type to satellite
-		map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-		
 		//Change the map location
 		final LatLng LR = new LatLng(51.990694, 4.375749);
 		map.moveCamera(CameraUpdateFactory.newLatLngZoom(LR, 18.0f));
+		
+		//Change the map type to satellite
+		map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+		
+		//Disable rotation gestures
+		map.getUiSettings().setRotateGesturesEnabled(false);
+		
+		//Show zoom controls
+		map.getUiSettings().setZoomControlsEnabled(true);
+		
+		//Show my location button
+		map.setMyLocationEnabled(true);
+		map.getUiSettings().setMyLocationButtonEnabled(true);
+		
 	}
 }
