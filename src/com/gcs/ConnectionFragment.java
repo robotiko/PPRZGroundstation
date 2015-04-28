@@ -6,6 +6,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 public class ConnectionFragment extends Fragment {
 	@Override
@@ -15,6 +16,7 @@ public class ConnectionFragment extends Fragment {
 	}
 
 	public void setText(String item) {
-		// TODO: Dynamically set the text
+		TextView textView = (TextView) getView().findViewById(R.id.connectButton);
+	    textView.setText(item);
 	}
 }
