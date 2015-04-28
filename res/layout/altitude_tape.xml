@@ -11,6 +11,7 @@
     android:layout_height="wrap_content"
     android:id="@+id/altitudeTapeView"
     android:gravity="center_vertical|right"
+    android:paddingRight="7dp"
     android:src="@drawable/altitude_tape"
     android:adjustViewBounds="true"
     android:scaleType="fitCenter"
