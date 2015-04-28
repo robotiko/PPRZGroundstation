@@ -15,8 +15,6 @@
     android:src="@drawable/altitude_tape"
     android:adjustViewBounds="true"
     android:scaleType="fitCenter"
-    android:contentDescription="@string/altitude_tape"
-    />
+    android:contentDescription="@string/altitude_tape"/>
     
-
 </LinearLayout>
