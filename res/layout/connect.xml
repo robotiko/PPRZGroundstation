@@ -17,7 +17,8 @@
             android:id="@+id/connectButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/connect" />
+            android:onClick="onButtonRequest"
+            android:text="@string/connect_button" />
 	    
     </LinearLayout>
 </LinearLayout>
