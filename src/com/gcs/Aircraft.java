@@ -32,7 +32,6 @@ public class Aircraft {
 	String conflictStatus = "gray";
 	
 	//TODO add communication status attribute
-	
 	String comm = "low";
 	
 	////////////////////Icon////////////////////
