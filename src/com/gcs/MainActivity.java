@@ -11,7 +11,11 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -39,18 +43,82 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private Handler handler;
 	
 	IMavLinkServiceClient mServiceClient;
+	Intent intent;
 	
 	private Button connectButton;
 	private boolean isConnected;
-	
-	Intent intent;
 
 	private TelemetryFragment telemetryFragment;
 	private BatteryFragment batteryFragment;
 	
-	/**
-     * Create service connection
-     */
+	Aircraft aircraft;
+	Marker droneMarker;
+	  
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		
+		handler = new Handler();
+		
+		connectButton = (Button) findViewById(R.id.connectButton);
+		isConnected = false;
+		
+		// Create a handle to the telemetry fragment
+		telemetryFragment = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);
+		
+		// Create a handle to the battery fragment
+		batteryFragment = (BatteryFragment) getSupportFragmentManager().findFragmentById(R.id.batteryFragment);
+		
+		//Instantiate aircraft object
+		aircraft = new Aircraft(this);
+		
+		// Get the map and register for the ready callback
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
+		if (id == R.id.action_settings) {
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+	
+	@Override
+    public void onStart() {
+        super.onStart();
+        
+        Intent intent = new Intent(IMavLinkServiceClient.class.getName());
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+	
+	@Override
+    public void onDestroy() {
+    	try {
+			mServiceClient.removeEventListener(TAG);
+		} catch (RemoteException e) {
+			// TODO Catch exception
+		}
+    	unbindService(serviceConnection);
+    }
+	
+	/////////////////////////COMMUNICATION/////////////////////////
+	
+	/////SERVICE CONNECTION
+	
     ServiceConnection serviceConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder serviceClient) {
@@ -97,8 +165,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		}
 	    		
 	    		case "ATTITUDE_UPDATED": {
-	    			batteryFragment.setText("1.1");
-//	    			updateAttitude();
+	    			updateAttitude();
 	    			break;
 	    		}
 	    		
@@ -117,64 +184,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     		}
     	}
     };
-	
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
-		
-		handler = new Handler();
-		
-		connectButton = (Button) findViewById(R.id.connectButton);
-		isConnected = false;
-		
-		// Create a handle to the telemetry fragment
-		telemetryFragment = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);
-		
-		// Create a handle to the battery fragment
-		batteryFragment = (BatteryFragment) getSupportFragmentManager().findFragmentById(R.id.batteryFragment);
-		
-		// Get the map and register for the ready callback
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
-	}
-	
-	@Override
-    public void onStart() {
-        super.onStart();
-        
-        Intent intent = new Intent(IMavLinkServiceClient.class.getName());
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-    }
-	
-	@Override
-    public void onDestroy() {
-    	try {
-			mServiceClient.removeEventListener(TAG);
-		} catch (RemoteException e) {
-			// TODO Catch exception
-		}
-    	unbindService(serviceConnection);
-    }
+    
+    /////OTHER COMMUNICATION FUNCTIONS
 	
 	private ConnectionParameter retrieveConnectionParameters() {
 		
@@ -245,6 +256,27 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					}
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the connect button", t);
+				}
+			}
+		});
+	}
+	
+	/**
+	 * This runnable object is created to update the attitude
+	 */
+	private void updateAttitude() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Attitude mAttitude = getAttribute("ATTITUDE");
+					aircraft.setRollPitchYaw(mAttitude.getRoll(), mAttitude.getPitch(), mAttitude.getYaw());
+					batteryFragment.setText(String.format("%.2f", mAttitude.getYaw()));
+					
+					updateMap();
+
+				} catch (Throwable t) {
+					Log.e(TAG, "Error while updating the attitude", t);
 				}
 			}
 		});
@@ -335,11 +367,38 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		//Disable rotation gestures
 		map.getUiSettings().setRotateGesturesEnabled(false);
 		
-		//Show zoom controls
-		map.getUiSettings().setZoomControlsEnabled(true);
-		
 		//Show my location button
 		map.getUiSettings().setMyLocationButtonEnabled(true);
+	}
+	
+	public void updateMap(){
 		
+		//Generate an icon
+		aircraft.generateIcon();
+		final BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(aircraft.getIcon());
+		final LatLng DELFT = new LatLng(51.991794, 4.375259);
+		
+		//Call GoogleMaps
+		SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+		mapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap map) {
+
+            	//Clear marker from map (if it exists)
+            	if(droneMarker != null){
+            		droneMarker.remove();
+            	}
+            	
+            	//Add marker to map
+            	droneMarker = map.addMarker(new MarkerOptions()
+                .position(DELFT)
+                .anchor((float) 0.5, (float) 0.5)
+                .flat(true)
+                .title("ICON")
+                .draggable(false)
+                .icon(icon)
+            	);	
+            }
+        });  
 	}
 }
