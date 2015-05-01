@@ -19,12 +19,6 @@ public class Aircraft {
 	    this.context = context;
 	}
 	
-	private final Attitude mAttitude = new Attitude();
-	
-	public void setRollPitchYaw(double roll, double pitch, double yaw) {
-    	mAttitude.setRollPitchYaw(roll, pitch, yaw);
-    }
-	
 	//TODO add battery attribute for battery status
 	String battery = "full";
 	
@@ -34,6 +28,68 @@ public class Aircraft {
 	//TODO add communication status attribute
 	String comm = "low";
 	
+	private Attitude mAttitude = new Attitude();
+	private Altitude mAltitude = new Altitude();
+	private Speed    mSpeed    = new Speed();
+	
+	//Set and get functions for attitude
+	public void setRollPitchYaw(double roll, double pitch, double yaw) {
+    	mAttitude.setRollPitchYaw(roll, pitch, yaw);
+    }
+	
+	public double getRoll() {
+    	return mAttitude.getRoll();
+    }
+    
+    public double getPitch() {
+    	return mAttitude.getPitch();
+    }
+    
+    public double getYaw() {
+    	return mAttitude.getYaw();
+    }
+	
+	//Set and get functions for Altitude
+    public void setAltitude(double altitude) {
+    	mAltitude.setAltitude(altitude);
+    }
+
+    public void setTargetAltitude(double targetAltitude) {
+    	mAltitude.setTargetAltitude(targetAltitude);
+    }
+    
+    public double getAltitude() {
+    	return mAltitude.getAltitude();
+    }
+    
+    public double getTargetAltitude() {
+    	return mAltitude.getTargetAltitude();
+	
+  //Set functions for Speed
+    public void setGroundAndAirSpeeds(double groundSpeed, double airSpeed, double climbSpeed) {
+    	mSpeed.setGroundAndAirSpeeds(groundSpeed,airSpeed,climbSpeed);
+    }
+    
+    public void setTargetSpeed(double targetSpeed) {
+    	mSpeed.setTargetSpeed(targetSpeed);
+    }
+    
+    public double getGroundSpeed() {
+    	return mSpeed.getGroundSpeed();
+    }
+    
+    public double getAirSpeed() {
+    	return mSpeed.getAirSpeed();
+    }
+    
+    public double getClimbSpeed() {
+    	return mSpeed.getClimbSpeed();
+    }
+    
+    public double getTargetSpeed() {
+    	return mSpeed.getTargetSpeed();
+    }
+    
 	////////////////////Icon////////////////////
 	
 	Bitmap AC_Icon;

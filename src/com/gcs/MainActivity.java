@@ -170,8 +170,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		}
 	    		
 	    		case "ALTITUDE_SPEED_UPDATED": {
-//	    			updateAltitude();
-//	    			updateSpeed();
+	    			updateAltitude();
+	    			updateSpeed();
 	    			break;
 	    		}
 	    		
@@ -277,6 +277,44 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the attitude", t);
+				}
+			}
+		});
+	}
+	
+	/**
+	 * This runnable object is created to update the altitude
+	 */
+	private void updateAltitude() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Altitude mAltitude = getAttribute("ALTITUDE");
+					aircraft.setAltitude(mAltitude.getAltitude());
+					aircraft.setTargetAltitude(mAltitude.getTargetAltitude());
+					telemetryFragment.setText(String.valueOf(mAltitude.getAltitude()));
+				} catch (Throwable t) {
+					Log.e(TAG, "Error while updating the altitude", t);
+				}
+			}
+		});
+	}
+	
+	/**
+	 * This runnable object is created to update the ground and airspeeds
+	 */
+	private void updateSpeed() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Speed mSpeed = getAttribute("SPEED");
+					aircraft.setGroundAndAirSpeeds(mSpeed.getGroundSpeed(),mSpeed.getAirspeed(),mSpeed.getTargetSpeed());
+					aircraft.setTargetSpeed(mSpeed.getTargetSpeed());
+					
+				} catch (Throwable t) {
+					Log.e(TAG, "Error while updating the speed", t);
 				}
 			}
 		});
