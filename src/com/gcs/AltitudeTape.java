@@ -1,36 +1,19 @@
 package com.gcs;
 
 import android.os.Bundle;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.Toast;
+import android.widget.RelativeLayout;
 
 public class AltitudeTape extends Fragment {
 	
-	LinearLayout linearlayout;
-	View rootView;
+	private RelativeLayout relativelayout;
+	private View rootView;
 	
-	@Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        ImageView altitudeTape = (ImageView) getView().findViewById(R.id.altitudeTapeView);
-
-        altitudeTape.setOnClickListener(new View.OnClickListener() {
-            //Start new list activity
-            public void onClick(View v) {
-                //Toast to test clickable altitudetape
-                Toast.makeText(getActivity(), "CLICK!!",Toast.LENGTH_LONG).show();
-                addLabel(0.0f);
-                addLabel(6.0f);
-            }
-        });
-        linearlayout = (LinearLayout) rootView.findViewById(R.id.linearlayout);
-    }
+	private boolean labelCreated = false;
 	
 	@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -42,13 +25,46 @@ public class AltitudeTape extends Fragment {
         return rootView;    
     }
 	
-	public void addLabel(float altitude){
+	@Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+//        ImageView altitudeTape = (ImageView) getView().findViewById(R.id.altitudeTapeView);
+//
+//        //OnCLickListener on the altitude tape
+//        altitudeTape.setOnClickListener(new View.OnClickListener() {
+//            //Start new list activity
+//            public void onClick(View v) {
+//
+//            }
+//        });
+        
+        relativelayout = (RelativeLayout) rootView.findViewById(R.id.relativelayout);
+    }
+	
+	public void addLabel(double altitude){
+		
+		int groundLevel = 783; //0 meter
+		int flightCeiling = -30; //20 m
+		
+		int lengthBar = groundLevel - flightCeiling;
+		int labelLocation = (int) (groundLevel-((altitude/20)*lengthBar));
+		
+		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(80, 100);
+        params.leftMargin = 50;
+        params.topMargin = labelLocation;
         
         //Test for labels on altitude tape
-        ImageView label = new ImageView(getActivity());
-        label.setImageResource(R.drawable.altitude_label_small_blue);
-        label.setY(altitude);
-
-        linearlayout.addView(label);
+        ImageView label;
+		if(!labelCreated){
+	        label = new ImageView(getActivity());
+	        label.setImageResource(R.drawable.altitude_label_small_blue);
+	        label.setId(1);
+	        relativelayout.addView(label,params);
+	        labelCreated = true;
+		} else {
+			label = (ImageView)  getView().findViewById(1);
+			relativelayout.updateViewLayout(label,params);
+		}
 	}
 }

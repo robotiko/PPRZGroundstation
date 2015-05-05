@@ -67,18 +67,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		connectButton = (Button) findViewById(R.id.connectButton);
 		isConnected = false;
 		
+		//Instantiate aircraft object
+		aircraft = new Aircraft(this);
+		
 		// Create a handle to the telemetry fragment
 		telemetryFragment = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);
 		
 		// Create a handle to the battery fragment
 		batteryFragment = (BatteryFragment) getSupportFragmentManager().findFragmentById(R.id.batteryFragment);
 		
-		// Create a handle to the battery fragment
-		altitudeTapeFragment = (AltitudeTape) getFragmentManager().findFragmentById(R.id.batteryFragment);
-				
-		
-		//Instantiate aircraft object
-		aircraft = new Aircraft(this);
+		// Create a handle to the altitudeTape fragment
+		altitudeTapeFragment = (AltitudeTape) getSupportFragmentManager().findFragmentById(R.id.altitudeTapeFragment);
 		
 		// Get the map and register for the ready callback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -303,6 +302,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					aircraft.setAltitude(mAltitude.getAltitude());
 					aircraft.setTargetAltitude(mAltitude.getTargetAltitude());
 					telemetryFragment.setText(String.valueOf(mAltitude.getAltitude()));
+					
+					//Set the location of the label on the altitude tape
+					altitudeTapeFragment.addLabel(mAltitude.getAltitude());
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the altitude", t);
 				}
