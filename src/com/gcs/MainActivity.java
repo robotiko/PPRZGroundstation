@@ -397,7 +397,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	@Override
 	public void onMapReady(GoogleMap map) {
-		// TODO: Work on available map gestures and maps-buttons on the side of the map
 				
 		//Change the map type to satellite
 		map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
@@ -411,8 +410,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		LatLng currentLocation =  new LatLng(myLocation.getLatitude(),myLocation.getLongitude());
 		map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 18.0f));
 		
-		//Disable rotation gestures
+		//Disable rotation adn tilt gestures
 		map.getUiSettings().setRotateGesturesEnabled(false);
+		map.getUiSettings().setTiltGesturesEnabled(false);
 		
 		//Show my location button
 		map.getUiSettings().setMyLocationButtonEnabled(true);

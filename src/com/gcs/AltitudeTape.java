@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 public class AltitudeTape extends Fragment {
 	
@@ -66,5 +67,18 @@ public class AltitudeTape extends Fragment {
 			label = (ImageView)  getView().findViewById(1);
 			relativelayout.updateViewLayout(label,params);
 		}
+        
+//        TextView label;
+//		if(!labelCreated){
+//	        label = new TextView(getActivity());
+//	        label.setBackgroundResource(R.drawable.altitude_label_small_blue);
+//	        label.setId(1);
+//	        label.setText("    A");
+//	        relativelayout.addView(label,params);
+//	        labelCreated = true;
+//		} else {
+//			label = (TextView)  getView().findViewById(1);
+//			relativelayout.updateViewLayout(label,params);
+//		}
 	}
 }
