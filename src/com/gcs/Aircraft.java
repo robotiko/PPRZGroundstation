@@ -64,7 +64,8 @@ public class Aircraft {
     
     public double getTargetAltitude() {
     	return mAltitude.getTargetAltitude();
-	
+    }
+    
   //Set functions for Speed
     public void setGroundAndAirSpeeds(double groundSpeed, double airSpeed, double climbSpeed) {
     	mSpeed.setGroundAndAirSpeeds(groundSpeed,airSpeed,climbSpeed);

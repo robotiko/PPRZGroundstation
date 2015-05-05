@@ -35,6 +35,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
 	
@@ -50,6 +52,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 	private TelemetryFragment telemetryFragment;
 	private BatteryFragment batteryFragment;
+	private AltitudeTape altitudeTapeFragment;
 	
 	Aircraft aircraft;
 	Marker droneMarker;
@@ -70,12 +73,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Create a handle to the battery fragment
 		batteryFragment = (BatteryFragment) getSupportFragmentManager().findFragmentById(R.id.batteryFragment);
 		
+		// Create a handle to the battery fragment
+		altitudeTapeFragment = (AltitudeTape) getFragmentManager().findFragmentById(R.id.batteryFragment);
+				
+		
 		//Instantiate aircraft object
 		aircraft = new Aircraft(this);
 		
 		// Get the map and register for the ready callback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        
+        //TODO solve crash on 90deg rotation of device
 	}
 
 	@Override
@@ -195,7 +204,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         
         /* TODO: Fetch server port */
         
-        final int serverPort = 5000; 
+        final int serverPort = 8888; 
         
         Bundle extraParams = new Bundle();
 

@@ -1,20 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="240dp"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@android:color/transparent"
 	android:id="@+id/right_layout">
     
-<ImageView
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:id="@+id/altitudeTapeView"
-    android:gravity="center_vertical|right"
-    android:paddingRight="7dp"
-    android:src="@drawable/altitude_tape"
-    android:adjustViewBounds="true"
-    android:scaleType="fitCenter"
-    android:contentDescription="@string/altitude_tape"/>
+	<ImageView
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:id="@+id/altitudeTapeView"
+	    android:gravity="center_vertical|right"
+	    android:paddingRight="7dp"
+	    android:src="@drawable/altitude_tape"
+	    android:adjustViewBounds="true"
+	    android:scaleType="fitCenter"
+	    android:contentDescription="@string/altitude_tape"/>
+
+	<LinearLayout
+    	android:layout_width="fill_parent"
+        android:id="@+id/linearlayout"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
+   	</LinearLayout>
     
-</LinearLayout>
+</FrameLayout>
