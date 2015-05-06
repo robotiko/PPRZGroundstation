@@ -7,6 +7,7 @@ import com.aidl.core.model.Altitude;
 import com.aidl.core.model.Attitude;
 import com.aidl.core.model.Heartbeat;
 import com.aidl.core.model.Speed;
+import com.model.Battery;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -81,6 +82,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 	}
+	
+	/* TODO Make a course extrapolation class to determine the conflictStatus of a drone */
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -180,7 +183,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		}
 	    		
 	    		case "BATTERY_UPDATED": {
-	    			
+	    			updateBattery();
+	    			break;
 	    		}
 	    		
 	    		default:
@@ -274,8 +278,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					Attitude mAttitude = getAttribute("ATTITUDE");
-					aircraft.setRollPitchYaw(mAttitude.getRoll(), mAttitude.getPitch(), mAttitude.getYaw());
-					batteryFragment.setText(String.format("%.2f", mAttitude.getYaw()));
+					aircraft.setRollPitchYaw(mAttitude.getRoll(), mAttitude.getPitch(), Math.toDegrees(mAttitude.getYaw()));
+					batteryFragment.setText(String.format("%.2f", Math.toDegrees(mAttitude.getYaw())));
 					
 					updateMap();
 
@@ -309,7 +313,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	}
 	
 	/**
-	 * This runnable object is created to update the ground and airspeeds
+	 * This runnable object is created to update the ground- and airspeeds
 	 */
 	private void updateSpeed() {
 		handler.post(new Runnable() {
@@ -322,6 +326,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the speed", t);
+				}
+			}
+		});
+	}
+
+	/**
+	 * This runnable object is created to update the battery information
+	 */
+	private void updateBattery() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Battery mBattery = getAttribute("BATTERY");
+					aircraft.setBatteryState(mBattery.getBattVolt(),mBattery.getBattLevel(),mBattery.getBattCurrent());
+					
+				} catch (Throwable t) {
+					Log.e(TAG, "Error while updating the battery information", t);
 				}
 			}
 		});

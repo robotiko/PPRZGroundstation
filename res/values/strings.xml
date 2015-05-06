@@ -14,4 +14,10 @@
     
     <string name="altitude_tape">Altitude Tape</string>
     
+    <!-- Conflict State -->
+    <string name="collision_course">red</string>
+    <string name="same_level">blue</string>
+    <string name="clear">gray</string>
+    
+    
 </resources>

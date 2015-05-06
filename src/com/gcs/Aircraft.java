@@ -8,6 +8,12 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import com.model.Altitude;
+import com.model.Attitude;
+import com.model.Battery;
+import com.model.Speed;
+import com.model.State;
+import com.model.Position;
 
 
 public class Aircraft {
@@ -18,18 +24,25 @@ public class Aircraft {
 	    this.context = context;
 	}
 	
-	//TODO add battery attribute for battery status
-	String battery = "full";
-	
-	//TODO add conflict status attribute
-	String conflictStatus = "gray";
-	
-	//TODO add communication status attribute
-	String comm = "low";
-	
 	private Attitude mAttitude = new Attitude();
 	private Altitude mAltitude = new Altitude();
 	private Speed    mSpeed    = new Speed();
+	private Battery  mBattery  = new Battery();
+	private State    mState    = new State();
+	private Position mPosition = new Position();
+	
+	//TODO add battery attribute for battery status (add to Battery class??)
+	String battery = "full";
+	
+	//TODO add conflict status attribute (add to State class??)
+	String conflictState = "gray";
+	
+//	String conflictState = context.getResources().getString(R.string.clear);
+	
+	//TODO add communication status attribute (add to State class??)
+	String comm = "low";
+	
+	/* TODO create location attribute/class */
 	
 	//Set and get functions for attitude
 	public void setRollPitchYaw(double roll, double pitch, double yaw) {
@@ -57,6 +70,10 @@ public class Aircraft {
     	mAltitude.setTargetAltitude(targetAltitude);
     }
     
+    public void setAGL(double AGL) {
+    	mAltitude.setTargetAltitude(AGL);
+    }
+    
     public double getAltitude() {
     	return mAltitude.getAltitude();
     }
@@ -65,7 +82,11 @@ public class Aircraft {
     	return mAltitude.getTargetAltitude();
     }
     
-  //Set functions for Speed
+    public double getAGL() {
+    	return mAltitude.getAGL();
+    }
+    
+  //Set and get functions for Speed
     public void setGroundAndAirSpeeds(double groundSpeed, double airSpeed, double climbSpeed) {
     	mSpeed.setGroundAndAirSpeeds(groundSpeed,airSpeed,climbSpeed);
     }
@@ -90,6 +111,77 @@ public class Aircraft {
     	return mSpeed.getTargetSpeed();
     }
     
+  //Set and get functions for Battery
+    public short getBattVolt() {
+        return mBattery.getBattVolt();
+    }
+
+    public short getBattLevel() {
+        return mBattery.getBattLevel();
+    }
+
+    public short getBattCurrent() {
+        return mBattery.getBattVolt();
+    }
+
+    public double getBattDischarge() {
+        return mBattery.getBattDischarge();
+    }
+
+    public void setBatteryState(short battVolt, short battLevel, short battCurrent) {
+    	mBattery.setBatteryState(battVolt,battLevel,battCurrent);
+    }
+    
+    //Set and get functions for State
+    public boolean isArmed() {
+        return mState.isArmed();
+    }
+
+    public boolean isFlying() {
+        return mState.isFlying();
+    }
+
+    public void setIsFlying(boolean newState) {
+    	mState.setIsFlying(newState);
+    }
+
+    public void setArmed(boolean newState) {
+    	mState.setArmed(newState);
+    }
+    
+  //Set and get functions for position
+    public byte getSatVisible() {
+    	return mPosition.getSatVisible();
+	}
+	
+	public int getTimeStamp() {
+		return mPosition.getTimeStamp();
+	}
+	
+	public int getLat() {
+		return mPosition.getLat();
+	}
+	
+	public int getLon() {
+		return mPosition.getLon();
+	}
+	
+	public int getAlt() {
+		return mPosition.getAlt();
+	}
+	
+	public int getHdg() {
+		return mPosition.getHdg();
+	}
+	
+	public void setSatVisible(byte satVisible) {
+		mPosition.setSatVisible(satVisible);
+	}
+	
+	public void setLlaHdg(int lat, int lon, int alt, short hdg) {
+		mPosition.setLlaHdg(lat,lon,alt,hdg);
+	}
+    
 	////////////////////Icon////////////////////
 	
 	Bitmap AC_Icon;
@@ -100,7 +192,7 @@ public class Aircraft {
 		Resources res = context.getResources();
 		
 		//Get the base icon (conflictStatus:red, blue, gray)
-		switch (conflictStatus){
+		switch (conflictState){
 			case "red": {
 				baseIcon = BitmapFactory.decodeResource(res, R.drawable.uav_icon_red);
 				break;
@@ -121,8 +213,6 @@ public class Aircraft {
     	
 		//Rotate the base icon
 		baseIcon = RotateBitmap(baseIcon,(float) mAttitude.getYaw());
-		
-//		Toast.makeText(context.getApplicationContext(), String.valueOf(baseIcon.getHeight()), Toast.LENGTH_SHORT).show();
 		
 		//Get the battery icon (full,half,low,empty)
 		switch (battery){
@@ -190,27 +280,30 @@ public class Aircraft {
     	
     	//TODO enable markers to scale with zoom for a constant keepout region (or use GroundOverlays)
     	
-    	//TODO solve issue of icons being placed outside base icon due to the rotation of a square icon
+    	//TODO Make white base-cirle that is drawn in code to prevent hardcoding numbers for location of battery/communication icons
 
     	//Create bitmap to work with
     	Bitmap mutableBitmap = baseIcon.copy(Bitmap.Config.ARGB_8888, true);
     	Canvas c = new Canvas(mutableBitmap);
+    	
+    	int center = mutableBitmap.getWidth()/2;
 
     	//(int left, int top, int right, int bottom)
         //Add battery icon to the base icon
         Drawable bat = new BitmapDrawable(res, batteryIcon);
-        bat.setBounds(75, 10, 85, 30);
+        bat.setBounds(center+11, center-54, center+21, center-34);
+//        bat.setBounds(75, 10, 85, 30);
         bat.draw(c);
         
         //Add communication icon to the base icon
         Drawable comm = new BitmapDrawable(res, communicationIcon);
-        comm.setBounds(40, 11, 60, 29);
+        comm.setBounds(center-24,center-53,center-4,center-35);
+//        comm.setBounds(40, 11, 60, 29);
         comm.draw(c);
 
         return mutableBitmap;
     }
 	
-
 	public Bitmap getIcon(){
 		return AC_Icon;
 	}
