@@ -56,29 +56,30 @@ public class AltitudeTape extends Fragment {
         params.topMargin = labelLocation;
         
         //Test for labels on altitude tape
-        ImageView label;
-		if(!labelCreated){
-	        label = new ImageView(getActivity());
-	        label.setImageResource(R.drawable.altitude_label_small_blue);
-	        label.setId(1);
-	        relativelayout.addView(label,params);
-	        labelCreated = true;
-		} else {
-			label = (ImageView)  getView().findViewById(1);
-			relativelayout.updateViewLayout(label,params);
-		}
-        
-//        TextView label;
+//        ImageView label;
 //		if(!labelCreated){
-//	        label = new TextView(getActivity());
-//	        label.setBackgroundResource(R.drawable.altitude_label_small_blue);
+//	        label = new ImageView(getActivity());
+//	        label.setImageResource(R.drawable.altitude_label_small_blue);
 //	        label.setId(1);
-//	        label.setText("    A");
 //	        relativelayout.addView(label,params);
 //	        labelCreated = true;
 //		} else {
-//			label = (TextView)  getView().findViewById(1);
+//			label = (ImageView)  getView().findViewById(1);
 //			relativelayout.updateViewLayout(label,params);
 //		}
+        
+        TextView label;
+		if(!labelCreated){
+	        label = new TextView(getActivity());
+	        label.setBackgroundResource(R.drawable.altitude_label_small_blue);
+//	        generateViewId () //TODO Generate this in teh aircraft class
+	        label.setId(1);
+	        label.setText("      A");
+	        relativelayout.addView(label,params);
+	        labelCreated = true;
+		} else {
+			label = (TextView)  getView().findViewById(1);
+			relativelayout.updateViewLayout(label,params);
+		}
 	}
 }

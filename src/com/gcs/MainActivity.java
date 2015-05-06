@@ -35,8 +35,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
 	
@@ -82,8 +80,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Get the map and register for the ready callback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        
-        //TODO solve crash on 90deg rotation of device
 	}
 
 	@Override
@@ -118,7 +114,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     	try {
 			mServiceClient.removeEventListener(TAG);
 		} catch (RemoteException e) {
-			// TODO Catch exception
+			Log.e(TAG, "Failed to remove event listener", e);
 		}
     	unbindService(serviceConnection);
     }
@@ -229,7 +225,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	        try {
 	        	mServiceClient.connectDroneClient(connParams);
 	        } catch (RemoteException e) {
-	            /* TODO: Handle remote exception */
+	        	Log.e(TAG, "Error while connecting to service", e);
 	        }
         }
         
@@ -244,7 +240,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			try {
 				mServiceClient.disconnectDroneClient();
 			} catch (RemoteException e) {
-				// TODO: Handle exception
+				Log.e(TAG, "Error while disconnecting", e);
 			}
     }
     

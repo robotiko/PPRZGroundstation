@@ -8,7 +8,6 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.widget.Toast;
 
 
 public class Aircraft {
@@ -189,6 +188,8 @@ public class Aircraft {
 	
     private Bitmap stackIcons(Bitmap baseIcon, Bitmap batteryIcon, Bitmap communicationIcon, Resources res){
     	
+    	//TODO enable markers to scale with zoom for a constant keepout region (or use GroundOverlays)
+    	
     	//TODO solve issue of icons being placed outside base icon due to the rotation of a square icon
 
     	//Create bitmap to work with
@@ -207,7 +208,7 @@ public class Aircraft {
         comm.draw(c);
 
         return mutableBitmap;
-    };
+    }
 	
 
 	public Bitmap getIcon(){
