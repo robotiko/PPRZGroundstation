@@ -7,8 +7,8 @@ import com.aidl.core.model.Altitude;
 import com.aidl.core.model.Attitude;
 import com.aidl.core.model.Heartbeat;
 import com.aidl.core.model.Speed;
-import com.model.Battery; //TODO change this to com.aidl.core.model.Battery once available in the aidl lib;
-import com.model.Position; //TODO change this to com.aidl.core.model.Position once available in the aidl lib;
+import com.aidl.core.model.Battery;
+import com.aidl.core.model.Position;
 import com.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -194,7 +194,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     		}
     	}
     };
-    
+//    updatePosition() 
     /////OTHER COMMUNICATION FUNCTIONS
 	
 	private ConnectionParameter retrieveConnectionParameters() {

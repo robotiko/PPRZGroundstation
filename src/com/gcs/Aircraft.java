@@ -104,15 +104,15 @@ public class Aircraft {
     }
     
   //Set and get functions for Battery
-    public short getBattVolt() {
+    public int getBattVolt() {
         return mBattery.getBattVolt();
     }
 
-    public short getBattLevel() {
+    public int getBattLevel() {
         return mBattery.getBattLevel();
     }
 
-    public short getBattCurrent() {
+    public int getBattCurrent() {
         return mBattery.getBattVolt();
     }
 
@@ -120,7 +120,7 @@ public class Aircraft {
         return mBattery.getBattDischarge();
     }
 
-    public void setBatteryState(short battVolt, short battLevel, short battCurrent) {
+    public void setBatteryState(int battVolt, int battLevel, int battCurrent) {
     	mBattery.setBatteryState(battVolt,battLevel,battCurrent);
     }
     
@@ -227,7 +227,7 @@ public class Aircraft {
 		baseIcon = RotateBitmap(baseIcon,(float) mAttitude.getYaw());
 		
 		//Get the battery icon (full,half,low)
-		short batLevel = getBattLevel();
+		int batLevel = getBattLevel();
 		int halfBat = context.getResources().getInteger(R.integer.HalfBatteryLevel);
 		int lowBat  = context.getResources().getInteger(R.integer.LowBatteryLevel);
 		/* TODO set the integer values to the correct orders to comply with the provide battery values */
