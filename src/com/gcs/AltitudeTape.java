@@ -32,18 +32,34 @@ public class AltitudeTape extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-//        ImageView altitudeTape = (ImageView) getView().findViewById(R.id.altitudeTapeView);
-//
-//        //OnCLickListener on the altitude tape
-//        altitudeTape.setOnClickListener(new View.OnClickListener() {
-//            //Start new list activity
-//            public void onClick(View v) {
-//
-//            }
-//        });
+        ImageView altitudeTape = (ImageView) getView().findViewById(R.id.altitudeTapeView);
+
+        //OnCLickListener on the altitude tape
+        altitudeTape.setOnClickListener(new View.OnClickListener() {
+        	@Override
+            public void onClick(View v) {
+            	Log.d("test","altitude tape clicked!!");
+            }
+        });
         
         relativelayout = (RelativeLayout) rootView.findViewById(R.id.relativelayout);
     }
+	
+	//OnCLickListener on the altitude labels
+	View.OnClickListener onLabelClick(final View tv)  {
+	    return new View.OnClickListener() {
+	        public void onClick(View v) {
+	        	switch (v.getId()){
+	        	case 1:
+	        		Log.d("Test", "Click dynamic label!!");
+	        		break;
+	        	case 2:
+	        		Log.d("Test", "Click static label!!");
+	        		break;
+	        	}
+        	}
+	    };
+	}
 	
 	public void setLabel(double altitude, int labelId){
 		
@@ -55,23 +71,11 @@ public class AltitudeTape extends Fragment {
 		int lengthBar = groundLevel - flightCeiling;
 		int labelLocation = (int) (groundLevel-((altitude/20)*lengthBar));
 		
+		/* TODO change the horizontal location of the altitude labels and flip them around */
 		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(80, 100);
         params.leftMargin = 50;
         params.topMargin = labelLocation;
-        
-        //Test for labels on altitude tape
-//        ImageView label;
-//		if(!labelCreated){
-//	        label = new ImageView(getActivity());
-//	        label.setImageResource(R.drawable.altitude_label_small_blue);
-//	        label.setId(1);
-//	        relativelayout.addView(label,params);
-//	        labelCreated = true;
-//		} else {
-//			label = (ImageView)  getView().findViewById(1);
-//			relativelayout.updateViewLayout(label,params);
-//		}
-        
+             
         TextView label;
 		if(!labelCreated){
 	        label = new TextView(getActivity());
@@ -83,6 +87,7 @@ public class AltitudeTape extends Fragment {
 	        String labelCharacter = String.valueOf((char)(64+labelId));
 	        label.setText("      "+ labelCharacter);
 	        label.setTypeface(null, Typeface.BOLD);
+	        label.setOnClickListener(onLabelClick(label));
 	        relativelayout.addView(label,params);
 	        labelCreated = true;
 		} else {
