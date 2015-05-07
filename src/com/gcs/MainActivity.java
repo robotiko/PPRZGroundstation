@@ -279,10 +279,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 				try {
 					Attitude mAttitude = getAttribute("ATTITUDE");
 					aircraft.setRollPitchYaw(mAttitude.getRoll(), mAttitude.getPitch(), Math.toDegrees(mAttitude.getYaw()));
-					batteryFragment.setText(String.format("%.2f", Math.toDegrees(mAttitude.getYaw())));
-					
-					updateMap();
 
+					updateMap();
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the attitude", t);
 				}
@@ -304,7 +302,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					telemetryFragment.setText(String.valueOf(mAltitude.getAltitude()));
 					
 					//Set the location of the label on the altitude tape
-					altitudeTapeFragment.addLabel(mAltitude.getAltitude());
+					altitudeTapeFragment.addLabel(mAltitude.getAltitude(),aircraft.getAltLabelId());
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the altitude", t);
 				}
@@ -341,7 +339,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 				try {
 					Battery mBattery = getAttribute("BATTERY");
 					aircraft.setBatteryState(mBattery.getBattVolt(),mBattery.getBattLevel(),mBattery.getBattCurrent());
-					
+					batteryFragment.setText(String.format("%.2f", mBattery.getBattVolt()));
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the battery information", t);
 				}

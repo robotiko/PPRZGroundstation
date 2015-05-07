@@ -8,13 +8,13 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.widget.TextView;
+
 import com.model.Altitude;
 import com.model.Attitude;
 import com.model.Battery;
 import com.model.Speed;
-import com.model.State;
 import com.model.Position;
-
 
 public class Aircraft {
 	
@@ -24,25 +24,17 @@ public class Aircraft {
 	    this.context = context;
 	}
 	
-	private Attitude mAttitude = new Attitude();
-	private Altitude mAltitude = new Altitude();
-	private Speed    mSpeed    = new Speed();
-	private Battery  mBattery  = new Battery();
-	private State    mState    = new State();
-	private Position mPosition = new Position();
+	private Attitude    mAttitude = new Attitude();
+	private Altitude    mAltitude = new Altitude();
+	private Speed       mSpeed    = new Speed();
+	private Battery     mBattery  = new Battery();
+	private CustomState mState    = new CustomState(); 
+	private Position    mPosition = new Position();
 	
-	//TODO add battery attribute for battery status (add to Battery class??)
-	String battery = "full";
+	private int communicationSignal   = 0;
+	private final int AltitudeLabelId = TextView.generateViewId();
 	
-	//TODO add conflict status attribute (add to State class??)
-	String conflictState = "gray";
-	
-//	String conflictState = context.getResources().getString(R.string.clear);
-	
-	//TODO add communication status attribute (add to State class??)
-	String comm = "low";
-	
-	/* TODO create location attribute/class */
+	/* TODO Implement the setting of the attributes in the service connection */
 	
 	//Set and get functions for attitude
 	public void setRollPitchYaw(double roll, double pitch, double yaw) {
@@ -149,6 +141,22 @@ public class Aircraft {
     	mState.setArmed(newState);
     }
     
+    public boolean isInConflict() {
+        return mState.isInConflict();
+    }
+
+    public void setIsInConflict(boolean newState) {
+    	mState.setIsInConflict(newState);
+    }
+    
+    public boolean isOnUniqueAltitude() {
+        return mState.isOnUniqueAltitude();
+    }
+	
+    public void setIsOnUniqueAltitude(boolean newState) {
+    	mState.setIsOnUniqueAltitude(newState);
+    }
+    
   //Set and get functions for position
     public byte getSatVisible() {
     	return mPosition.getSatVisible();
@@ -181,6 +189,19 @@ public class Aircraft {
 	public void setLlaHdg(int lat, int lon, int alt, short hdg) {
 		mPosition.setLlaHdg(lat,lon,alt,hdg);
 	}
+	
+    //Set and get functions for class attributes
+    public int getCommunicationSignal(){
+    	return communicationSignal;
+    }
+    
+    public void setCommunicationSignal(int communicationSignal){
+    	this.communicationSignal = communicationSignal;
+    }
+    
+    public int getAltLabelId(){
+    	return AltitudeLabelId;
+    }
     
 	////////////////////Icon////////////////////
 	
@@ -192,72 +213,53 @@ public class Aircraft {
 		Resources res = context.getResources();
 		
 		//Get the base icon (conflictStatus:red, blue, gray)
-		switch (conflictState){
-			case "red": {
+		if(isOnUniqueAltitude()){
+			baseIcon = BitmapFactory.decodeResource(res, R.drawable.uav_icon_gray);
+		} else {
+			if (isInConflict()){
 				baseIcon = BitmapFactory.decodeResource(res, R.drawable.uav_icon_red);
-				break;
-			}
-			case "blue": {
+			} else {
 				baseIcon = BitmapFactory.decodeResource(res, R.drawable.uav_icon_blue);
-				break;
-			}
-			case "gray": {
-				baseIcon = BitmapFactory.decodeResource(res, R.drawable.uav_icon_gray);
-				break;
-			}
-			default: {
-				baseIcon = BitmapFactory.decodeResource(res, R.drawable.uav_icon_gray);
-				break;
 			}
 		}
     	
 		//Rotate the base icon
 		baseIcon = RotateBitmap(baseIcon,(float) mAttitude.getYaw());
 		
-		//Get the battery icon (full,half,low,empty)
-		switch (battery){
-			case "full": {
-				batteryIcon = BitmapFactory.decodeResource(res, R.drawable.battery_icon_green);
-				break;
-			}
-			case "half": {
-				batteryIcon = BitmapFactory.decodeResource(res, R.drawable.battery_icon_yellow);
-				break;
-			}
-			case "empty": {
-				batteryIcon = BitmapFactory.decodeResource(res, R.drawable.battery_icon_red);
-				break;
-			}
-			default: {
-				batteryIcon = BitmapFactory.decodeResource(res, R.drawable.battery_icon_green);
-				break;
-			}
-		}
+		//Get the battery icon (full,half,low)
+		short batLevel = getBattLevel();
+		int halfBat = context.getResources().getInteger(R.integer.HalfBatteryLevel);
+		int lowBat  = context.getResources().getInteger(R.integer.LowBatteryLevel);
+		/* TODO set the integer values to the correct orders to comply with the provide battery values */
 		
+		if(batLevel > halfBat) { //high battery level
+			batteryIcon = BitmapFactory.decodeResource(res, R.drawable.battery_icon_green);
+		}
+		else if (halfBat >= batLevel && batLevel > lowBat) { //middle battery level
+			batteryIcon = BitmapFactory.decodeResource(res, R.drawable.battery_icon_yellow);
+		}
+		else { //low battery level
+			batteryIcon = BitmapFactory.decodeResource(res, R.drawable.battery_icon_red);
+		}
+
 		//Get the communication icon (full,mid,low,empty)
-		switch (comm){
-			case "full": {
-				communicationIcon = BitmapFactory.decodeResource(res, R.drawable.communication_icon_full);
-				break;
-			}
-			case "half": {
-				communicationIcon = BitmapFactory.decodeResource(res, R.drawable.communication_icon_mid);
-				break;
-			}
-			case "low": {
-				communicationIcon = BitmapFactory.decodeResource(res, R.drawable.communication_icon_low);
-				break;
-			}
-			case "empty": {
-				communicationIcon = BitmapFactory.decodeResource(res, R.drawable.communication_icon_empty);
-				break;
-			}
-			default: {
-				communicationIcon = BitmapFactory.decodeResource(res, R.drawable.communication_icon_full);
-				break;
-			}
-		}
+		int halfComm = context.getResources().getInteger(R.integer.HalfCommunicationSignal);
+		int lowComm  = context.getResources().getInteger(R.integer.LowBatteryLevel);
+		int NoComm   = context.getResources().getInteger(R.integer.NoCommunicationSignal);
 		
+		if (communicationSignal > halfComm) { //High signal strength
+			communicationIcon = BitmapFactory.decodeResource(res, R.drawable.communication_icon_full);
+		}
+		else if (halfComm >= communicationSignal && communicationSignal > lowComm) { //Middle signal strength
+			communicationIcon = BitmapFactory.decodeResource(res, R.drawable.communication_icon_mid);
+		}
+		else if (lowComm >= communicationSignal && communicationSignal > NoComm) { //Low signal strength
+			communicationIcon = BitmapFactory.decodeResource(res, R.drawable.communication_icon_low);
+		}
+		else { //No signal
+			communicationIcon = BitmapFactory.decodeResource(res, R.drawable.communication_icon_empty);
+		}
+
 		//Place battery- and communication icons
 		baseIcon = stackIcons(baseIcon,batteryIcon,communicationIcon,res);
 		
@@ -269,9 +271,7 @@ public class Aircraft {
 	//Rotate a bitmap
 	private Bitmap RotateBitmap(Bitmap source, float angle){
         Matrix matrix = new Matrix();
-//        matrix.postRotate(angle);
-        
-        matrix.postRotate(angle, source.getWidth()/2, source.getHeight()/2);
+        matrix.postRotate(angle);
         
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }

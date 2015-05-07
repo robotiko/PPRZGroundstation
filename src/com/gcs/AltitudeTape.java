@@ -44,9 +44,9 @@ public class AltitudeTape extends Fragment {
         relativelayout = (RelativeLayout) rootView.findViewById(R.id.relativelayout);
     }
 	
-	public void addLabel(double altitude){
+	public void addLabel(double altitude, int labelId){
 		
-		/* Determine altitude label location based on the height of the bar and the the vertical range of the drones (flight ceiling - ground level) */
+		/* TODO Determine altitude label location based on the height of the bar and the the vertical range of the drones (flight ceiling - ground level) */
 		
 		int groundLevel = 783; //0 meter
 		int flightCeiling = -30; //20 m
@@ -75,14 +75,13 @@ public class AltitudeTape extends Fragment {
 		if(!labelCreated){
 	        label = new TextView(getActivity());
 	        label.setBackgroundResource(R.drawable.altitude_label_small_blue);
-//	        generateViewId () //TODO Generate a unique id in the aircraft class
-	        label.setId(1);
+	        label.setId(labelId);
 	        label.setText("      A");
 	        label.setTypeface(null, Typeface.BOLD);
 	        relativelayout.addView(label,params);
 	        labelCreated = true;
 		} else {
-			label = (TextView)  getView().findViewById(1);
+			label = (TextView)  getView().findViewById(labelId);
 			relativelayout.updateViewLayout(label,params);
 		}
 	}

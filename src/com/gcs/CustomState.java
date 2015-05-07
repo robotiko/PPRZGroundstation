@@ -4,19 +4,28 @@ import com.model.State;
 
 public class CustomState extends State {
 
-	private String conflictState;
+	private boolean isInConflict = false;
+	private boolean isOnUniqueAltitude = true;
 	
 	
-	public String getConflictState() {
-        return this.conflictState;
+	public boolean isInConflict() {
+        return this.isInConflict;
     }
 
-    public void setConflictState(String newState) {
-        if (this.conflictState != newState) {
-            this.conflictState = newState;
+    public void setIsInConflict(boolean newState) {
+        if (this.isInConflict != newState) {
+            this.isInConflict = newState;
         }
     }
+    
+    public boolean isOnUniqueAltitude() {
+        return this.isOnUniqueAltitude;
+    }
 	
-	
+    public void setIsOnUniqueAltitude(boolean newState) {
+        if (this.isOnUniqueAltitude != newState) {
+            this.isOnUniqueAltitude = newState;
+        }
+    }
 	
 }

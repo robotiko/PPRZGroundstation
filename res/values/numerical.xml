@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <!-- Battery values -->
+    <integer name="HalfBatteryLevel">50</integer>
+    <integer name="LowBatteryLevel">20</integer>
+    
+    <!-- Communication values -->
+    <integer name="HalfCommunicationSignal">60</integer>
+    <integer name="LowCommunicationSignal">30</integer>
+    <integer name="NoCommunicationSignal">0</integer>
+    
+</resources>
