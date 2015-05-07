@@ -7,7 +7,9 @@ import com.aidl.core.model.Altitude;
 import com.aidl.core.model.Attitude;
 import com.aidl.core.model.Heartbeat;
 import com.aidl.core.model.Speed;
-import com.model.Battery;
+import com.model.Battery; //TODO change this to com.aidl.core.model.Battery once available in the aidl lib;
+import com.model.Position; //TODO change this to com.aidl.core.model.Position once available in the aidl lib;
+import com.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -302,7 +304,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					telemetryFragment.setText(String.valueOf(mAltitude.getAltitude()));
 					
 					//Set the location of the label on the altitude tape
-					altitudeTapeFragment.addLabel(mAltitude.getAltitude(),aircraft.getAltLabelId());
+					altitudeTapeFragment.setLabel(mAltitude.getAltitude(),aircraft.getAltLabelId());
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the altitude", t);
 				}
@@ -321,7 +323,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					Speed mSpeed = getAttribute("SPEED");
 					aircraft.setGroundAndAirSpeeds(mSpeed.getGroundSpeed(),mSpeed.getAirspeed(),mSpeed.getTargetSpeed());
 					aircraft.setTargetSpeed(mSpeed.getTargetSpeed());
-					
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the speed", t);
 				}
@@ -342,6 +343,43 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					batteryFragment.setText(String.format("%.2f", mBattery.getBattVolt()));
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the battery information", t);
+				}
+			}
+		});
+	}
+	
+	/**
+	 * This runnable object is created to update position
+	 */
+	private void updatePosition() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Position mPosition = getAttribute("POSITION"); //TODO check is POSITION is the correct tag
+					aircraft.setSatVisible(mPosition.getSatVisible());
+					aircraft.setLlaHdg(mPosition.getLat(),mPosition.getLon(),mPosition.getAlt(),(short) mPosition.getHdg());
+					//TODO check if heading should be an int or short (and make changes accordingly)
+				} catch (Throwable t) {
+					Log.e(TAG, "Error while updating position", t);
+				}
+			}
+		});
+	}
+	
+	/**
+	 * This runnable object is created to update state
+	 */
+	private void updateState() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					State mState = getAttribute("STATE"); //TODO check is STATE is the correct tag
+					aircraft.setIsFlying(mState.isFlying());
+					aircraft.setArmed(mState.isArmed());
+				} catch (Throwable t) {
+					Log.e(TAG, "Error while updating state", t);
 				}
 			}
 		});

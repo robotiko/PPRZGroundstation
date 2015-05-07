@@ -3,6 +3,7 @@ package com.gcs;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,7 +45,7 @@ public class AltitudeTape extends Fragment {
         relativelayout = (RelativeLayout) rootView.findViewById(R.id.relativelayout);
     }
 	
-	public void addLabel(double altitude, int labelId){
+	public void setLabel(double altitude, int labelId){
 		
 		/* TODO Determine altitude label location based on the height of the bar and the the vertical range of the drones (flight ceiling - ground level) */
 		
@@ -76,7 +77,11 @@ public class AltitudeTape extends Fragment {
 	        label = new TextView(getActivity());
 	        label.setBackgroundResource(R.drawable.altitude_label_small_blue);
 	        label.setId(labelId);
-	        label.setText("      A");
+	        
+	        /* On the basis of the label number (first label is generated to be 1) a string is
+	        made to display on the altitude label */
+	        String labelCharacter = String.valueOf((char)(64+labelId));
+	        label.setText("      "+ labelCharacter);
 	        label.setTypeface(null, Typeface.BOLD);
 	        relativelayout.addView(label,params);
 	        labelCreated = true;
