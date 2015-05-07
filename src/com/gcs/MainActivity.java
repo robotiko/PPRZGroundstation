@@ -189,12 +189,28 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    			break;
 	    		}
 	    		
+	    		case "POSITION_UPDATED": {
+	    			updatePosition();
+	    			break;
+	    		}
+	    		
+	    		case "SATELLITES_VISIBLE_UPDATED": {
+	    			break;
+	    		}
+
+	    		/* Enable the state service case once available */
+//	    		case "STATE_UPDATED": {
+//	    			updateState();
+//	    			break;
+//	    		}
+	    		
 	    		default:
 	    			break;
     		}
     	}
     };
-//    updatePosition() 
+
+
     /////OTHER COMMUNICATION FUNCTIONS
 	
 	private ConnectionParameter retrieveConnectionParameters() {
@@ -301,7 +317,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					Altitude mAltitude = getAttribute("ALTITUDE");
 					aircraft.setAltitude(mAltitude.getAltitude());
 					aircraft.setTargetAltitude(mAltitude.getTargetAltitude());
-					telemetryFragment.setText(String.valueOf(mAltitude.getAltitude()));
 					
 					//Set the location of the label on the altitude tape
 					altitudeTapeFragment.setLabel(mAltitude.getAltitude(),aircraft.getAltLabelId());
