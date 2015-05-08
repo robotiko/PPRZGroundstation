@@ -146,7 +146,7 @@ public class AltitudeTape extends Fragment {
 	        labelCreated = true;
 		} else {
 			label = (TextView)  getView().findViewById(labelId);
-//			relativelayout.updateViewLayout(label,params);
+			relativelayout.updateViewLayout(label,params);
 		}
 	}
 	

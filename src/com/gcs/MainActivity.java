@@ -185,12 +185,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		}
 	    		
 	    		case "BATTERY_UPDATED": {
-	    			updateBattery();
+//	    			updateBattery();
 	    			break;
 	    		}
 	    		
 	    		case "POSITION_UPDATED": {
-	    			updatePosition();
+//	    			updatePosition();
 	    			break;
 	    		}
 	    		
