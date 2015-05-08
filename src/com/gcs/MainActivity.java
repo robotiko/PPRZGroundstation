@@ -375,6 +375,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					aircraft.setSatVisible(mPosition.getSatVisible());
 					aircraft.setLlaHdg(mPosition.getLat(),mPosition.getLon(),mPosition.getAlt(),(short) mPosition.getHdg());
 					//TODO check if heading should be an int or short (and make changes accordingly)
+					Log.d("TEST","Position updated");
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating position", t);
 				}
@@ -493,6 +494,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		aircraft.generateIcon();
 		final BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(aircraft.getIcon());
 		final LatLng DELFT = new LatLng(51.991794, 4.375259);
+		
+		/* TODO make location on map dynamic */
+//		final LatLng DELFT = new LatLng(aircraft.getLat()*1e-7, aircraft.getLon()*1e-7);
+//		Log.d("Lat",String.valueOf(aircraft.getLat()));
 		
 		//Call GoogleMaps
 		SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);

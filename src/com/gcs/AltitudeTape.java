@@ -1,11 +1,15 @@
 package com.gcs;
 
+import android.content.ClipData;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.DragShadowBuilder;
+import android.view.DragEvent;
+import android.view.View.OnDragListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -45,10 +49,11 @@ public class AltitudeTape extends Fragment {
         relativelayout = (RelativeLayout) rootView.findViewById(R.id.relativelayout);
     }
 	
-	//OnCLickListener on the altitude labels
-	View.OnClickListener onLabelClick(final View tv)  {
+	//OnCLickListener for the altitude labels
+	View.OnClickListener onLabelClick(final View tv) {
 	    return new View.OnClickListener() {
 	        public void onClick(View v) {
+	        	/* TODO implement code for selection of aircraft (colors etc.) */
 	        	switch (v.getId()){
 	        	case 1:
 	        		Log.d("Test", "Click dynamic label!!");
@@ -60,6 +65,53 @@ public class AltitudeTape extends Fragment {
         	}
 	    };
 	}
+	
+	//OnLongClickListener for the altitude labels
+	View.OnLongClickListener onLabelLongClick(final View tv) {
+		return new View.OnLongClickListener() {
+			@Override
+			public boolean onLongClick(View v) {
+				
+//				ClipData.Item item = new ClipData.Item((CharSequence)v.getTag());
+	            ClipData data = ClipData.newPlainText("","");
+	            View.DragShadowBuilder myShadow = new DragShadowBuilder(tv);
+	            /* TODO improve the dragshadow */
+	            /* TODO only allow vertical dragging: http://stackoverflow.com/questions/20307246/how-do-i-restrict-drag-and-drop-along-the-y-axis-only-in-android */
+	            /* TODO Offset the label that is dragged to be able to see it */
+	            
+	            // Starts the drag
+	            v.startDrag(data,  		// the data to be dragged
+	                        myShadow,  	// the drag shadow builder
+	                        null,      	// no need to use local data
+	                        0          	// flags (not currently used, set to 0)
+	            );
+//	            tv.setOnDragListener(onLabelDrag(tv));
+				return true;
+			}
+		};
+		
+	}
+
+    class MyDragListener implements OnDragListener {
+
+        public boolean onDrag(View v, DragEvent event) {
+            switch (event.getAction()) {
+            case DragEvent.ACTION_DRAG_STARTED:
+            	Log.d("Drag","Drag started!!");
+                break;
+            case DragEvent.ACTION_DRAG_LOCATION :	
+            	//send y location of the label to the dragshadow
+//            	Log.d("Drag","loc!!");
+                break;
+            case DragEvent.ACTION_DRAG_ENDED:
+            	Log.d("Drag","Dropped!!");
+                break;
+            default:
+                break;
+            }
+            return true;
+        }
+    }
 	
 	public void setLabel(double altitude, int labelId){
 		
@@ -88,11 +140,21 @@ public class AltitudeTape extends Fragment {
 	        label.setText("      "+ labelCharacter);
 	        label.setTypeface(null, Typeface.BOLD);
 	        label.setOnClickListener(onLabelClick(label));
+	        label.setOnLongClickListener(onLabelLongClick(label));
+	        label.setOnDragListener(new MyDragListener());
 	        relativelayout.addView(label,params);
 	        labelCreated = true;
 		} else {
 			label = (TextView)  getView().findViewById(labelId);
-			relativelayout.updateViewLayout(label,params);
+//			relativelayout.updateViewLayout(label,params);
 		}
+	}
+	
+	private void setTargetAltitude(int dropLocation) {
+		/* TODO use the set function of the service to set the target altitude */
+		
+		//1. Input to this method is the drop location of the dragged label.
+		//2. Determine the corresponding altitude based on the flightceiling/groundlevel and droplocation
+		//3. Set the target altitude in the service
 	}
 }

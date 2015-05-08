@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.widget.TextView;
 
 import com.model.Altitude;
@@ -306,6 +307,5 @@ public class Aircraft {
 	
 	public Bitmap getIcon(){
 		return AC_Icon;
-	}
-	    
+	}	    
 }
