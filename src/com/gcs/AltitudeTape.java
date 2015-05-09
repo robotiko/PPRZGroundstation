@@ -99,9 +99,10 @@ public class AltitudeTape extends Fragment {
             case DragEvent.ACTION_DRAG_STARTED:
             	Log.d("Drag","Drag started!!");
                 break;
-            case DragEvent.ACTION_DRAG_LOCATION :	
+            case DragEvent.ACTION_DRAG_LOCATION :
+            	float y_loc = event.getY();
+            	Log.d("Current y-location",String.valueOf(y_loc));
             	//send y location of the label to the dragshadow
-//            	Log.d("Drag","loc!!");
                 break;
             case DragEvent.ACTION_DRAG_ENDED:
             	Log.d("Drag","Dropped!!");
