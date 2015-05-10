@@ -28,6 +28,7 @@ public class Aircraft {
 	
 	private int communicationSignal   = 0;
 	private final int AltitudeLabelId = TextView.generateViewId();
+	private final int targetLabelId   = TextView.generateViewId();
 	
 	/* TODO Implement the setting of the attributes in the service connection */
 	
@@ -205,5 +206,9 @@ public class Aircraft {
     
     public int getAltLabelId(){
     	return AltitudeLabelId;
-    }    
+    }
+    
+    public int GetTargetLabelId(){
+    	return targetLabelId;
+    }
 }

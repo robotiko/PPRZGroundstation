@@ -10,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.DragShadowBuilder;
 import android.view.DragEvent;
-import android.view.View.OnDragListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -22,6 +21,13 @@ public class AltitudeTape extends Fragment {
 	private View rootView;
 	
 	private boolean labelCreated = false;
+	private boolean targetCreated = false;
+	
+	/* TODO Determine altitude label location based on the height of the bar and the the dynamic vertical range of the drones (flight ceiling - ground level) */
+	private int groundLevelTape   = 848; //0 meter
+	private int flightCeilingTape = 35; //20 m
+	private double flightCeiling  = 20; //[m]
+	private double MSA 			  = 0;//[m]
 	
 	@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -99,8 +105,7 @@ public class AltitudeTape extends Fragment {
             case DragEvent.ACTION_DRAG_STARTED:
                 break;
             case DragEvent.ACTION_DRAG_LOCATION :
-            	//send y location of the label to the dragshadow
-            	showDragShadow(event.getY());
+            	Log.d("Current y-location",String.valueOf(event.getY()));
                 break;
             case DragEvent.ACTION_DROP:
             	//Send the drop location to the method that implements the command
@@ -113,20 +118,14 @@ public class AltitudeTape extends Fragment {
         }
     }
 	
+    //Method to draw aircraft labels on the altitude tape
 	public void setLabel(double altitude, int labelId){
-
-		/* TODO Determine altitude label location based on the height of the bar and the the vertical range of the drones (flight ceiling - ground level) */
-		int groundLevel = 848; //0 meter
-		int flightCeiling = 35; //20 m
-		
-		int lengthBar = groundLevel - flightCeiling;
-		int labelLocation = (int) (groundLevel-((altitude/20)*lengthBar));
 		
 		/* TODO change the horizontal location of the altitude labels and flip them around */
 		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(80, 60);
         params.leftMargin = 50;
-        params.topMargin = labelLocation;
-             
+        params.topMargin = altitudeToLabelLocation(altitude);
+
         TextView label;
 		if(!labelCreated){
 	        label = new TextView(getActivity());
@@ -150,17 +149,58 @@ public class AltitudeTape extends Fragment {
 		}
 	}
 	
-	private void showDragShadow(float y_loc) {
-		Log.d("Current y-location",String.valueOf(y_loc));
+	//Method to draw the target altitude on the altitude tape
+	public void setTargetLabel(double targetAltitude, int targetLabelId) {
+		
+		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(80, 50);
+        params.leftMargin = 50;
+        params.topMargin = altitudeToLabelLocation(targetAltitude);
+
+		View target;
+		if(!targetCreated) {
+			target = new View(getActivity());
+			target.setBackgroundResource(R.drawable.altitude_label_small_red);
+			target.setId(targetLabelId);
+			relativelayout.addView(target,params);
+			targetCreated = true;
+		} else {
+			target = (View) getView().findViewById(targetLabelId);
+			relativelayout.updateViewLayout(target,params);
+		}
 	}
 	
+	//Convert altitude to a label location on the tape
+	private int altitudeToLabelLocation(double altitude) {
+		
+		int lengthBar = groundLevelTape - flightCeilingTape;
+		double verticalRange = flightCeiling - MSA; 	
+		int labelLocation = (int) (groundLevelTape-((altitude/verticalRange)*lengthBar));
+		
+		return labelLocation;
+	}
+	
+	//Convert label location on the tape to an altitude 
+	private double labelLocationToAltitude(float labelLocation) {
+		
+		int lengthBar = groundLevelTape - flightCeilingTape;
+		double verticalRange = flightCeiling - MSA;
+		double altitude = verticalRange*((double) groundLevelTape-labelLocation)/lengthBar;
+		
+		return altitude;
+	}
+
+	//Set the target altitude to the service
 	private void setTargetAltitude(float dropLocation) {
 		
-		Log.d("Drag","Dropped at:"+String.valueOf(dropLocation));
-		/* TODO use the set function of the service to set the target altitude */
+		double dropAltitude = labelLocationToAltitude(dropLocation);
+
+		if (dropAltitude < MSA) {
+			dropAltitude = MSA;
+		} else if (dropAltitude > flightCeiling) {
+			dropAltitude = flightCeiling;
+		}
 		
-		//1. Input to this method is the drop location of the dragged label.
-		//2. Determine the corresponding altitude based on the flightceiling/groundlevel and droplocation
-		//3. Set the target altitude in the service
+		/* TODO Set the target altitude to the service once this function is available */
+//		setTargetLabel(dropAltitude, 10); //Temporary setfunction to show a label
 	}
 }
