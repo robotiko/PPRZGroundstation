@@ -1,4 +1,4 @@
-package com.gcs;
+package com.gcs.core;
 
 import com.model.State;
 

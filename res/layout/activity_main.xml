@@ -12,7 +12,7 @@
 
     <fragment
         android:id="@+id/telemetryFragment"
-        android:name="com.gcs.TelemetryFragment"
+        android:name="com.gcs.fragments.TelemetryFragment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -22,7 +22,7 @@
     
     <fragment
         android:id="@+id/batteryFragment"
-        android:name="com.gcs.BatteryFragment"
+        android:name="com.gcs.fragments.BatteryFragment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -32,7 +32,7 @@
     
     <fragment
         android:id="@+id/connectionFragment"
-        android:name="com.gcs.ConnectionFragment"
+        android:name="com.gcs.fragments.ConnectionFragment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -41,7 +41,7 @@
     
     <fragment
         android:id="@+id/altitudeTapeFragment"
-        android:name="com.gcs.AltitudeTape"
+        android:name="com.gcs.fragments.AltitudeTape"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"

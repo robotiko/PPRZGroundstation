@@ -1,5 +1,7 @@
-package com.gcs;
+package com.gcs.core;
 
+
+import com.gcs.R;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;

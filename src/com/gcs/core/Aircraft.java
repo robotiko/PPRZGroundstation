@@ -1,4 +1,4 @@
-package com.gcs;
+package com.gcs.core;
 
 import android.content.Context;
 import android.graphics.Bitmap;

@@ -1,4 +1,6 @@
-package com.gcs;
+package com.gcs.fragments;
+
+import com.gcs.R;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;

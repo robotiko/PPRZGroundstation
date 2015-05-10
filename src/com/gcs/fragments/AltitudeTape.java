@@ -1,4 +1,6 @@
-package com.gcs;
+package com.gcs.fragments;
+
+import com.gcs.R;
 
 import android.content.ClipData;
 import android.graphics.Typeface;
