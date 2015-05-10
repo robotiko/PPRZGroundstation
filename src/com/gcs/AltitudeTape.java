@@ -5,6 +5,7 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.DragShadowBuilder;
@@ -72,7 +73,6 @@ public class AltitudeTape extends Fragment {
 			@Override
 			public boolean onLongClick(View v) {
 				
-//				ClipData.Item item = new ClipData.Item((CharSequence)v.getTag());
 	            ClipData data = ClipData.newPlainText("","");
 	            View.DragShadowBuilder myShadow = new DragShadowBuilder(tv);
 	            /* TODO improve the dragshadow */
@@ -85,28 +85,27 @@ public class AltitudeTape extends Fragment {
 	                        null,      	// no need to use local data
 	                        0          	// flags (not currently used, set to 0)
 	            );
-//	            tv.setOnDragListener(onLabelDrag(tv));
 				return true;
 			}
 		};
 		
 	}
 
-    class MyDragListener implements OnDragListener {
+    class MyDragListener implements View.OnDragListener {
 
         public boolean onDrag(View v, DragEvent event) {
+        	v = rootView;
             switch (event.getAction()) {
             case DragEvent.ACTION_DRAG_STARTED:
-            	Log.d("Drag","Drag started!!");
                 break;
             case DragEvent.ACTION_DRAG_LOCATION :
-            	float y_loc = event.getY();
-            	Log.d("Current y-location",String.valueOf(y_loc));
             	//send y location of the label to the dragshadow
+            	showDragShadow(event.getY());
                 break;
-            case DragEvent.ACTION_DRAG_ENDED:
-            	Log.d("Drag","Dropped!!");
-                break;
+            case DragEvent.ACTION_DROP:
+            	//Send the drop location to the method that implements the command
+            	setTargetAltitude(event.getY());
+            	break;
             default:
                 break;
             }
@@ -115,17 +114,16 @@ public class AltitudeTape extends Fragment {
     }
 	
 	public void setLabel(double altitude, int labelId){
-		
+
 		/* TODO Determine altitude label location based on the height of the bar and the the vertical range of the drones (flight ceiling - ground level) */
-		
-		int groundLevel = 783; //0 meter
-		int flightCeiling = -30; //20 m
+		int groundLevel = 848; //0 meter
+		int flightCeiling = 35; //20 m
 		
 		int lengthBar = groundLevel - flightCeiling;
 		int labelLocation = (int) (groundLevel-((altitude/20)*lengthBar));
 		
 		/* TODO change the horizontal location of the altitude labels and flip them around */
-		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(80, 100);
+		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(80, 60);
         params.leftMargin = 50;
         params.topMargin = labelLocation;
              
@@ -140,9 +138,10 @@ public class AltitudeTape extends Fragment {
 	        String labelCharacter = String.valueOf((char)(64+labelId));
 	        label.setText("      "+ labelCharacter);
 	        label.setTypeface(null, Typeface.BOLD);
+	        label.setGravity(Gravity.CENTER_VERTICAL);
 	        label.setOnClickListener(onLabelClick(label));
 	        label.setOnLongClickListener(onLabelLongClick(label));
-	        label.setOnDragListener(new MyDragListener());
+	        rootView.setOnDragListener(new MyDragListener());
 	        relativelayout.addView(label,params);
 	        labelCreated = true;
 		} else {
@@ -151,7 +150,13 @@ public class AltitudeTape extends Fragment {
 		}
 	}
 	
-	private void setTargetAltitude(int dropLocation) {
+	private void showDragShadow(float y_loc) {
+		Log.d("Current y-location",String.valueOf(y_loc));
+	}
+	
+	private void setTargetAltitude(float dropLocation) {
+		
+		Log.d("Drag","Dropped at:"+String.valueOf(dropLocation));
 		/* TODO use the set function of the service to set the target altitude */
 		
 		//1. Input to this method is the drop location of the dragged label.

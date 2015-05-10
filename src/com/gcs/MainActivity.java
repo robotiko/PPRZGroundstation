@@ -185,12 +185,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		}
 	    		
 	    		case "BATTERY_UPDATED": {
-//	    			updateBattery();
+//	    			updateBattery(); /* TODO fix the battery update in service */
 	    			break;
 	    		}
 	    		
 	    		case "POSITION_UPDATED": {
-//	    			updatePosition();
+//	    			updatePosition(); /* TODO fix the position update in service */
 	    			break;
 	    		}
 	    		
@@ -354,7 +354,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					Battery mBattery = getAttribute("BATTERY");
-					aircraft.setBatteryState(mBattery.getBattVolt(),mBattery.getBattLevel(),mBattery.getBattCurrent());
+//					aircraft.setBatteryState(mBattery.getBattVolt(), mBattery.getBattLevel(), mBattery.getBattCurrent());
 					batteryFragment.setText(String.format("%.2f", mBattery.getBattVolt()));
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the battery information", t);
