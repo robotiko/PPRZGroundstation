@@ -203,6 +203,7 @@ public class AltitudeTape extends Fragment {
 		
 		double dropAltitude = labelLocationToAltitude(dropLocation);
 
+		//If the label is dropped outside the altitude tape, set the target altitude at the bounds.
 		if (dropAltitude < MSA) {
 			dropAltitude = MSA;
 		} else if (dropAltitude > flightCeiling) {
