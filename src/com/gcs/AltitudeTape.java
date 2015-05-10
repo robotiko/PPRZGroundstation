@@ -152,6 +152,7 @@ public class AltitudeTape extends Fragment {
 	//Method to draw the target altitude on the altitude tape
 	public void setTargetLabel(double targetAltitude, int targetLabelId) {
 		
+		/* TODO make a better indicating icon/bug for the target altitude */
 		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(80, 50);
         params.leftMargin = 50;
         params.topMargin = altitudeToLabelLocation(targetAltitude);
@@ -161,12 +162,20 @@ public class AltitudeTape extends Fragment {
 			target = new View(getActivity());
 			target.setBackgroundResource(R.drawable.altitude_label_small_red);
 			target.setId(targetLabelId);
+			target.setVisibility(View.VISIBLE);
 			relativelayout.addView(target,params);
 			targetCreated = true;
 		} else {
 			target = (View) getView().findViewById(targetLabelId);
+			target.setVisibility(View.VISIBLE);
 			relativelayout.updateViewLayout(target,params);
 		}
+	}
+	
+	//Method to remove the target label from the altitude tape
+	public void deleteTargetLabel(int targetLabelId) {
+		View targetLabel = (View) getView().findViewById(targetLabelId);
+		targetLabel.setVisibility(View.GONE);
 	}
 	
 	//Convert altitude to a label location on the tape

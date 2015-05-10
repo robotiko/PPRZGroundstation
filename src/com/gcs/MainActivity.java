@@ -319,7 +319,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					aircraft.setTargetAltitude(mAltitude.getTargetAltitude());
 					
 					//Set the location of the label on the altitude tape
-					altitudeTapeFragment.setTargetLabel(mAltitude.getTargetAltitude(), aircraft.GetTargetLabelId());
+					if (Math.abs(mAltitude.getTargetAltitude()-mAltitude.getAltitude()) > 0.001){
+						altitudeTapeFragment.setTargetLabel(mAltitude.getTargetAltitude(), aircraft.GetTargetLabelId());
+					} else {
+						altitudeTapeFragment.deleteTargetLabel(aircraft.GetTargetLabelId());
+					}
 					altitudeTapeFragment.setLabel(mAltitude.getAltitude(),aircraft.getAltLabelId());
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the altitude", t);
