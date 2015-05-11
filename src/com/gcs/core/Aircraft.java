@@ -196,9 +196,13 @@ public class Aircraft {
     	mIcon.generateIcon(isOnUniqueAltitude(), isInConflict(), (float) mAttitude.getYaw(), getBattLevel(), communicationSignal, context.getResources());
     }
     
-    public Bitmap getIcon(){
+    public Bitmap getIcon() {
 		return mIcon.getIcon();
-	}	
+	}
+    
+    public float getIconScalingFactor() {
+    	return mIcon.getIconScalingFactor();
+    }
 	
     //Set and get functions for class attributes
     public int getCommunicationSignal(){

@@ -11,17 +11,20 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 public class Icon {
 	
 	private Bitmap AC_Icon;
 	
+	private float scalingFactor = 1.0f;
+	
+	/* TODO make the size of the icon dynamic */
+	private int dimensions = 200;
+	
 	public void generateIcon(boolean isOnUniqueAltitude, boolean isInConflict, float heading, int batLevel, int communicationSignal, Resources res){
 		
 		Bitmap baseIcon, batteryIcon, communicationIcon;
-		
-		/* TODO make the size of the icon dynamic */
-		int dimensions = 200;
 		
 		//Get the base icon (conflictStatus:red, blue, gray)
 		if(isOnUniqueAltitude){
@@ -126,6 +129,8 @@ public class Icon {
 //    	int offSet = center-100;
 //    	icon.setBounds(offSet, offSet, offSet+200, offSet+200);
 //    	icon.draw(c);
+    	
+    	setScalingFactor(mutableBitmap.getWidth());
 
     	//(int left, int top, int right, int bottom)
         //Add battery icon to the base icon
@@ -142,8 +147,18 @@ public class Icon {
 
         return mutableBitmap;
     }
+    
+    private void setScalingFactor(int widthActual) {
+//    	Log.d("Actual width",String.valueOf(((float)widthActual)/dimensions));
+
+    	scalingFactor = ((float)widthActual)/dimensions;
+    }
 	
 	public Bitmap getIcon(){
 		return AC_Icon;
-	}	    
+	}
+	
+	public float getIconScalingFactor() {
+		return scalingFactor;
+	}
 }

@@ -20,6 +20,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.GroundOverlay;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -62,6 +64,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	Aircraft aircraft;
 	Marker droneMarker;
+	GroundOverlay mapOverlay;
+	
+	private float protectedZoneDiameter; //= (float) getResources().getInteger(R.integer.ProtectedZoneDiameter);
 	  
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +93,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Get the map and register for the ready callback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        
+        protectedZoneDiameter = (float) getResources().getInteger(R.integer.ProtectedZoneDiameter);
 	}
 	
 	/* TODO Make a course extrapolation class to determine the conflictStatus of a drone */
@@ -542,7 +549,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		//Generate an icon
 		aircraft.generateIcon();
 		final BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(aircraft.getIcon());
-		final LatLng DELFT = new LatLng(aircraft.getLat()*1e-7, aircraft.getLon()*1e-7);
+		final LatLng aircraftLocation = new LatLng(aircraft.getLat()*1e-7, aircraft.getLon()*1e-7);
 		
 		//Call GoogleMaps
 		SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -550,20 +557,40 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapReady(GoogleMap map) {
 
-            	//Clear marker from map (if it exists)
-            	if(droneMarker != null){
-            		droneMarker.remove();
+            	///////* Map overlay for display of aircraft icon on map *///////
+            	
+            	//Clear ground overlay from map (if it exists)
+            	if(mapOverlay != null) {
+            		mapOverlay.remove();
             	}
             	
-            	//Add marker to map
-            	droneMarker = map.addMarker(new MarkerOptions()
-                .position(DELFT)
-                .anchor((float) 0.5, (float) 0.5)
-                .flat(true)
-                .title("ICON")
-                .draggable(false)
-                .icon(icon)
-            	);	
+            	//Add groundoverlay to map (size changes with zooming)
+            	float imageSize = protectedZoneDiameter*aircraft.getIconScalingFactor();
+            	
+            	mapOverlay = map.addGroundOverlay(new GroundOverlayOptions()
+            	.image(icon)
+            	.position(aircraftLocation, imageSize, imageSize) // width and height in m
+            	);
+            	
+            	
+            	///////* Marker for display of waypoints on map *///////
+            	
+            	/* TODO Change dronemarker to waypoint markers */
+//            	//Clear marker from map (if it exists)
+//            	if(droneMarker != null) {
+//            		droneMarker.remove();
+//            	}
+//            	            	
+//            	//Add marker to map (size remains constant with zooming)
+//            	droneMarker = map.addMarker(new MarkerOptions()
+//                .position(DELFT)
+//                .anchor((float) 0.5, (float) 0.5)
+//                .flat(true)
+//                .title("ICON")
+//                .draggable(false)
+//                .icon(icon)
+//            	);	
+
             }
         });  
 	}

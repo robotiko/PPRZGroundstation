@@ -10,4 +10,7 @@
     <integer name="LowCommunicationSignal">30</integer>
     <integer name="NoCommunicationSignal">0</integer>
     
+    <!-- Protected zone diameter in meters-->
+    <integer name="ProtectedZoneDiameter">30</integer>
+    
 </resources>
