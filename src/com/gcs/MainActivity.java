@@ -189,12 +189,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		}
 	    		
 	    		case "BATTERY_UPDATED": {
-//	    			updateBattery(); /* TODO fix the battery update in service */
+	    			updateBattery();
 	    			break;
 	    		}
 	    		
 	    		case "POSITION_UPDATED": {
-//	    			updatePosition(); /* TODO fix the position update in service */
+	    			updatePosition(); /* TODO fix the position update in service */
 	    			break;
 	    		}
 	    		
@@ -363,8 +363,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					Battery mBattery = getAttribute("BATTERY");
-//					aircraft.setBatteryState(mBattery.getBattVolt(), mBattery.getBattLevel(), mBattery.getBattCurrent());
-					batteryFragment.setText(String.format("%.2f", mBattery.getBattVolt()));
+					aircraft.setBatteryState(mBattery.getBattVolt(), mBattery.getBattLevel(), mBattery.getBattCurrent());
+					batteryFragment.setText(String.valueOf(mBattery.getBattVolt()));
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the battery information", t);
 				}
@@ -447,7 +447,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             	
             case "ATTITUDE":
             	return (T) new Attitude();
-                
+            	
+            case "BATTERY":
+            	return (T) new Battery();
+            	
+            case "POSITION":
+            	return (T) new Position();
+            	
+            case "STATE":
+            	return (T) new State();
+            	
             default:
             	return null;
         }
@@ -466,6 +475,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 				
 			case "ATTITUDE":
 				return Attitude.class.getClassLoader();
+
+			case "BATTERY":
+				return Battery.class.getClassLoader();
+				
+			case "POSITION":
+				return Position.class.getClassLoader();
+
+			case "STATE":
+				return State.class.getClassLoader();			
 
 			default:
 				return null;
@@ -502,11 +520,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		//Generate an icon
 		aircraft.generateIcon();
 		final BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(aircraft.getIcon());
-		final LatLng DELFT = new LatLng(51.991794, 4.375259);
-		
-		/* TODO make location on map dynamic */
-//		final LatLng DELFT = new LatLng(aircraft.getLat()*1e-7, aircraft.getLon()*1e-7);
-//		Log.d("Lat",String.valueOf(aircraft.getLat()));
+		final LatLng DELFT = new LatLng(aircraft.getLat()*1e-7, aircraft.getLon()*1e-7);
 		
 		//Call GoogleMaps
 		SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.widget.TextView;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.model.Altitude;
 import com.model.Attitude;
 import com.model.Battery;
@@ -25,12 +26,11 @@ public class Aircraft {
 	private CustomState mState    = new CustomState(); 
 	private Position    mPosition = new Position();
 	private Icon		mIcon     = new Icon();
+	/* TODO implement waypoints */
 	
 	private int communicationSignal   = 0;
 	private final int AltitudeLabelId = TextView.generateViewId();
 	private final int targetLabelId   = TextView.generateViewId();
-	
-	/* TODO Implement the setting of the attributes in the service connection */
 	
 	//Set and get functions for attitude
 	public void setRollPitchYaw(double roll, double pitch, double yaw) {
@@ -168,6 +168,11 @@ public class Aircraft {
 	
 	public int getLon() {
 		return mPosition.getLon();
+	}
+	
+	public LatLng getLatLon() {
+		LatLng latLon = new LatLng(mPosition.getLat(), mPosition.getLon());
+		return latLon;
 	}
 	
 	public int getAlt() {
