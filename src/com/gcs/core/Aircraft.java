@@ -170,9 +170,9 @@ public class Aircraft {
 		return mPosition.getLon();
 	}
 	
-	public LatLng getLatLon() {
-		LatLng latLon = new LatLng(mPosition.getLat(), mPosition.getLon());
-		return latLon;
+	public LatLng getLatLng() {
+		LatLng latLng = new LatLng(mPosition.getLat()*1e-7, mPosition.getLon()*1e-7);
+		return latLng;
 	}
 	
 	public int getAlt() {

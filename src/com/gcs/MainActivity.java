@@ -17,6 +17,7 @@ import com.gcs.fragments.TelemetryFragment;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -47,7 +48,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-public class MainActivity extends FragmentActivity implements OnMapReadyCallback, OnMapClickListener {
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback, OnMapClickListener, OnMarkerClickListener {
 	
 	private static final String TAG = MainActivity.class.getSimpleName();
 	
@@ -58,13 +59,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	private Button connectButton;
 	private boolean isConnected;
+	private boolean isAircraftIconSelected = false;
+	private boolean isInfowindowVisible = false;
 
 	private TelemetryFragment telemetryFragment;
 	private BatteryFragment batteryFragment;
 	private AltitudeTape altitudeTapeFragment;
 	
 	Aircraft aircraft;
-	Marker droneMarker;
+	Marker droneMarker, infoWindow;
 	GroundOverlay mapOverlay;
 	
 	private float protectedZoneDiameter; //= (float) getResources().getInteger(R.integer.ProtectedZoneDiameter);
@@ -547,6 +550,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		
 		//Enable clicklistener on the map
 		map.setOnMapClickListener(this);
+		
+		//Enable clicklistener on markers
+		map.setOnMarkerClickListener(this);
 	}
 	
 	/* Map listener for clicks (might be changed to OnMapLongClickListener) */
@@ -559,8 +565,59 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		 
 		//If the clicklocation is within the protected zone, excecute the following code
 		if(distance[0] <= protectedZoneDiameter/2) {
-			Log.d("distance",String.valueOf(distance[0]));
+			/* TODO implement actions for clicked aircraft icons */
+			
+			/* Show or remove the info window (note that an additional onmarkerlistener is used because 
+			 * an extra (hidden) marker is used for the info window, which can also be clicked */
+			if(isAircraftIconSelected) {
+				setInfoWindow();
+				isAircraftIconSelected = false;
+			} else {
+				setInfoWindow();
+				isAircraftIconSelected = true;
+			}
 		}
+	}
+	
+	/* Marker listener */
+	@Override
+    public boolean onMarkerClick(final Marker marker) {
+		
+		//If the infowindow marker is clicked, remove it
+		if(marker.equals(infoWindow)) {
+			infoWindow.remove();
+			isInfowindowVisible = false;
+		}
+		return true;
+	}
+	
+	/* Set the information window for an aircraft icon */
+	private void setInfoWindow() {
+
+		//Call GoogleMaps
+		SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+		mapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap map) {
+            	
+            	if(!isInfowindowVisible) {
+          	 
+	            	infoWindow = map.addMarker(new MarkerOptions()
+	            	.position(aircraft.getLatLng())
+	                .alpha(0)
+	                .draggable(true)
+//	                .infoWindowAnchor(0.5f,0.5f)  //Determine the location of the info window
+	                .title("LABEL")
+	                .snippet("AIRCRAFT INFORMATION HERE"));
+            			
+	            	infoWindow.showInfoWindow();
+	            	isInfowindowVisible = true;
+            	} else {
+            		infoWindow.remove();
+            		isInfowindowVisible = false;
+            	}
+            }
+		}); 
 	}
 	
 	/* Update the objects that are displayed on the map */
@@ -587,6 +644,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             	//Add groundoverlay to map (size changes with zooming)
             	float imageSize = protectedZoneDiameter*aircraft.getIconScalingFactor();
             	
+            	/* TODO use setZIndex to make sure the aircraft icons are drawn on top of polylines for flight plan (largest number goes on top)*/
             	mapOverlay = map.addGroundOverlay(new GroundOverlayOptions()
             	.image(icon)
             	.position(aircraftLocation, imageSize, imageSize) // width and height in m
