@@ -23,7 +23,14 @@ public class BatteryFragment extends Fragment {
 	    textView.setText(item);
 	}
 	
-	public void setBackground(Color color) {
+	public void setBackground(String colorString) {
 		// TODO: Dynamically change the background color
+		int color = Color.parseColor(colorString);
+		
+		TextView valueField = (TextView) getView().findViewById(R.id.batteryValue);
+		valueField.setBackgroundColor(color);
+		
+		TextView unitField = (TextView) getView().findViewById(R.id.batteryUnitLabel);
+		unitField.setBackgroundColor(color);
 	}
 }

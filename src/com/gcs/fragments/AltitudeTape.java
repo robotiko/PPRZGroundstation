@@ -83,8 +83,7 @@ public class AltitudeTape extends Fragment {
 				
 	            ClipData data = ClipData.newPlainText("","");
 	            View.DragShadowBuilder myShadow = new DragShadowBuilder(tv);
-	            /* TODO improve the dragshadow */
-	            /* TODO only allow vertical dragging: http://stackoverflow.com/questions/20307246/how-do-i-restrict-drag-and-drop-along-the-y-axis-only-in-android */
+	            /* TODO Hide dragshadow and show custom indicator on altitude tape */
 	            /* TODO Offset the label that is dragged to be able to see it */
 	            
 	            // Starts the drag

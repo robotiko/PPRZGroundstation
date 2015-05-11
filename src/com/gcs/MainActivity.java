@@ -42,6 +42,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
 	
@@ -153,7 +154,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private IEventListener.Stub listener = new IEventListener.Stub() {
     	@Override
 		public void onConnectionFailed() {
-    		/* TODO: Handle connection failure */
+    		Toast.makeText(getApplicationContext(), "Connection Failed!", Toast.LENGTH_SHORT).show();
     	}
     	
     	@Override
@@ -194,7 +195,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		}
 	    		
 	    		case "POSITION_UPDATED": {
-	    			updatePosition(); /* TODO fix the position update in service */
+	    			updatePosition();
 	    			break;
 	    		}
 	    		
@@ -202,9 +203,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    			break;
 	    		}
 
-	    		/* Enable the state service case once available */
+	    		/* TODO Enable the state service case once available */
 //	    		case "STATE_UPDATED": {
 //	    			updateState();
+//	    			break;
+//	    		}
+	    		
+	    		/* TODO Enable the waypoint service case once available */
+//	    		case "WAYPOINT_UPDATED": {
+//	    			updateWaypoint();
 //	    			break;
 //	    		}
 	    		
@@ -380,11 +387,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			@Override
 			public void run() {
 				try {
-					Position mPosition = getAttribute("POSITION"); //TODO check is POSITION is the correct tag
+					Position mPosition = getAttribute("POSITION");
 					aircraft.setSatVisible(mPosition.getSatVisible());
 					aircraft.setLlaHdg(mPosition.getLat(),mPosition.getLon(),mPosition.getAlt(),(short) mPosition.getHdg());
 					//TODO check if heading should be an int or short (and make changes accordingly)
-					Log.d("TEST","Position updated");
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating position", t);
 				}
@@ -400,11 +406,27 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			@Override
 			public void run() {
 				try {
-					State mState = getAttribute("STATE"); //TODO check is STATE is the correct tag
+					State mState = getAttribute("STATE");
 					aircraft.setIsFlying(mState.isFlying());
 					aircraft.setArmed(mState.isArmed());
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating state", t);
+				}
+			}
+		});
+	}
+	
+	/**
+	 * This runnable object is created to update waypoints
+	 */
+	private void updateWaypoint() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					/* TODO finish the setting of received waypoint data from service */
+				} catch (Throwable t) {
+					Log.e(TAG, "Error while updating waypoint", t);
 				}
 			}
 		});
