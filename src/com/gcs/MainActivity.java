@@ -16,6 +16,7 @@ import com.gcs.fragments.BatteryFragment;
 import com.gcs.fragments.TelemetryFragment;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -46,7 +47,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback, OnMapClickListener {
 	
 	private static final String TAG = MainActivity.class.getSimpleName();
 	
@@ -521,6 +522,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 	/////////////////////////MAPS/////////////////////////
 	
+	/* First time the map is ready, set options */
 	@Override
 	public void onMapReady(GoogleMap map) {
 				
@@ -536,14 +538,32 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		LatLng currentLocation =  new LatLng(myLocation.getLatitude(),myLocation.getLongitude());
 		map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 18.0f));
 		
-		//Disable rotation adn tilt gestures
+		//Disable rotation and tilt gestures
 		map.getUiSettings().setRotateGesturesEnabled(false);
 		map.getUiSettings().setTiltGesturesEnabled(false);
 		
 		//Show my location button
 		map.getUiSettings().setMyLocationButtonEnabled(true);
+		
+		//Enable clicklistener on the map
+		map.setOnMapClickListener(this);
 	}
 	
+	/* Map listener for clicks (might be changed to OnMapLongClickListener) */
+	@Override
+	public void onMapClick(LatLng point) {
+		 
+		//Calculate the distance from clicklocation to the aircraft location
+		float[] distance = new float[1];
+		Location.distanceBetween(aircraft.getLat()*1e-7,aircraft.getLon()*1e-7,point.latitude,point.longitude,distance);
+		 
+		//If the clicklocation is within the protected zone, excecute the following code
+		if(distance[0] <= protectedZoneDiameter/2) {
+			Log.d("distance",String.valueOf(distance[0]));
+		}
+	}
+	
+	/* Update the objects that are displayed on the map */
 	public void updateMap(){
 		
 		//Generate an icon
@@ -571,8 +591,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             	.image(icon)
             	.position(aircraftLocation, imageSize, imageSize) // width and height in m
             	);
-            	
-            	
+
             	///////* Marker for display of waypoints on map *///////
             	
             	/* TODO Change dronemarker to waypoint markers */
