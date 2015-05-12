@@ -349,6 +349,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					aircraft.setAltitude(mAltitude.getAltitude());
 					aircraft.setTargetAltitude(mAltitude.getTargetAltitude());
 					
+					telemetryFragment.setText(String.valueOf(mAltitude.getAltitude()));
+					
 					//Set the location of the label on the altitude tape
 					if (Math.abs(mAltitude.getTargetAltitude()-mAltitude.getAltitude()) > 0.001){
 						altitudeTapeFragment.setTargetLabel(mAltitude.getTargetAltitude(), aircraft.GetTargetLabelId());
