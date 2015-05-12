@@ -97,7 +97,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Get the map and register for the ready callback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        
+
         protectedZoneDiameter = (float) getResources().getInteger(R.integer.ProtectedZoneDiameter);
 	}
 	
@@ -320,7 +320,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					Attitude mAttitude = getAttribute("ATTITUDE");
 					aircraft.setRollPitchYaw(mAttitude.getRoll(), mAttitude.getPitch(), Math.toDegrees(mAttitude.getYaw()));
 
+					/* TODO move map update to the heartbeat updates (make sure info window move correctly with aircraft icon) */
 					updateMap();
+					
+					//Make sure the information window moves with the aircraft icon
+					if(isInfowindowVisible) {
+						setInfoWindow();
+					}
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the attitude", t);
 				}
@@ -402,6 +408,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					aircraft.setSatVisible(mPosition.getSatVisible());
 					aircraft.setLlaHdg(mPosition.getLat(),mPosition.getLon(),mPosition.getAlt(),(short) mPosition.getHdg());
 					//TODO check if heading should be an int or short (and make changes accordingly)
+					
+					//Make sure the information window moves with the aircraft icon
+//					if(isInfowindowVisible) {
+//						setInfoWindow();
+//					}
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating position", t);
 				}
@@ -570,10 +581,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			/* Show or remove the info window (note that an additional onmarkerlistener is used because 
 			 * an extra (hidden) marker is used for the info window, which can also be clicked */
 			if(isAircraftIconSelected) {
-				setInfoWindow();
+//				setInfoWindow();
+				removeInfoWindow();
 				isAircraftIconSelected = false;
 			} else {
 				setInfoWindow();
+				isInfowindowVisible = true;
 				isAircraftIconSelected = true;
 			}
 		}
@@ -600,8 +613,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapReady(GoogleMap map) {
             	
-            	if(!isInfowindowVisible) {
-          	 
 	            	infoWindow = map.addMarker(new MarkerOptions()
 	            	.position(aircraft.getLatLng())
 	                .alpha(0)
@@ -609,15 +620,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //	                .infoWindowAnchor(0.5f,0.5f)  //Determine the location of the info window
 	                .title("LABEL")
 	                .snippet("AIRCRAFT INFORMATION HERE"));
+	            	/* TODO add to infowindow: airtime, distance from home, #sats */
             			
 	            	infoWindow.showInfoWindow();
-	            	isInfowindowVisible = true;
-            	} else {
-            		infoWindow.remove();
-            		isInfowindowVisible = false;
-            	}
             }
 		}); 
+	}
+	
+	private void removeInfoWindow() {
+		infoWindow.remove();
+		isInfowindowVisible = false;
 	}
 	
 	/* Update the objects that are displayed on the map */
