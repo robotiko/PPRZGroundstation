@@ -175,6 +175,7 @@ public class Aircraft {
 		return latLng;
 	}
 	
+	/* Remove either this function of getAltitude() */
 	public int getAlt() {
 		return mPosition.getAlt();
 	}
