@@ -16,6 +16,7 @@ import com.gcs.fragments.BatteryFragment;
 import com.gcs.fragments.TelemetryFragment;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -60,7 +61,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private Button connectButton;
 	private boolean isConnected;
 	private boolean isAircraftIconSelected = false;
-	private boolean isInfowindowVisible = false;
 
 	private TelemetryFragment telemetryFragment;
 	private BatteryFragment batteryFragment;
@@ -324,7 +324,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					updateMap();
 					
 					//Make sure the information window moves with the aircraft icon
-					if(isInfowindowVisible) {
+					if(isAircraftIconSelected) {
+						Log.d("info visible","yes");
 						setInfoWindow();
 					}
 				} catch (Throwable t) {
@@ -408,11 +409,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					aircraft.setSatVisible(mPosition.getSatVisible());
 					aircraft.setLlaHdg(mPosition.getLat(),mPosition.getLon(),mPosition.getAlt(),(short) mPosition.getHdg());
 					//TODO check if heading should be an int or short (and make changes accordingly)
-					
-					//Make sure the information window moves with the aircraft icon
-//					if(isInfowindowVisible) {
-//						setInfoWindow();
-//					}
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating position", t);
 				}
@@ -564,6 +560,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		
 		//Enable clicklistener on markers
 		map.setOnMarkerClickListener(this);
+		
+//		map.setInfoWindowAdapter(new PopupAdapter(getLayoutInflater()));
 	}
 	
 	/* Map listener for clicks (might be changed to OnMapLongClickListener) */
@@ -586,7 +584,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 				isAircraftIconSelected = false;
 			} else {
 				setInfoWindow();
-				isInfowindowVisible = true;
 				isAircraftIconSelected = true;
 			}
 		}
@@ -599,7 +596,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		//If the infowindow marker is clicked, remove it
 		if(marker.equals(infoWindow)) {
 			infoWindow.remove();
-			isInfowindowVisible = false;
+			isAircraftIconSelected = false;
 		}
 		return true;
 	}
@@ -627,9 +624,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		}); 
 	}
 	
+	/* Method to remove the information window of an aircraft icon */
 	private void removeInfoWindow() {
 		infoWindow.remove();
-		isInfowindowVisible = false;
+		isAircraftIconSelected = false;
 	}
 	
 	/* Update the objects that are displayed on the map */
