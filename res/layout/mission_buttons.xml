@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/missionButtonVerticalLayout"
+    android:orientation="horizontal"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center" >
+    <!-- 
+    <RelativeLayout
+        android:id="@+id/connectHorizontalLayout"
+       	android:orientation="horizontal"
+       	android:layout_width="fill_parent"
+    	android:layout_height="fill_parent" 
+    	android:gravity="center" >  -->
+       
+       <Button
+            android:id="@+id/goHomeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onGoHomeRequest"
+            android:layout_marginRight="5dp"
+            android:text="@string/go_home_button" />
+       
+        <Button
+            android:id="@+id/takeOffButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onTakeOffRequest"
+            android:layout_marginRight="5dp"
+            android:text="@string/take_off_button" />
+        
+        <Button
+            android:id="@+id/landButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onLandRequest"
+            android:layout_marginRight="10dp"
+            android:text="@string/land_button" />
+    <!--</RelativeLayout>-->
+
+</LinearLayout>

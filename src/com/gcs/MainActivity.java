@@ -13,6 +13,7 @@ import com.model.State; //TODO change this to com.aidl.core.model.State once ava
 import com.gcs.core.Aircraft;
 import com.gcs.fragments.AltitudeTape;
 import com.gcs.fragments.BatteryFragment;
+import com.gcs.fragments.MissionButtonFragment;
 import com.gcs.fragments.TelemetryFragment;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -58,6 +59,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private Handler handler;
 	
 	IMavLinkServiceClient mServiceClient;
+	MissionButtonFragment missionButtons;
 	Intent intent;
 	
 	private Button connectButton;
@@ -95,6 +97,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		
 		// Create a handle to the altitudeTape fragment
 		altitudeTapeFragment = (AltitudeTape) getSupportFragmentManager().findFragmentById(R.id.altitudeTapeFragment);
+		
+		// Create a handle to the MissionButton fragment
+		missionButtons = (MissionButtonFragment) getSupportFragmentManager().findFragmentById(R.id.missionButtonFragment);
 		
 		// Get the map and register for the ready callback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -533,6 +538,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 				return null;
 		}
 	 }
+	
+	/////////////////////MISSION BUTTONS/////////////////////
+	
+	public void onLandRequest(View v) {
+		
+		missionButtons.onLandRequest(v);
+	}
+	
+	public void onTakeOffRequest(View v) {
+		missionButtons.onTakeOffRequest(v);
+	}
+	
+	public void onGoHomeRequest(View v) {
+		missionButtons.onGoHomeRequest(v);
+	}
 
 	/////////////////////////MAPS/////////////////////////
 	

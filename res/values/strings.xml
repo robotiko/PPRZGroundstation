@@ -12,6 +12,11 @@
     <string name="meter_unit">m</string>
     <string name="volt_unit">V</string>
     
-    <string name="altitude_tape">Altitude Tape</string>    
+    <string name="altitude_tape">Altitude Tape</string>
+    
+    <!-- Mission buttons -->
+    <string name="land_button">Land</string>
+    <string name="take_off_button">Take-Off</string>
+    <string name="go_home_button">Go Home</string>
     
 </resources>
