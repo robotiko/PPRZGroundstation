@@ -197,6 +197,10 @@ public class Aircraft {
     	mIcon.generateIcon(isOnUniqueAltitude(), isInConflict(), (float) mAttitude.getYaw(), getBattLevel(), communicationSignal, context.getResources());
     }
     
+    public void setCircleColor(int color) {
+    	mIcon.setCircleColor(color);
+    }
+    
     public Bitmap getIcon() {
 		return mIcon.getIcon();
 	}

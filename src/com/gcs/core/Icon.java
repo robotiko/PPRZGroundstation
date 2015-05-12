@@ -7,17 +7,18 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 
 public class Icon {
 	
 	private Bitmap AC_Icon;
 	
 	private float scalingFactor = 1.0f;
+	private int circleColor = Color.WHITE;
 	
 	/* TODO make the size of the icon dynamic */
 	private int dimensions = 200;
@@ -93,7 +94,7 @@ public class Icon {
 		
 		/* TODO Make the color of the circle dynamic */
 		Paint paint = new Paint();
-		paint.setColor(res.getInteger(R.color.white));
+		paint.setColor(circleColor);
 		paint.setFlags(Paint.ANTI_ALIAS_FLAG);
 		
 		canvas.drawCircle(dimensions/2, dimensions/2, dimensions/2, paint);
@@ -160,5 +161,9 @@ public class Icon {
 	
 	public float getIconScalingFactor() {
 		return scalingFactor;
+	}
+	
+	public void setCircleColor(int color) {
+		circleColor = color;
 	}
 }

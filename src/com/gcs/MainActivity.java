@@ -35,6 +35,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -637,10 +638,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			if(isAircraftIconSelected) {
 				isAircraftIconSelected = false;
 				infoWindow.remove();
+//				aircraft.setCircleColor(Color.WHITE);
 				Log.d("icon","deselected");
 			} else {
 				isAircraftIconSelected = true;
 				setInfoWindow();
+//				aircraft.setCircleColor(Color.YELLOW);
 				Log.d("icon","selected");
 			}
 		}
@@ -654,6 +657,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		if(marker.equals(infoWindow)) {
 			isAircraftIconSelected = false;
 			infoWindow.remove();
+//			aircraft.setCircleColor(Color.WHITE);
 		}
 		return true;
 	}
@@ -684,6 +688,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	/* Update the objects that are displayed on the map */
 	public void updateMap(){
+		
+		//Determine the color of the aicraft icon depoendent on selection status
+		if(isAircraftIconSelected) {
+			aircraft.setCircleColor(Color.YELLOW);
+		} else {
+			aircraft.setCircleColor(Color.WHITE);
+		}
 		
 		//Generate an icon
 		aircraft.generateIcon();
