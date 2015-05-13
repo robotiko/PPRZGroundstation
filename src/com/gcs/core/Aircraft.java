@@ -222,7 +222,7 @@ public class Aircraft {
     	return AltitudeLabelId;
     }
     
-    public int GetTargetLabelId(){
+    public int getTargetLabelId(){
     	return targetLabelId;
     }
 }
