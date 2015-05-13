@@ -52,7 +52,7 @@ public class Icon {
 		
 		//Get the base icon (conflictStatus:red, blue, gray)
 		if(isOnUniqueAltitude){
-			baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_gray);
+			baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_gray); /* TODO make the gray aircraft icon darker for visibility */
 		} else {
 			if (isInConflict){
 				baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_red);

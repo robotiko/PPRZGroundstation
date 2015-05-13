@@ -261,6 +261,11 @@ public class Aircraft {
 	public float getWpLon(int wpNumber) {
 		return waypoints.get(wpNumber).getLon();
 	}
+	
+	public LatLng getWpLatLng(int wpNumber) {
+		LatLng latLng = new LatLng(waypoints.get(wpNumber).getLat(),waypoints.get(wpNumber).getLon());
+		return latLng;
+	}
     
     public float getWpAlt(int wpNumber) {
 		return waypoints.get(wpNumber).getAlt();

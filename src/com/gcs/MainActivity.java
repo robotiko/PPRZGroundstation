@@ -72,7 +72,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private AltitudeTape altitudeTapeFragment;
 	
 	Aircraft aircraft;
-	Marker droneMarker, infoWindow;
+	Marker wpMarker, infoWindow;
 	GroundOverlay mapOverlay;
 	
 	private float protectedZoneDiameter;
@@ -91,7 +91,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		aircraft = new Aircraft(this);
 		aircraft.setIconSettings();
 		
-		//Add a waypoint (TEMPORARY)
+		//Add some waypoints (TEMPORARY)
 		/*                  [lat,        lon,        alt,   index,     targetSys,targetComp] */
 		aircraft.addWaypoint(51.990968f, 4.375053f, 5.0f,  (short) 0, (byte) 0, (byte) 0);
 		aircraft.addWaypoint(51.990968f, 4.377670f, 10.0f, (short) 1, (byte) 0, (byte) 0);
@@ -159,7 +159,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	/////////////////////////COMMUNICATION/////////////////////////
 	
-	/////SERVICE CONNECTION
+	////////SERVICE CONNECTION
 	
     ServiceConnection serviceConnection = new ServiceConnection() {
 		@Override
@@ -248,84 +248,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     		}
     	}
     };
-
-
-    /////OTHER COMMUNICATION FUNCTIONS
-	
-	private ConnectionParameter retrieveConnectionParameters() {
-		
-		/* TODO: Fetch connection type */
-		
-        final int connectionType = 0; // UDP connection
-        
-        /* TODO: Fetch server port */
-        
-        final int serverPort = 8888; 
-        
-        Bundle extraParams = new Bundle();
-
-        ConnectionParameter connParams;
-        switch (connectionType) {
-
-            case 0:
-                extraParams.putInt("udp_port", serverPort);
-                connParams = new ConnectionParameter(connectionType, extraParams);
-                break;
-                
-            default:
-            	connParams = null;
-                break;
-        }
-
-        return connParams;
-    }
-	
-	public void connectToDroneClient(){
-        final ConnectionParameter connParams = retrieveConnectionParameters();
-        if (!(connParams == null)) {
-	        try {
-	        	mServiceClient.connectDroneClient(connParams);
-	        } catch (RemoteException e) {
-	        	Log.e(TAG, "Error while connecting to service", e);
-	        }
-        }
-        
-        /* TODO: Update the text of the connect button */
-        
-    }
-	
-    public void onButtonRequest(View view) {
-    	if (!isConnected)
-    		connectToDroneClient();
-		else
-			try {
-				mServiceClient.disconnectDroneClient();
-			} catch (RemoteException e) {
-				Log.e(TAG, "Error while disconnecting", e);
-			}
-    }
     
-    /**
-     * This runnable object is created such that the update is performed
-     * by the UI handler. This is a design requirement posed by the Android SDK
-     */
-	private void updateConnectButton() {
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					if (isConnected) {
-						connectButton.setText(R.string.disconnect_button);
-					} else {
-						connectButton.setText(R.string.connect_button);
-					}
-				} catch (Throwable t) {
-					Log.e(TAG, "Error while updating the connect button", t);
-				}
-			}
-		});
-	}
-	
+    ////////UPDATE METHODS FOR AIRCRAFT DATA
+    
 	/**
 	 * This runnable object is created to update the attitude
 	 */
@@ -465,6 +390,83 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					/* TODO finish the setting of received waypoint data from service */
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating waypoint", t);
+				}
+			}
+		});
+	}
+
+
+	////////OTHER COMMUNICATION FUNCTIONS
+	
+	private ConnectionParameter retrieveConnectionParameters() {
+		
+		/* TODO: Fetch connection type */
+		
+        final int connectionType = 0; // UDP connection
+        
+        /* TODO: Fetch server port */
+        
+        final int serverPort = 8888; 
+        
+        Bundle extraParams = new Bundle();
+
+        ConnectionParameter connParams;
+        switch (connectionType) {
+
+            case 0:
+                extraParams.putInt("udp_port", serverPort);
+                connParams = new ConnectionParameter(connectionType, extraParams);
+                break;
+                
+            default:
+            	connParams = null;
+                break;
+        }
+
+        return connParams;
+    }
+	
+	public void connectToDroneClient(){
+        final ConnectionParameter connParams = retrieveConnectionParameters();
+        if (!(connParams == null)) {
+	        try {
+	        	mServiceClient.connectDroneClient(connParams);
+	        } catch (RemoteException e) {
+	        	Log.e(TAG, "Error while connecting to service", e);
+	        }
+        }
+        
+        /* TODO: Update the text of the connect button */
+        
+    }
+	
+    public void onButtonRequest(View view) {
+    	if (!isConnected)
+    		connectToDroneClient();
+		else
+			try {
+				mServiceClient.disconnectDroneClient();
+			} catch (RemoteException e) {
+				Log.e(TAG, "Error while disconnecting", e);
+			}
+    }
+    
+    /**
+     * This runnable object is created such that the update is performed
+     * by the UI handler. This is a design requirement posed by the Android SDK
+     */
+	private void updateConnectButton() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					if (isConnected) {
+						connectButton.setText(R.string.disconnect_button);
+					} else {
+						connectButton.setText(R.string.connect_button);
+					}
+				} catch (Throwable t) {
+					Log.e(TAG, "Error while updating the connect button", t);
 				}
 			}
 		});
@@ -734,21 +736,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             	///////* Marker for display of waypoints on map *///////
             	
-            	/* TODO Change dronemarker to waypoint markers */
-//            	//Clear marker from map (if it exists)
-//            	if(droneMarker != null) {
-//            		droneMarker.remove();
-//            	}
-//            	            	
-//            	//Add marker to map (size remains constant with zooming)
-//            	droneMarker = map.addMarker(new MarkerOptions()
-//                .position(DELFT)
-//                .anchor((float) 0.5, (float) 0.5)
-//                .flat(true)
-//                .title("ICON")
-//                .draggable(false)
-//                .icon(icon)
-//            	);	
+            	//Clear marker from map (if it exists)
+            	if(wpMarker != null) {
+            		wpMarker.remove();
+            	}
+            	            	
+            	//Add marker to map (size remains constant with zooming)
+            	wpMarker = map.addMarker(new MarkerOptions()
+                .position(aircraft.getWpLatLng(0))
+                .anchor((float) 0.5, (float) 0.5)
+                .flat(true)
+                .title("Waypoint")
+                .draggable(false)
+            	);	
 
             }
         });  
