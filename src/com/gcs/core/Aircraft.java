@@ -197,7 +197,7 @@ public class Aircraft {
 	
 	//Set and get functions for icon
     public void generateIcon() {
-    	mIcon.generateIcon(isOnUniqueAltitude(), isInConflict(), (float) mAttitude.getYaw(), getBattLevel(), communicationSignal, context.getResources());
+    	mIcon.generateIcon(isOnUniqueAltitude(), isInConflict(), (float) mAttitude.getYaw(), getBattLevel(), communicationSignal);
     }
     
     public void setCircleColor(int color) {
@@ -293,5 +293,10 @@ public class Aircraft {
     
     public int getTargetLabelId(){
     	return targetLabelId;
+    }
+    
+    //Other
+    public void setIconSettings(){
+    	mIcon.setIconSettings(context.getResources());
     }
 }

@@ -5,7 +5,7 @@ import com.model.State;
 public class CustomState extends State {
 
 	private boolean isInConflict = false;
-	private boolean isOnUniqueAltitude = true;
+	private boolean isOnUniqueAltitude = false;
 	
 	
 	public boolean isInConflict() {

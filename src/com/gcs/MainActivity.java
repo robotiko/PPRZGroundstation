@@ -75,7 +75,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	Marker droneMarker, infoWindow;
 	GroundOverlay mapOverlay;
 	
-	private float protectedZoneDiameter; //= (float) getResources().getInteger(R.integer.ProtectedZoneDiameter);
+	private float protectedZoneDiameter;
 	  
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +89,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		
 		// Instantiate aircraft object
 		aircraft = new Aircraft(this);
+		aircraft.setIconSettings();
 		
 		//Add a waypoint (TEMPORARY)
 		/*                  [lat,        lon,        alt,   index,     targetSys,targetComp] */
@@ -633,6 +634,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	/* Map listener for clicks (might be changed to OnMapLongClickListener) */
 	@Override
 	public void onMapClick(LatLng point) {
+		
+		/* TODO fix bugs with aircraft icon selection */
 		 
 		//Calculate the distance from clicklocation to the aircraft location
 		float[] distance = new float[1];

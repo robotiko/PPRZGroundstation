@@ -15,13 +15,15 @@ import android.graphics.drawable.Drawable;
 
 public class Icon {
 	
+	Resources res;
+	
 	private Bitmap AC_Icon;
 	
 	private float scalingFactor = 1.0f;
 	private int circleColor = Color.WHITE;
 	
-	/* TODO make sure all values from resources are loaded at creation of class and not at every generation of the icon */
 	private int resolution;
+	private int protectedZoneAlpha;
 	private int batteryVertLocation;
 	private int batteryHorLocation;
 	private int batteryScaling;
@@ -29,17 +31,24 @@ public class Icon {
 	private int commHorLocation;
 	private int commScaling;
 	
-	public void generateIcon(boolean isOnUniqueAltitude, boolean isInConflict, float heading, int batLevel, int communicationSignal, Resources res){
-		
-		Bitmap baseIcon, batteryIcon, communicationIcon;
+	/* TODO make sure all values from resources are loaded at creation of class and not when this method is called from onCreate */
+	public void setIconSettings(Resources res){
+		this.res = res;
 		
 		resolution          = res.getInteger(R.integer.IconResolution);
+		protectedZoneAlpha  = res.getInteger(R.integer.IconAlpha);
+		
 		batteryVertLocation = res.getInteger(R.integer.BatteryVertLocation);
 		batteryHorLocation  = res.getInteger(R.integer.BatteryHorLocation);
 		batteryScaling      = res.getInteger(R.integer.BatteryScaling);
 		commVertLocation    = res.getInteger(R.integer.CommVertLocation);
 		commHorLocation     = res.getInteger(R.integer.CommHorLocation);
 		commScaling			= res.getInteger(R.integer.CommScaling);
+	}
+	
+	public void generateIcon(boolean isOnUniqueAltitude, boolean isInConflict, float heading, int batLevel, int communicationSignal){
+		
+		Bitmap baseIcon, batteryIcon, communicationIcon;
 		
 		//Get the base icon (conflictStatus:red, blue, gray)
 		if(isOnUniqueAltitude){
@@ -53,7 +62,7 @@ public class Icon {
 		}
 		
 		//Place the icon on a white circle
-		baseIcon = addCircle(baseIcon,res);
+		baseIcon = addCircle(baseIcon);
     	
 		//Rotate the base icon
 		baseIcon = RotateBitmap(baseIcon,(float) heading);
@@ -92,7 +101,7 @@ public class Icon {
 		}
 
 		//Place battery- and communication icons
-		baseIcon = stackIcons(baseIcon,batteryIcon,communicationIcon,res);
+		baseIcon = stackIcons(baseIcon,batteryIcon,communicationIcon);
 		
 		//TODO add speedvector to icon
 
@@ -100,13 +109,14 @@ public class Icon {
 	}
 	
 	//Add the base circle
-	private Bitmap addCircle(Bitmap source, Resources res) {
+	private Bitmap addCircle(Bitmap source) {
 		
 		Bitmap mutableBitmap = Bitmap.createBitmap(resolution, resolution, Bitmap.Config.ARGB_8888);
 		Canvas canvas = new Canvas(mutableBitmap);
 		
 		Paint paint = new Paint();
 		paint.setColor(circleColor);
+		paint.setAlpha(protectedZoneAlpha);
 		paint.setFlags(Paint.ANTI_ALIAS_FLAG);
 		
 		canvas.drawCircle(resolution/2, resolution/2, resolution/2, paint);
@@ -127,7 +137,7 @@ public class Icon {
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 	
-    private Bitmap stackIcons(Bitmap baseIcon, Bitmap batteryIcon, Bitmap communicationIcon, Resources res){
+    private Bitmap stackIcons(Bitmap baseIcon, Bitmap batteryIcon, Bitmap communicationIcon){
 
     	//Create bitmap to work with
     	Bitmap mutableBitmap = baseIcon.copy(Bitmap.Config.ARGB_8888, true);
