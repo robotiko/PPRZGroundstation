@@ -13,4 +13,13 @@
     <!-- Protected zone diameter in meters-->
     <integer name="ProtectedZoneDiameter">30</integer>
     
+    <!-- Aircraft icon parameters -->
+    <integer name="IconResolution">600</integer> 	 <!-- pixels                        -->
+    <integer name="BatteryVertLocation">70</integer> <!-- percent of radius from center -->
+    <integer name="BatteryHorLocation">20</integer>  <!-- percent of radius from center -->
+    <integer name="BatteryScaling">25</integer>	     <!-- percent of the original image -->
+    <integer name="CommVertLocation">70</integer>	 <!-- percent of radius from center -->
+    <integer name="CommHorLocation">20</integer>	 <!-- percent of radiusfrom center  -->
+    <integer name="CommScaling">30</integer>	     <!-- percent of the original image -->
+    
 </resources>

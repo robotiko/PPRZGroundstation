@@ -20,12 +20,26 @@ public class Icon {
 	private float scalingFactor = 1.0f;
 	private int circleColor = Color.WHITE;
 	
-	/* TODO make the size of the icon dynamic */
-	private int dimensions = 200;
+	/* TODO make sure all values from resources are loaded at creation of class and not at every generation of the icon */
+	private int resolution;
+	private int batteryVertLocation;
+	private int batteryHorLocation;
+	private int batteryScaling;
+	private int commVertLocation;
+	private int commHorLocation;
+	private int commScaling;
 	
 	public void generateIcon(boolean isOnUniqueAltitude, boolean isInConflict, float heading, int batLevel, int communicationSignal, Resources res){
 		
 		Bitmap baseIcon, batteryIcon, communicationIcon;
+		
+		resolution          = res.getInteger(R.integer.IconResolution);
+		batteryVertLocation = res.getInteger(R.integer.BatteryVertLocation);
+		batteryHorLocation  = res.getInteger(R.integer.BatteryHorLocation);
+		batteryScaling      = res.getInteger(R.integer.BatteryScaling);
+		commVertLocation    = res.getInteger(R.integer.CommVertLocation);
+		commHorLocation     = res.getInteger(R.integer.CommHorLocation);
+		commScaling			= res.getInteger(R.integer.CommScaling);
 		
 		//Get the base icon (conflictStatus:red, blue, gray)
 		if(isOnUniqueAltitude){
@@ -39,16 +53,15 @@ public class Icon {
 		}
 		
 		//Place the icon on a white circle
-		baseIcon = addCircle(baseIcon,dimensions,res);
+		baseIcon = addCircle(baseIcon,res);
     	
 		//Rotate the base icon
 		baseIcon = RotateBitmap(baseIcon,(float) heading);
 		
 		//Get the battery icon (full,half,low)
-//		int batLevel = getBattLevel();
 		int halfBat = res.getInteger(R.integer.HalfBatteryLevel);
 		int lowBat  = res.getInteger(R.integer.LowBatteryLevel);
-		/* TODO set the integer values to the correct orders to comply with the provide battery values */
+		/* TODO set the integer values to the correct orders to comply with the provided battery values */
 		
 		if(batLevel > halfBat) { //high battery level
 			batteryIcon = BitmapFactory.decodeResource(res, R.drawable.battery_icon_green);
@@ -87,21 +100,20 @@ public class Icon {
 	}
 	
 	//Add the base circle
-	private Bitmap addCircle(Bitmap source, int dimensions, Resources res) {
+	private Bitmap addCircle(Bitmap source, Resources res) {
 		
-		Bitmap mutableBitmap = Bitmap.createBitmap(dimensions, dimensions, Bitmap.Config.ARGB_8888);
+		Bitmap mutableBitmap = Bitmap.createBitmap(resolution, resolution, Bitmap.Config.ARGB_8888);
 		Canvas canvas = new Canvas(mutableBitmap);
 		
-		/* TODO Make the color of the circle dynamic */
 		Paint paint = new Paint();
 		paint.setColor(circleColor);
 		paint.setFlags(Paint.ANTI_ALIAS_FLAG);
 		
-		canvas.drawCircle(dimensions/2, dimensions/2, dimensions/2, paint);
+		canvas.drawCircle(resolution/2, resolution/2, resolution/2, paint);
 
 		Drawable icon = new BitmapDrawable(res, source);
-		int sideOffset = (int) (0.25*dimensions);
-		icon.setBounds(sideOffset, sideOffset, dimensions-sideOffset, dimensions-sideOffset);
+		int sideOffset = (int) (0.25*resolution);
+		icon.setBounds(sideOffset, sideOffset, resolution-sideOffset, resolution-sideOffset);
 		icon.draw(canvas);
 		
 		return mutableBitmap;
@@ -116,43 +128,42 @@ public class Icon {
     }
 	
     private Bitmap stackIcons(Bitmap baseIcon, Bitmap batteryIcon, Bitmap communicationIcon, Resources res){
-    	
-    	//TODO enable markers to scale with zoom for a constant keepout region (or use GroundOverlays)
-    	
-    	//TODO Make white base-cirle that is drawn in code to prevent hardcoding numbers for location of battery/communication icons
 
     	//Create bitmap to work with
     	Bitmap mutableBitmap = baseIcon.copy(Bitmap.Config.ARGB_8888, true);
-//    	Bitmap mutableBitmap = Bitmap.createBitmap(200, 200, Bitmap.Config.ARGB_8888);
     	Canvas c = new Canvas(mutableBitmap);
-//    	Drawable icon = new BitmapDrawable(res, baseIcon);
     	int center = mutableBitmap.getWidth()/2;
-//    	int offSet = center-100;
-//    	icon.setBounds(offSet, offSet, offSet+200, offSet+200);
-//    	icon.draw(c);
     	
+    	//Set scaling factor to avoid icon size changing with heading while printing the aircraft icon on the map
     	setScalingFactor(mutableBitmap.getWidth());
 
-    	//(int left, int top, int right, int bottom)
         //Add battery icon to the base icon
+    	int batVert = (resolution/2)*batteryVertLocation/100;
+    	int batHor  = (resolution/2)*batteryHorLocation/100;
+    	int batHalfWidth = (batteryScaling/2)*batteryIcon.getWidth()/100;	
+		int batHalfHeight = (batteryScaling/2)*batteryIcon.getHeight()/100;	
+		
         Drawable bat = new BitmapDrawable(res, batteryIcon);
-        bat.setBounds(center+11, center-54, center+21, center-34);
-//        bat.setBounds(75, 10, 85, 30);
+        //(int left, int top, int right, int bottom)
+        bat.setBounds(center+batHor-batHalfWidth, center-batVert-batHalfHeight, center+batHor+batHalfWidth, center-batVert+batHalfHeight);
         bat.draw(c);
         
         //Add communication icon to the base icon
+        int commVert = (resolution/2)*commVertLocation/100;
+    	int commHor  = (resolution/2)*commHorLocation/100;
+    	int commHalfWidth = (commScaling/2)*communicationIcon.getWidth()/100;	
+		int commHalfHeight = (commScaling/2)*communicationIcon.getHeight()/100;	
+        
         Drawable comm = new BitmapDrawable(res, communicationIcon);
-        comm.setBounds(center-24,center-53,center-4,center-35);
-//        comm.setBounds(40, 11, 60, 29);
+        //(int left, int top, int right, int bottom)
+        comm.setBounds(center-commHor-commHalfWidth,center-commVert-commHalfHeight,center-commHor+commHalfWidth,center-commVert+commHalfHeight);
         comm.draw(c);
 
         return mutableBitmap;
     }
     
     private void setScalingFactor(int widthActual) {
-//    	Log.d("Actual width",String.valueOf(((float)widthActual)/dimensions));
-
-    	scalingFactor = ((float)widthActual)/dimensions;
+    	scalingFactor = ((float)widthActual)/resolution;
     }
 	
 	public Bitmap getIcon(){

@@ -638,12 +638,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			if(isAircraftIconSelected) {
 				isAircraftIconSelected = false;
 				infoWindow.remove();
-//				aircraft.setCircleColor(Color.WHITE);
 				Log.d("icon","deselected");
 			} else {
 				isAircraftIconSelected = true;
 				setInfoWindow();
-//				aircraft.setCircleColor(Color.YELLOW);
 				Log.d("icon","selected");
 			}
 		}
@@ -657,7 +655,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		if(marker.equals(infoWindow)) {
 			isAircraftIconSelected = false;
 			infoWindow.remove();
-//			aircraft.setCircleColor(Color.WHITE);
 		}
 		return true;
 	}
