@@ -1,5 +1,8 @@
 package com.gcs.core;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.widget.TextView;
@@ -19,14 +22,14 @@ public class Aircraft {
 	    this.context = context;
 	}
 	
-	private Attitude    mAttitude = new Attitude();
-	private Altitude    mAltitude = new Altitude();
-	private Speed       mSpeed    = new Speed();
-	private Battery     mBattery  = new Battery();
-	private CustomState mState    = new CustomState(); 
-	private Position    mPosition = new Position();
-	private Icon		mIcon     = new Icon();
-	/* TODO implement waypoints */
+	private Attitude       mAttitude = new Attitude();
+	private Altitude       mAltitude = new Altitude();
+	private Speed          mSpeed    = new Speed();
+	private Battery        mBattery  = new Battery();
+	private CustomState    mState    = new CustomState(); 
+	private Position       mPosition = new Position();
+	private Icon		   mIcon     = new Icon();
+	private List<Waypoint> waypoints = new ArrayList<Waypoint>();
 	
 	private int communicationSignal   = 0;
 	private final int AltitudeLabelId = TextView.generateViewId();
@@ -175,7 +178,7 @@ public class Aircraft {
 		return latLng;
 	}
 	
-	/* Remove either this function of getAltitude() */
+	/* TODO Remove either this function of getAltitude() */
 	public int getAlt() {
 		return mPosition.getAlt();
 	}
@@ -208,6 +211,72 @@ public class Aircraft {
     public float getIconScalingFactor() {
     	return mIcon.getIconScalingFactor();
     }
+    
+    //Set and get functions for waypoints
+    public void addWaypoint(float lat, float lon, float alt, short seq, byte targetSys, byte targetComp) {
+    	Waypoint wp = new Waypoint(lat, lon, alt, seq, targetSys, targetComp);
+        waypoints.add(wp);
+    }
+    
+    public void setWpLat(float lat, int wpNumber) {
+    	Waypoint wp = waypoints.get(wpNumber);
+    	wp.setLat(lat);
+    	waypoints.set(wpNumber,wp);
+	}
+    
+    public void setWpLon(float lon, int wpNumber) {
+    	Waypoint wp = waypoints.get(wpNumber);
+    	wp.setLon(lon);
+    	waypoints.set(wpNumber,wp);
+	}
+    
+    public void setWpAlt(float alt, int wpNumber) {
+    	Waypoint wp = waypoints.get(wpNumber);
+    	wp.setAlt(alt);
+    	waypoints.set(wpNumber,wp);
+    }
+    
+	public void setWpSeq(short seq, int wpNumber) {
+		Waypoint wp = waypoints.get(wpNumber);
+    	wp.setSeq(seq);
+    	waypoints.set(wpNumber,wp);
+	}
+	
+	public void setWpTargetSys(byte targetSys, int wpNumber) {
+		Waypoint wp = waypoints.get(wpNumber);
+    	wp.setTargetSys(targetSys);
+    	waypoints.set(wpNumber,wp);
+	}
+	
+	public void setWpTargetComp(byte targetComp, int wpNumber) {
+		Waypoint wp = waypoints.get(wpNumber);
+    	wp.setTargetComp(targetComp);
+    	waypoints.set(wpNumber,wp);
+	}
+	
+	public float getWpLat(int wpNumber) {
+		return waypoints.get(wpNumber).getLat();
+	}
+	
+	public float getWpLon(int wpNumber) {
+		return waypoints.get(wpNumber).getLon();
+	}
+    
+    public float getWpAlt(int wpNumber) {
+		return waypoints.get(wpNumber).getAlt();
+	}
+    
+    public short getWpSeq(int wpNumber) {
+    	return waypoints.get(wpNumber).getSeq();
+	}
+
+	public byte getWpTargetSys(int wpNumber) {
+		return waypoints.get(wpNumber).getTargetSys();
+	}
+	
+	public byte getWpTargetComp(int wpNumber) {
+		return waypoints.get(wpNumber).getTargetComp();
+	}
 	
     //Set and get functions for class attributes
     public int getCommunicationSignal(){

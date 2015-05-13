@@ -87,8 +87,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		connectButton = (Button) findViewById(R.id.connectButton);
 		isConnected = false;
 		
-		//Instantiate aircraft object
+		// Instantiate aircraft object
 		aircraft = new Aircraft(this);
+		
+		//Add a waypoint (TEMPORARY)
+		/*                  [lat,        lon,        alt,   index,     targetSys,targetComp] */
+		aircraft.addWaypoint(51.990968f, 4.375053f, 5.0f,  (short) 0, (byte) 0, (byte) 0);
+		aircraft.addWaypoint(51.990968f, 4.377670f, 10.0f, (short) 1, (byte) 0, (byte) 0);
+		aircraft.addWaypoint(51.990074f, 4.377670f, 15.0f, (short) 2, (byte) 0, (byte) 0);
+		aircraft.addWaypoint(51.990074f, 4.375053f, 20.0f, (short) 3, (byte) 0, (byte) 0);
 		
 		// Create a handle to the telemetry fragment
 		telemetryFragment = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);
@@ -106,6 +113,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        // Value for the size of the protected zone around the aircraft icon
         protectedZoneDiameter = (float) getResources().getInteger(R.integer.ProtectedZoneDiameter);
 	}
 	
@@ -363,6 +371,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					} else {
 						altitudeTapeFragment.deleteTargetLabel(aircraft.getTargetLabelId());
 					}
+					
 					altitudeTapeFragment.setLabel(mAltitude.getAltitude(),aircraft.getAltLabelId());
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the altitude", t);
