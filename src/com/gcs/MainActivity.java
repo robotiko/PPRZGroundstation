@@ -57,7 +57,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	private static final String TAG = MainActivity.class.getSimpleName();
 	
-	private Handler handler;
+	private Handler handler, interfaceUpdateHandler;
+	private int mInterval = 100; // seconds * 1000
 	
 	IMavLinkServiceClient mServiceClient;
 	MissionButtonFragment missionButtons;
@@ -66,6 +67,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private Button connectButton;
 	private boolean isConnected;
 	private boolean isAircraftIconSelected = false;
+	private boolean isAltitudeUpdated = false;
 
 	private TelemetryFragment telemetryFragment;
 	private BatteryFragment batteryFragment;
@@ -83,6 +85,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		setContentView(R.layout.activity_main);
 		
 		handler = new Handler();
+		interfaceUpdateHandler = new Handler();
 		
 		connectButton = (Button) findViewById(R.id.connectButton);
 		isConnected = false;
@@ -116,6 +119,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Value for the size of the protected zone around the aircraft icon
         protectedZoneDiameter = (float) getResources().getInteger(R.integer.ProtectedZoneDiameter);
+        
+        // Start the interface update handler
+		interfaceUpdater.run();	/* TODO check if there is a better moment to start this handler (on first heartbeat?) */
 	}
 	
 	/* TODO Make a course extrapolation class to determine the conflictStatus of a drone */
@@ -156,6 +162,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		}
     	unbindService(serviceConnection);
     }
+	
+	////////////INTERFACE UPDATER//////////
+	
+	Runnable interfaceUpdater = new Runnable() {
+	    @Override 
+	    public void run() {
+	    	updateMap();
+	    	
+	    	if (isAltitudeUpdated){
+	    		updateAltitudeTape();
+	    	}
+	    	
+	    	interfaceUpdateHandler.postDelayed(interfaceUpdater, mInterval);
+	    }
+	  };
 	
 	/////////////////////////COMMUNICATION/////////////////////////
 	
@@ -262,12 +283,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					Attitude mAttitude = getAttribute("ATTITUDE");
 					aircraft.setRollPitchYaw(mAttitude.getRoll(), mAttitude.getPitch(), Math.toDegrees(mAttitude.getYaw()));
 					
-					/* TODO move map update to the heartbeat updates (make sure info window move correctly with aircraft icon) */
-					updateMap();
+					/* TODO move map update to the heartbeat updates or a separate thread (make sure info window move correctly with aircraft icon) */
+//					updateMap();
 					
 					//Make sure the information window moves with the aircraft icon
 					if(isAircraftIconSelected) {
-						Log.d("after","yes");
 						setInfoWindow();
 					}
 				} catch (Throwable t) {
@@ -291,14 +311,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					
 					telemetryFragment.setText(String.valueOf(mAltitude.getAltitude()));
 					
-					//Set the location of the target label on the altitude tape
-					if (Math.abs(mAltitude.getTargetAltitude()-mAltitude.getAltitude()) > 0.001){
-						altitudeTapeFragment.setTargetLabel(mAltitude.getTargetAltitude(), aircraft.getTargetLabelId());
-					} else {
-						altitudeTapeFragment.deleteTargetLabel(aircraft.getTargetLabelId());
-					}
-					
-					altitudeTapeFragment.setLabel(mAltitude.getAltitude(),aircraft.getAltLabelId());
+					/* Set isAltitudeUpdated to be true at first update of altitude */
+					if(!isAltitudeUpdated) isAltitudeUpdated = true;
+
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the altitude", t);
 				}
@@ -440,6 +455,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         
     }
 	
+	/* TODO solve bugs with the connect button */
     public void onButtonRequest(View view) {
     	if (!isConnected)
     		connectToDroneClient();
@@ -598,6 +614,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		//Enable clicklistener on markers
 		map.setOnMarkerClickListener(this);
 		
+		/* TODO limit zooming for groundoverlays */ //http://stackoverflow.com/questions/14977078/limit-scrolling-and-zooming-google-maps-android-api-v2
+		
 		//Enable a custom information window for the aircraft icons
 		map.setInfoWindowAdapter(new InfoWindowAdapter() {
 			
@@ -753,4 +771,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });  
 	}
+	
+	/////////////////////////ALTITUDE TAPE/////////////////////////
+	
+	public void updateAltitudeTape(){
+		
+		/* Set the location of the target label on the altitude tape and check wether to 
+		 * show the target label or not (aka is the aircraft already on target altitude?) */
+		if (Math.abs(aircraft.getTargetAltitude()-aircraft.getAltitude()) > 0.001){
+			altitudeTapeFragment.setTargetLabel(aircraft.getTargetAltitude(), aircraft.getTargetLabelId());
+		} else {
+			altitudeTapeFragment.deleteTargetLabel(aircraft.getTargetLabelId());
+		}
+		
+		/* Set the location (actual) altitude label on the altitude tape */ 
+		altitudeTapeFragment.setLabel(aircraft.getAltitude(),aircraft.getAltLabelId());
+	}
+	
 }
