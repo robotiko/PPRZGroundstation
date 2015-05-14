@@ -165,15 +165,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	////////////INTERFACE UPDATER//////////
 	
+	
+	/* TODO make sure information window is synchonously updated with tha aircraft icon */
+	
 	Runnable interfaceUpdater = new Runnable() {
 	    @Override 
 	    public void run() {
+	    	//Update map (icons, waypoints and information windows)
 	    	updateMap();
 	    	
+			//Update altitude tape
 	    	if (isAltitudeUpdated){
 	    		updateAltitudeTape();
 	    	}
 	    	
+	    	//Restart this updater after the set interval
 	    	interfaceUpdateHandler.postDelayed(interfaceUpdater, mInterval);
 	    }
 	  };
@@ -260,7 +266,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		
 	    		/* TODO Enable the waypoint service case once available */
 //	    		case "WAYPOINT_UPDATED": {
-//	    			updateWaypoint();
+//	    			updateWaypoints();
 //	    			break;
 //	    		}
 	    		
@@ -282,14 +288,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 				try {
 					Attitude mAttitude = getAttribute("ATTITUDE");
 					aircraft.setRollPitchYaw(mAttitude.getRoll(), mAttitude.getPitch(), Math.toDegrees(mAttitude.getYaw()));
-					
-					/* TODO move map update to the heartbeat updates or a separate thread (make sure info window move correctly with aircraft icon) */
-//					updateMap();
-					
-					//Make sure the information window moves with the aircraft icon
-					if(isAircraftIconSelected) {
-						setInfoWindow();
-					}
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the attitude", t);
 				}
@@ -397,14 +395,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	/**
 	 * This runnable object is created to update waypoints
 	 */
-	private void updateWaypoint() {
+	private void updateWaypoints() {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
 				try {
 					/* TODO finish the setting of received waypoint data from service */
 				} catch (Throwable t) {
-					Log.e(TAG, "Error while updating waypoint", t);
+					Log.e(TAG, "Error while updating waypoints", t);
 				}
 			}
 		});
@@ -571,7 +569,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	/////////////////////MISSION BUTTONS/////////////////////
 	
 	public void onLandRequest(View v) {
-		
 		missionButtons.onLandRequest(v);
 	}
 	
@@ -700,17 +697,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapReady(GoogleMap map) {
             	
-            	if(infoWindow != null) {
-            		infoWindow.remove();
-            	}
-            	
-            	infoWindow = map.addMarker(new MarkerOptions()
-            	.position(aircraft.getLatLng())
-                .alpha(0)
-                .draggable(false)
-//	                .infoWindowAnchor(0.5f,0.5f)  //Determine the location of the info window
-    			);
-            	infoWindow.showInfoWindow();
+//            	if(infoWindow != null) {
+//            		infoWindow.remove();
+//            	}
+//            	
+//            	infoWindow = map.addMarker(new MarkerOptions()
+//            	.position(aircraft.getLatLng())
+//                .alpha(1)
+//                .draggable(false)
+////	                .infoWindowAnchor(0.5f,0.5f)  //Determine the location of the info window
+//    			);
+//            	infoWindow.showInfoWindow();
             }
 		}); 
 	}
@@ -751,6 +748,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             	.image(icon)
             	.position(aircraftLocation, imageSize, imageSize) // width and height in m
             	);
+            	
+            	///////* Set the information window for an aircraft icon *///////
+            	
+            	if(isAircraftIconSelected) {
+                	if(infoWindow != null) {
+                		infoWindow.remove();
+                	}
+                	
+                	infoWindow = map.addMarker(new MarkerOptions()
+                	.position(aircraft.getLatLng())
+                    .alpha(1)
+                    .draggable(false)
+//    	                .infoWindowAnchor(0.5f,0.5f)  //Determine the location of the info window
+        			);
+                	infoWindow.showInfoWindow();
+    			}
 
             	///////* Marker for display of waypoints on map *///////
             	
