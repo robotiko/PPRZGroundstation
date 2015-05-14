@@ -77,6 +77,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	Marker wpMarker, infoWindow;
 	GroundOverlay mapOverlay;
 	
+	SupportMapFragment mapFragment;
+	
 	private float protectedZoneDiameter;
 	  
 	@Override
@@ -114,7 +116,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		missionButtons = (MissionButtonFragment) getSupportFragmentManager().findFragmentById(R.id.missionButtonFragment);
 		
 		// Get the map and register for the ready callback
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
         // Value for the size of the protected zone around the aircraft icon
@@ -692,7 +694,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private void setInfoWindow() {
 
 		//Call GoogleMaps
-		SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 		mapFragment.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap map) {
@@ -728,7 +729,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		final LatLng aircraftLocation = new LatLng(aircraft.getLat()*1e-7, aircraft.getLon()*1e-7);
 		
 		//Call GoogleMaps
-		SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 		mapFragment.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap map) {
