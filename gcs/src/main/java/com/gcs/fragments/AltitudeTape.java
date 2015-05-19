@@ -176,7 +176,10 @@ public class AltitudeTape extends Fragment {
 	//Method to remove the target label from the altitude tape
 	public void deleteTargetLabel(int targetLabelId) {
 		View targetLabel = (View) getView().findViewById(targetLabelId);
-		targetLabel.setVisibility(View.GONE);
+
+		if(targetLabel!=null) {
+			targetLabel.setVisibility(View.GONE);
+		}
 	}
 	
 	//Convert altitude to a label location on the tape
