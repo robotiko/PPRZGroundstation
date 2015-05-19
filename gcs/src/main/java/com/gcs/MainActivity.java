@@ -74,7 +74,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private AltitudeTape altitudeTapeFragment;
 	
 	Aircraft aircraft;
-	Marker wpMarker, infoWindow;
+	Marker acMarker, wpMarker, infoWindow;
 	GroundOverlay mapOverlay;
 	
 	SupportMapFragment mapFragment;
@@ -733,22 +733,25 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapReady(GoogleMap map) {
 
-            	///////* Map overlay for display of aircraft icon on map *///////
-            	
-            	//Clear ground overlay from map (if it exists)
-            	if(mapOverlay != null) {
-            		mapOverlay.remove();
+				///////* Marker for display of aircraft icon on map *///////
+
+                //Clear marker from map (if it exists)
+            	if(acMarker != null) {
+            		acMarker.remove();
             	}
-            	
-            	//Add groundoverlay to map (size changes with zooming)
-            	float imageSize = protectedZoneDiameter*aircraft.getIconScalingFactor();
-            	
-            	/* TODO use setZIndex to make sure the aircraft icons are drawn on top of polylines for flight plan (largest number goes on top)*/
-            	mapOverlay = map.addGroundOverlay(new GroundOverlayOptions()
-            	.image(icon)
-            	.position(aircraftLocation, imageSize, imageSize) // width and height in m
-            	);
-            	
+
+                /* TODO use setZIndex to make sure the aircraft icons are drawn on top of polylines for flight plan (largest number goes on top)*/
+                //Add marker to map
+                acMarker = map.addMarker(new MarkerOptions()
+                                .position(aircraft.getLatLng())
+                                .anchor((float) 0.5, (float) 0.5)
+                                .icon(icon)
+                                .flat(true)
+                                .title("Aircraft")
+                                .draggable(false)
+                );
+
+
             	///////* Set the information window for an aircraft icon *///////
             	
             	if(isAircraftIconSelected) {
