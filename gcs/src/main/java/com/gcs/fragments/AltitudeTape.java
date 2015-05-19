@@ -120,7 +120,16 @@ public class AltitudeTape extends Fragment {
     }
 	
     //Method to draw aircraft labels on the altitude tape
-	public void setLabel(double altitude, int labelId){
+	public void setLabel(double altitude, int labelId, String labelCharacter, boolean isAircraftIconSelected){
+
+        int backgroundImg;
+
+        if(isAircraftIconSelected) {
+            /* TODO add yellow label for selection */
+            backgroundImg = R.drawable.altitude_label_small_gray;
+        } else {
+            backgroundImg =  R.drawable.altitude_label_small_blue;
+        }
 		
 		/* TODO change the horizontal location of the altitude labels and flip them around */
 		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(80, 60);
@@ -130,12 +139,12 @@ public class AltitudeTape extends Fragment {
         TextView label;
 		if(!labelCreated){
 	        label = new TextView(getActivity());
-	        label.setBackgroundResource(R.drawable.altitude_label_small_blue);
-	        label.setId(labelId);
-	        
+            label.setId(labelId);
+            label.setBackgroundResource(backgroundImg);
+
 	        /* On the basis of the label number (first label is generated to be 1) a string is
 	        made to display on the altitude label */
-	        String labelCharacter = String.valueOf((char)(64+labelId));
+//	        String labelCharacter = String.valueOf((char)(64+labelId));
 	        label.setText("      "+ labelCharacter);
 	        label.setTypeface(null, Typeface.BOLD);
 	        label.setGravity(Gravity.CENTER_VERTICAL);
@@ -146,11 +155,12 @@ public class AltitudeTape extends Fragment {
 	        labelCreated = true;
 		} else {
 			label = (TextView)  getView().findViewById(labelId);
-			relativelayout.updateViewLayout(label,params);
+            label.setBackgroundResource(backgroundImg);
+			relativelayout.updateViewLayout(label, params);
 		}
 	}
-	
-	//Method to draw the target altitude on the altitude tape
+
+    //Method to draw the target altitude on the altitude tape
 	public void setTargetLabel(double targetAltitude, int targetLabelId) {
 		
 		/* TODO make a better indicating icon/bug for the target altitude */

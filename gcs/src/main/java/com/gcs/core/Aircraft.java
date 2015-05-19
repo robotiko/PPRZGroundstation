@@ -31,9 +31,10 @@ public class Aircraft {
 	private Icon		   mIcon     = new Icon();
 	private List<Waypoint> waypoints = new ArrayList<Waypoint>();
 	
-	private int communicationSignal   = 0;
-	private final int AltitudeLabelId = TextView.generateViewId();
-	private final int targetLabelId   = TextView.generateViewId();
+	private int communicationSignal     = 0;
+	private final int AltitudeLabelId   = TextView.generateViewId();
+	private final int targetLabelId     = TextView.generateViewId();
+	private final String labelCharacter = String.valueOf((char)(64+AltitudeLabelId));
 	
 	//Set and get functions for attitude
 	public void setRollPitchYaw(double roll, double pitch, double yaw) {
@@ -192,7 +193,7 @@ public class Aircraft {
 	}
 	
 	public void setLlaHdg(int lat, int lon, int alt, short hdg) {
-		mPosition.setLlaHdg(lat,lon,alt,hdg);
+		mPosition.setLlaHdg(lat, lon, alt, hdg);
 	}
 	
 	//Set and get functions for icon
@@ -211,6 +212,8 @@ public class Aircraft {
     public float getIconScalingFactor() {
     	return mIcon.getIconScalingFactor();
     }
+
+    public float getIconBoundFactor() {return mIcon.getIconBoundFactor(); }
     
     //Set and get functions for waypoints
     public void addWaypoint(float lat, float lon, float alt, short seq, byte targetSys, byte targetComp) {
@@ -221,7 +224,7 @@ public class Aircraft {
     public void setWpLat(float lat, int wpNumber) {
     	Waypoint wp = waypoints.get(wpNumber);
     	wp.setLat(lat);
-    	waypoints.set(wpNumber,wp);
+    	waypoints.set(wpNumber, wp);
 	}
     
     public void setWpLon(float lon, int wpNumber) {
@@ -299,6 +302,8 @@ public class Aircraft {
     public int getTargetLabelId(){
     	return targetLabelId;
     }
+
+	public String getLabelCharacter() { return labelCharacter;}
     
     //Other
     public void setIconSettings(){

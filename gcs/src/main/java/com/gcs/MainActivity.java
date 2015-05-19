@@ -17,7 +17,7 @@ import com.gcs.fragments.MissionButtonFragment;
 import com.gcs.fragments.TelemetryFragment;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-//import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
+import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
 import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
@@ -53,12 +53,12 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends FragmentActivity implements OnMapReadyCallback, OnMapClickListener, OnMarkerClickListener {
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback, OnMarkerClickListener, OnInfoWindowClickListener {
 	
 	private static final String TAG = MainActivity.class.getSimpleName();
 	
 	private Handler handler, interfaceUpdateHandler;
-	private int mInterval = 100; // seconds * 1000
+	private int mInterval = 500; // seconds * 1000
 	
 	IMavLinkServiceClient mServiceClient;
 	MissionButtonFragment missionButtons;
@@ -173,8 +173,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	Runnable interfaceUpdater = new Runnable() {
 	    @Override 
 	    public void run() {
+
+            //only update if selection status corresponds with
+
+
 	    	//Update map (icons, waypoints and information windows)
-	    	updateMap();
+            updateAircraftMarker();
 	    	
 			//Update altitude tape
 	    	if (isAltitudeUpdated){
@@ -330,7 +334,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					Speed mSpeed = getAttribute("SPEED");
-					aircraft.setGroundAndAirSpeeds(mSpeed.getGroundSpeed(),mSpeed.getAirspeed(),mSpeed.getTargetSpeed());
+					aircraft.setGroundAndAirSpeeds(mSpeed.getGroundSpeed(), mSpeed.getAirspeed(), mSpeed.getTargetSpeed());
 					aircraft.setTargetSpeed(mSpeed.getTargetSpeed());
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the speed", t);
@@ -367,7 +371,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 				try {
 					Position mPosition = getAttribute("POSITION");
 					aircraft.setSatVisible(mPosition.getSatVisible());
-					aircraft.setLlaHdg(mPosition.getLat(),mPosition.getLon(),mPosition.getAlt(),(short) mPosition.getHdg());
+					aircraft.setLlaHdg(mPosition.getLat(), mPosition.getLon(), mPosition.getAlt(), (short) mPosition.getHdg());
 					//TODO check if heading should be an int or short (and make changes accordingly)
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating position", t);
@@ -403,6 +407,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					/* TODO finish the setting of received waypoint data from service */
+                    waypointUpdater();
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating waypoints", t);
 				}
@@ -607,138 +612,151 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		//Show my location button
 		map.getUiSettings().setMyLocationButtonEnabled(true);
 		
-		//Enable clicklistener on the map
-		map.setOnMapClickListener(this);
-		
 		//Enable clicklistener on markers
 		map.setOnMarkerClickListener(this);
-		
-		/* TODO limit zooming for groundoverlays */ //http://stackoverflow.com/questions/14977078/limit-scrolling-and-zooming-google-maps-android-api-v2
-		
-		//Enable a custom information window for the aircraft icons
-		map.setInfoWindowAdapter(new InfoWindowAdapter() {
-			
-			// Use default InfoWindow frame
-			@Override
-			public View getInfoWindow(Marker marker) {
-				return(null);
-			}
-			
-			// Defines the contents of the InfoWindow
+
+        //Enable clicklistener on infowindows
+        map.setOnInfoWindowClickListener(this);
+
+        //Temporary load of waypoints /* TODO improve the location of waypoint update call */
+        waypointUpdater();
+
+//		//Enable a custom information window for the aircraft icons
+//		map.setInfoWindowAdapter(new InfoWindowAdapter() {
+//
+//			// Use default InfoWindow frame
+//			@Override
+//			public View getInfoWindow(Marker marker) {
+//				return(null);
+//			}
+//
+//			// Defines the contents of the InfoWindow
+//            @Override
+//            public View getInfoContents(Marker marker) {
+//
+//            	View v = getLayoutInflater().inflate(R.layout.info_window, null);
+//
+//            	/* TODO add content to infowindow */
+//
+//            	TextView infoAirtime  = (TextView) v.findViewById(R.id.info_airtime);
+//            	TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
+//            	TextView infoAlt      = (TextView) v.findViewById(R.id.info_alt);
+//            	TextView infoMode     = (TextView) v.findViewById(R.id.info_mode);
+//            	TextView infoSats     = (TextView) v.findViewById(R.id.info_sats);
+//
+//	        	//Setting the values in the information window
+//            	infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
+//            	infoDistHome.setText("Distance Home: " + "DISTANCE HERE!");
+//            	infoAlt.setText("Altitude: "+ aircraft.getAltitude());
+//            	infoMode.setText("Mode: " + "MODE HERE!");
+//            	infoSats.setText("#Sats: " + "#SATS HERE!");
+//
+//            	return v;
+//            }
+//		});
+	}
+
+    private void showCustomInfoWindow() {
+
+        //Enable a custom information window for the aircraft icons
+        //Call GoogleMaps
+        mapFragment.getMapAsync(new OnMapReadyCallback() {
             @Override
-            public View getInfoContents(Marker marker) {
-            	
-            	View v = getLayoutInflater().inflate(R.layout.info_window, null);
-            	
-            	/* TODO add content to infowindow */
-            	
-            	TextView infoAirtime  = (TextView) v.findViewById(R.id.info_airtime);
-            	TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
-            	TextView infoAlt      = (TextView) v.findViewById(R.id.info_alt);
-            	TextView infoMode     = (TextView) v.findViewById(R.id.info_mode);
-            	TextView infoSats     = (TextView) v.findViewById(R.id.info_sats);
+            public void onMapReady(GoogleMap map) {
 
-	        	//Setting the values in the information window
-            	infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
-            	infoDistHome.setText("Distance Home: " + "DISTANCE HERE!");
-            	infoAlt.setText("Altitude: "+ aircraft.getAltitude());
-            	infoMode.setText("Mode: " + "MODE HERE!");
-            	infoSats.setText("#Sats: " + "#SATS HERE!");
+                map.setInfoWindowAdapter(new InfoWindowAdapter() {
 
-            	return v;
+                    // Use default InfoWindow frame
+                    @Override
+                    public View getInfoWindow(Marker marker) {
+                        return(null);
+                    }
+
+                    // Defines the contents of the InfoWindow
+                    @Override
+                    public View getInfoContents(Marker marker) {
+
+                        View v = getLayoutInflater().inflate(R.layout.info_window, null);
+
+                        /* TODO add content to infowindow */
+
+                        TextView infoAirtime  = (TextView) v.findViewById(R.id.info_airtime);
+                        TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
+                        TextView infoAlt      = (TextView) v.findViewById(R.id.info_alt);
+                        TextView infoMode     = (TextView) v.findViewById(R.id.info_mode);
+                        TextView infoSats     = (TextView) v.findViewById(R.id.info_sats);
+
+                        //Setting the values in the information window
+                        infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
+                        infoDistHome.setText("Distance Home: " + "DISTANCE HERE!");
+                        infoAlt.setText("Altitude: "+ aircraft.getAltitude());
+                        infoMode.setText("Mode: " + "MODE HERE!");
+                        infoSats.setText("#Sats: " + "#SATS HERE!");
+
+                        return v;
+                    }
+                });
             }
-		});
-	}
-	
-	/* Map listener for clicks (might be changed to OnMapLongClickListener) */
-	@Override
-	public void onMapClick(LatLng point) {
-		
-		/* TODO fix bugs with aircraft icon selection */
-		 
-		//Calculate the distance from clicklocation to the aircraft location
-		float[] distance = new float[1];
-		Location.distanceBetween(aircraft.getLat()*1e-7,aircraft.getLon()*1e-7,point.latitude,point.longitude,distance);
-		 
-		//If the clicklocation is within the protected zone, excecute the following code
-		if(distance[0] <= protectedZoneDiameter/2) {
-			/* TODO implement actions for clicked aircraft icons */
-			
-			/* Show or remove the info window (note that an additional onmarkerlistener is used because 
-			 * an extra (hidden) marker is used for the info window, which can also be clicked */
-			if(isAircraftIconSelected) {
-				isAircraftIconSelected = false;
-				infoWindow.remove();
-				Log.d("icon","deselected");
-			} else {
-				isAircraftIconSelected = true;
-				setInfoWindow();
-				Log.d("icon","selected");
-			}
-		}
-	}
-	
+        });
+    }
+
+
 	/* Marker listener to unselect an aircraft icon*/
 	@Override
     public boolean onMarkerClick(final Marker marker) {
-		
-		//If the infowindow marker is clicked, remove it
-		if(marker.equals(infoWindow)) {
-			isAircraftIconSelected = false;
-			infoWindow.remove();
-		}
+
+        //If the aircraft icon is clicked, select it or unselect it
+        if(marker.equals(acMarker)) {
+            if(!isAircraftIconSelected) {
+                isAircraftIconSelected = true;
+                Log.d("infowindow","markerclick-ON");
+            } else {
+                isAircraftIconSelected = false;
+                Log.d("infowindow","markerclick-OFF");
+            }
+            /* TODO prevent info window from translating on rotation (square problem) */
+        }
+
 		return true;
 	}
-	
-	/* Set the information window for an aircraft icon */
-	private void setInfoWindow() {
 
-		//Call GoogleMaps
-		mapFragment.getMapAsync(new OnMapReadyCallback() {
-            @Override
-            public void onMapReady(GoogleMap map) {
-            	
-//            	if(infoWindow != null) {
-//            		infoWindow.remove();
-//            	}
-//            	
-//            	infoWindow = map.addMarker(new MarkerOptions()
-//            	.position(aircraft.getLatLng())
-//                .alpha(1)
-//                .draggable(false)
-////	                .infoWindowAnchor(0.5f,0.5f)  //Determine the location of the info window
-//    			);
-//            	infoWindow.showInfoWindow();
-            }
-		}); 
-	}
-	
+    /* Info window click listener to hide it*/
+    @Override
+    public void onInfoWindowClick(final Marker marker) {
+
+        //If the infowindow marker is clicked, remove it
+        if(marker.equals(infoWindow)) {
+            isAircraftIconSelected = false;
+            Log.d("infowindow","windowclick-OFF");
+        }
+    }
+
 	/* Update the objects that are displayed on the map */
-	public void updateMap(){
-		
-		//Determine the color of the aicraft icon depoendent on selection status
+	public void updateAircraftMarker(){
+
+		//Determine the color of the aicraft icon based on selection status
 		if(isAircraftIconSelected) {
 			aircraft.setCircleColor(Color.YELLOW);
 		} else {
 			aircraft.setCircleColor(Color.WHITE);
 		}
-		
+
 		//Generate an icon
 		aircraft.generateIcon();
 		final BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(aircraft.getIcon());
 		final LatLng aircraftLocation = new LatLng(aircraft.getLat()*1e-7, aircraft.getLon()*1e-7);
-		
+
 		//Call GoogleMaps
-		mapFragment.getMapAsync(new OnMapReadyCallback() {
+        mapFragment.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap map) {
 
-				///////* Marker for display of aircraft icon on map *///////
+                ///////* Marker for display of aircraft icon on map *///////
 
                 //Clear marker from map (if it exists)
-            	if(acMarker != null) {
-            		acMarker.remove();
-            	}
+                if (acMarker != null) {
+                    acMarker.remove();
+                }
 
                 /* TODO use setZIndex to make sure the aircraft icons are drawn on top of polylines for flight plan (largest number goes on top)*/
                 //Add marker to map
@@ -747,49 +765,52 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 .anchor((float) 0.5, (float) 0.5)
                                 .icon(icon)
                                 .flat(true)
-                                .title("Aircraft")
+                                .title(" " + aircraft.getLabelCharacter())
+                                .infoWindowAnchor(0.5f, 1-1*aircraft.getIconBoundFactor())
                                 .draggable(false)
                 );
 
-
-            	///////* Set the information window for an aircraft icon *///////
-            	
-            	if(isAircraftIconSelected) {
-                	if(infoWindow != null) {
-                		infoWindow.remove();
-                	}
-                	
-                	infoWindow = map.addMarker(new MarkerOptions()
-                	.position(aircraft.getLatLng())
-                    .alpha(1)
-                    .draggable(false)
-//    	                .infoWindowAnchor(0.5f,0.5f)  //Determine the location of the info window
-        			);
-                	infoWindow.showInfoWindow();
-    			}
-
-            	///////* Marker for display of waypoints on map *///////
-            	
-            	//Clear marker from map (if it exists)
-            	if(wpMarker != null) {
-            		wpMarker.remove();
-            	}
-            	            	
-            	//Add marker to map (size remains constant with zooming)
-            	wpMarker = map.addMarker(new MarkerOptions()
-                .position(aircraft.getWpLatLng(0))
-                .anchor((float) 0.5, (float) 0.5)
-                .flat(true)
-                .title("Waypoint")
-                .draggable(false)
-            	);	
-
+                //Hide or show the information window of the aicraft based on selection status
+                if(isAircraftIconSelected) {
+                    acMarker.showInfoWindow();
+                } else {
+                    acMarker.hideInfoWindow();
+                }
             }
-        });  
+        });
 	}
-	
+
+    /* Update the waypoint markers that are displayed on the map */
+    private void waypointUpdater() {
+
+        //Call GoogleMaps
+        mapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap map) {
+
+                /* TODO Change call location of the waypoint update to the appropriate location (when new waypoints are received??) */
+
+                //Clear marker from map (if it exists)
+                if (wpMarker != null) {
+                    wpMarker.remove();
+                }
+
+                //Add marker to map (size remains constant with zooming)
+                wpMarker = map.addMarker(new MarkerOptions()
+                                .position(aircraft.getWpLatLng(0))
+                                .anchor((float) 0.5, (float) 0.5)
+                                .flat(true)
+                                .title("Waypoint")
+                                .draggable(false)
+                );
+            }
+
+        });
+    }
+
+
 	/////////////////////////ALTITUDE TAPE/////////////////////////
-	
+
 	public void updateAltitudeTape(){
 		
 		/* Set the location of the target label on the altitude tape and check wether to 
@@ -800,8 +821,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			altitudeTapeFragment.deleteTargetLabel(aircraft.getTargetLabelId());
 		}
 		
-		/* Set the location (actual) altitude label on the altitude tape */ 
-		altitudeTapeFragment.setLabel(aircraft.getAltitude(),aircraft.getAltLabelId());
+		/* Set the location (actual) altitude label on the altitude tape */
+		altitudeTapeFragment.setLabel(aircraft.getAltitude(),aircraft.getAltLabelId(),aircraft.getLabelCharacter(),isAircraftIconSelected);
 	}
-	
+
 }
