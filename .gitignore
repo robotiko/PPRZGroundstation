@@ -7,7 +7,8 @@
 .idea/libraries
 local.properties
 gcs.iml
+/*/build/
 /build
 app/build
-app.iml
+*.iml
 .DS_Store
