@@ -1,5 +1,6 @@
 package com.gcs.fragments;
 
+import com.gcs.MainActivity;
 import com.gcs.R;
 
 import android.content.ClipData;
@@ -62,15 +63,24 @@ public class AltitudeTape extends Fragment {
 	View.OnClickListener onLabelClick(final View tv) {
 	    return new View.OnClickListener() {
 	        public void onClick(View v) {
+
+                boolean isSelected = ((MainActivity)getActivity()).getIsAircraftIconSelected();
+
+                if(isSelected) {    //Deselect
+                    ((MainActivity)getActivity()).setAircraftSelectionStatus(false);
+                } else {            //Select
+                    ((MainActivity)getActivity()).setAircraftSelectionStatus(true);
+                }
+
 	        	/* TODO implement code for selection of aircraft (colors etc.) */
-	        	switch (v.getId()){
-	        	case 1:
-	        		Log.d("Test", "Click dynamic label!!");
-	        		break;
-	        	case 2:
-	        		Log.d("Test", "Click static label!!");
-	        		break;
-	        	}
+//	        	switch (v.getId()){
+//	        	case 1:
+//	        		Log.d("Test", "Click dynamic label!!");
+//	        		break;
+//	        	case 2:
+//	        		Log.d("Test", "Click static label!!");
+//	        		break;
+//	        	}
         	}
 	    };
 	}

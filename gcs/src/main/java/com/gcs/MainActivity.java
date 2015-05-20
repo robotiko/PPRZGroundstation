@@ -836,4 +836,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		altitudeTapeFragment.setLabel(aircraft.getAltitude(),aircraft.getAltLabelId(),aircraft.getLabelCharacter(),isAircraftIconSelected);
 	}
 
+    public void setAircraftSelectionStatus(boolean selection){
+        isAircraftIconSelected = selection;
+    }
+
+    public boolean getIsAircraftIconSelected() {
+        return isAircraftIconSelected;
+    }
+
 }
