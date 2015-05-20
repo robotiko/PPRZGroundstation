@@ -35,6 +35,7 @@ public class Aircraft {
 	private final int AltitudeLabelId   = TextView.generateViewId();
 	private final int targetLabelId     = TextView.generateViewId();
 	private final String labelCharacter = String.valueOf((char)(64+AltitudeLabelId));
+	private boolean isSelected = false;
 	
 	//Set and get functions for attitude
 	public void setRollPitchYaw(double roll, double pitch, double yaw) {
@@ -304,6 +305,12 @@ public class Aircraft {
     }
 
 	public String getLabelCharacter() { return labelCharacter;}
+
+	public boolean isSelected() { return isSelected; }
+
+	public void setIsSelected(boolean isSelected) {
+		this.isSelected = isSelected;
+	}
     
     //Other
     public void setIconSettings(){

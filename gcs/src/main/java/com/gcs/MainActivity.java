@@ -68,7 +68,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	private Button connectButton;
 	private boolean isConnected;
-	private boolean isAircraftIconSelected = false;
+//	private boolean isAircraftIconSelected = false;
 	private boolean isAltitudeUpdated = false;
 
 	private TelemetryFragment telemetryFragment;
@@ -665,11 +665,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //If the aircraft icon is clicked, select it or unselect it
         if(marker.equals(acMarker)) {
-            if(!isAircraftIconSelected) {
-                isAircraftIconSelected = true;
+            if(!aircraft.isSelected()) {
+                aircraft.setIsSelected(true);
                 Log.d("infowindow","markerclick-ON");
             } else {
-                isAircraftIconSelected = false;
+                aircraft.setIsSelected(false);
                 Log.d("infowindow","markerclick-OFF");
             }
             /* TODO prevent info window from translating on rotation (square problem) */
@@ -684,7 +684,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //If the infowindow marker is clicked, remove it
         if(marker.equals(infoWindow)) {
-            isAircraftIconSelected = false;
+            aircraft.setIsSelected(false);
             Log.d("infowindow","windowclick-OFF");
         }
     }
@@ -693,7 +693,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	public void updateAircraftMarker(){
 
 		//Determine the color of the aicraft icon based on selection status
-		if(isAircraftIconSelected) {
+		if(aircraft.isSelected()) {
 			aircraft.setCircleColor(Color.YELLOW);
 		} else {
 			aircraft.setCircleColor(Color.WHITE);
@@ -729,7 +729,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 );
 
                 //Show either the label or the detailed information window of the aicraft based on selection status
-                if(isAircraftIconSelected) {
+                if(aircraft.isSelected()) {
 
 					map.setInfoWindowAdapter(new InfoWindowAdapter() {
 
@@ -833,15 +833,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		}
 		
 		/* Set the location (actual) altitude label on the altitude tape */
-		altitudeTapeFragment.setLabel(aircraft.getAltitude(),aircraft.getAltLabelId(),aircraft.getLabelCharacter(),isAircraftIconSelected);
+		altitudeTapeFragment.setLabel(aircraft.getAltitude(),aircraft.getAltLabelId(),aircraft.getLabelCharacter(),aircraft.isSelected());
 	}
 
-    public void setAircraftSelectionStatus(boolean selection){
-        isAircraftIconSelected = selection;
+    public void setIsSelected(boolean isSelected){
+        aircraft.setIsSelected(isSelected);
     }
 
-    public boolean getIsAircraftIconSelected() {
-        return isAircraftIconSelected;
+    public boolean isAircraftIconSelected() {
+        return aircraft.isSelected();
     }
-
 }

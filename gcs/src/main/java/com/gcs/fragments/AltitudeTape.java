@@ -64,15 +64,15 @@ public class AltitudeTape extends Fragment {
 	    return new View.OnClickListener() {
 	        public void onClick(View v) {
 
-                boolean isSelected = ((MainActivity)getActivity()).getIsAircraftIconSelected();
+                boolean isSelected = ((MainActivity)getActivity()).isAircraftIconSelected();
 
                 if(isSelected) {    //Deselect
-                    ((MainActivity)getActivity()).setAircraftSelectionStatus(false);
+                    ((MainActivity)getActivity()).setIsSelected(false);
                 } else {            //Select
-                    ((MainActivity)getActivity()).setAircraftSelectionStatus(true);
+                    ((MainActivity)getActivity()).setIsSelected(true);
                 }
 
-	        	/* TODO implement code for selection of aircraft (colors etc.) */
+	        	/* TODO implement code for selection of aircraft when multiple are available (colors etc.) */
 //	        	switch (v.getId()){
 //	        	case 1:
 //	        		Log.d("Test", "Click dynamic label!!");
