@@ -8,5 +8,7 @@
     <item name="red" type="color">#FFFF4444</item>
     
     <item name="white" type="color">#FFFFFF</item>
+
+    <item name="yellow" type="color">#FFFFFF00</item>
  
 </resources> 

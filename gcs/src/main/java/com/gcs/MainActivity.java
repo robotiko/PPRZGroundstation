@@ -36,6 +36,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -46,6 +47,7 @@ import android.os.Parcelable;
 import android.os.RemoteException;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -634,7 +636,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //            @Override
 //            public View getInfoContents(Marker marker) {
 //
-//            	View v = getLayoutInflater().inflate(R.layout.info_window, null);
+//            	View v = getLayoutInflater().inflate(R.layout.info_window_detail, null);
 //
 //            	/* TODO add content to infowindow */
 //
@@ -655,50 +657,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //            }
 //		});
 	}
-
-    private void showCustomInfoWindow() {
-
-        //Enable a custom information window for the aircraft icons
-        //Call GoogleMaps
-        mapFragment.getMapAsync(new OnMapReadyCallback() {
-            @Override
-            public void onMapReady(GoogleMap map) {
-
-                map.setInfoWindowAdapter(new InfoWindowAdapter() {
-
-                    // Use default InfoWindow frame
-                    @Override
-                    public View getInfoWindow(Marker marker) {
-                        return(null);
-                    }
-
-                    // Defines the contents of the InfoWindow
-                    @Override
-                    public View getInfoContents(Marker marker) {
-
-                        View v = getLayoutInflater().inflate(R.layout.info_window, null);
-
-                        /* TODO add content to infowindow */
-
-                        TextView infoAirtime  = (TextView) v.findViewById(R.id.info_airtime);
-                        TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
-                        TextView infoAlt      = (TextView) v.findViewById(R.id.info_alt);
-                        TextView infoMode     = (TextView) v.findViewById(R.id.info_mode);
-                        TextView infoSats     = (TextView) v.findViewById(R.id.info_sats);
-
-                        //Setting the values in the information window
-                        infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
-                        infoDistHome.setText("Distance Home: " + "DISTANCE HERE!");
-                        infoAlt.setText("Altitude: "+ aircraft.getAltitude());
-                        infoMode.setText("Mode: " + "MODE HERE!");
-                        infoSats.setText("#Sats: " + "#SATS HERE!");
-
-                        return v;
-                    }
-                });
-            }
-        });
-    }
 
 
 	/* Marker listener to unselect an aircraft icon*/
@@ -770,12 +728,65 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 .draggable(false)
                 );
 
-                //Hide or show the information window of the aicraft based on selection status
+                //Show either the label or the detailed information window of the aicraft based on selection status
                 if(isAircraftIconSelected) {
-                    acMarker.showInfoWindow();
+
+					map.setInfoWindowAdapter(new InfoWindowAdapter() {
+
+                        // Use default InfoWindow frame
+                        @Override
+                        public View getInfoWindow(Marker marker) {
+                            return (null);
+                        }
+
+                        // Defines the contents of the InfoWindow
+                        @Override
+                        public View getInfoContents(Marker marker) {
+
+                            View v = getLayoutInflater().inflate(R.layout.info_window_detail, null);
+
+                        /* TODO add content to the detailed infowindow */
+
+                            TextView infoAirtime = (TextView) v.findViewById(R.id.info_airtime);
+                            TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
+                            TextView infoAlt = (TextView) v.findViewById(R.id.info_alt);
+                            TextView infoMode = (TextView) v.findViewById(R.id.info_mode);
+                            TextView infoSats = (TextView) v.findViewById(R.id.info_sats);
+
+                            //Setting the values in the information window
+                            infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
+                            infoDistHome.setText("Distance Home: " + "DISTANCE HERE!");
+                            infoAlt.setText("Altitude: " + aircraft.getAltitude());
+                            infoMode.setText("Mode: " + "MODE HERE!");
+                            infoSats.setText("#Sats: " + "#SATS HERE!");
+
+                            return v;
+                        }
+                    });
                 } else {
-                    acMarker.hideInfoWindow();
+
+                    map.setInfoWindowAdapter(new InfoWindowAdapter() {
+
+                        // Use default InfoWindow frame
+                        @Override
+                        public View getInfoWindow(Marker marker) {
+                            return(null);
+                        }
+
+                        // Defines the contents of the InfoWindow
+                        @Override
+                        public View getInfoContents(Marker marker) {
+
+                            View v = getLayoutInflater().inflate(R.layout.info_window_label, null);
+
+                            TextView label = (TextView) v.findViewById(R.id.label);
+                            label.setText(aircraft.getLabelCharacter());
+
+                            return v;
+                        }
+                    });
                 }
+				acMarker.showInfoWindow();
             }
         });
 	}
