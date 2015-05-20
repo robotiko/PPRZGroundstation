@@ -35,7 +35,7 @@ public class Aircraft {
 	private final int AltitudeLabelId   = TextView.generateViewId();
 	private final int targetLabelId     = TextView.generateViewId();
 	private final String labelCharacter = String.valueOf((char)(64+AltitudeLabelId));
-	private boolean isSelected = false;
+	private boolean isSelected          = false;
 	
 	//Set and get functions for attitude
 	public void setRollPitchYaw(double roll, double pitch, double yaw) {
@@ -157,6 +157,14 @@ public class Aircraft {
     public void setIsOnUniqueAltitude(boolean newState) {
     	mState.setIsOnUniqueAltitude(newState);
     }
+
+    public void setConflictStatus(boolean newIsInConflict, boolean newIsOnUniqueAltitude) {
+        mState.setConflictStatus(newIsInConflict,newIsOnUniqueAltitude);
+    }
+
+    public ConflictStatus getConflictStatus() {
+        return mState.getConflictStatus();
+    }
     
   //Set and get functions for position
     public byte getSatVisible() {
@@ -199,7 +207,7 @@ public class Aircraft {
 	
 	//Set and get functions for icon
     public void generateIcon() {
-    	mIcon.generateIcon(isOnUniqueAltitude(), isInConflict(), (float) mAttitude.getYaw(), getBattLevel(), communicationSignal);
+    	mIcon.generateIcon(mState.getConflictStatus(), (float) mAttitude.getYaw(), getBattLevel(), communicationSignal);
     }
     
     public void setCircleColor(int color) {

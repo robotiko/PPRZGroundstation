@@ -2,6 +2,7 @@ package com.gcs.fragments;
 
 import com.gcs.MainActivity;
 import com.gcs.R;
+import com.gcs.core.ConflictStatus;
 
 import android.content.ClipData;
 import android.graphics.Typeface;
@@ -93,7 +94,6 @@ public class AltitudeTape extends Fragment {
 				
 	            ClipData data = ClipData.newPlainText("","");
 	            View.DragShadowBuilder myShadow = new DragShadowBuilder(tv);
-	            /* TODO Hide dragshadow and show custom indicator on altitude tape */
 	            /* TODO Offset the label that is dragged to be able to see it */
 	            
 	            // Starts the drag
@@ -116,7 +116,6 @@ public class AltitudeTape extends Fragment {
             case DragEvent.ACTION_DRAG_STARTED:
                 break;
             case DragEvent.ACTION_DRAG_LOCATION :
-            	Log.d("Current y-location",String.valueOf(event.getY()));
                 break;
             case DragEvent.ACTION_DROP:
             	//Send the drop location to the method that implements the command
@@ -138,7 +137,21 @@ public class AltitudeTape extends Fragment {
             /* TODO add yellow label for selection */
             backgroundImg = R.drawable.altitude_label_small_gray;
         } else {
-            backgroundImg =  R.drawable.altitude_label_small_blue;
+            ConflictStatus conflictStatus = ((MainActivity) getActivity()).getConflictStatus();
+
+            switch (conflictStatus) {
+                case BLUE:
+                    backgroundImg =  R.drawable.altitude_label_small_blue;
+                    break;
+                case GRAY:
+                    backgroundImg =  R.drawable.altitude_label_small_gray;
+                    break;
+                case RED:
+                    backgroundImg =  R.drawable.altitude_label_small_red;
+                    break;
+                default:
+                    backgroundImg =  R.drawable.altitude_label_small_blue;
+            }
         }
 		
 		/* TODO change the horizontal location of the altitude labels and flip them around */
@@ -152,9 +165,6 @@ public class AltitudeTape extends Fragment {
             label.setId(labelId);
             label.setBackgroundResource(backgroundImg);
 
-	        /* On the basis of the label number (first label is generated to be 1) a string is
-	        made to display on the altitude label */
-//	        String labelCharacter = String.valueOf((char)(64+labelId));
 	        label.setText("      "+ labelCharacter);
 	        label.setTypeface(null, Typeface.BOLD);
 	        label.setGravity(Gravity.CENTER_VERTICAL);

@@ -9,6 +9,7 @@ import com.aidl.core.model.Heartbeat;
 import com.aidl.core.model.Speed;
 import com.aidl.core.model.Battery;
 import com.aidl.core.model.Position;
+import com.gcs.core.ConflictStatus;
 import com.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
 import com.gcs.core.Aircraft;
 import com.gcs.fragments.AltitudeTape;
@@ -19,14 +20,12 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
 import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter;
-import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.GroundOverlay;
-import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -36,7 +35,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -47,7 +45,6 @@ import android.os.Parcelable;
 import android.os.RemoteException;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -168,9 +165,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 	
 	////////////INTERFACE UPDATER//////////
-	
-	
-	/* TODO make sure information window is synchonously updated with tha aircraft icon */
 	
 	Runnable interfaceUpdater = new Runnable() {
 	    @Override 
@@ -620,42 +614,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Enable clicklistener on infowindows
         map.setOnInfoWindowClickListener(this);
 
-        //Temporary load of waypoints /* TODO improve the location of waypoint update call */
+        //Temporary load of waypoints
+        /* TODO improve the location of waypoint update call */
         waypointUpdater();
-
-//		//Enable a custom information window for the aircraft icons
-//		map.setInfoWindowAdapter(new InfoWindowAdapter() {
-//
-//			// Use default InfoWindow frame
-//			@Override
-//			public View getInfoWindow(Marker marker) {
-//				return(null);
-//			}
-//
-//			// Defines the contents of the InfoWindow
-//            @Override
-//            public View getInfoContents(Marker marker) {
-//
-//            	View v = getLayoutInflater().inflate(R.layout.info_window_detail, null);
-//
-//            	/* TODO add content to infowindow */
-//
-//            	TextView infoAirtime  = (TextView) v.findViewById(R.id.info_airtime);
-//            	TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
-//            	TextView infoAlt      = (TextView) v.findViewById(R.id.info_alt);
-//            	TextView infoMode     = (TextView) v.findViewById(R.id.info_mode);
-//            	TextView infoSats     = (TextView) v.findViewById(R.id.info_sats);
-//
-//	        	//Setting the values in the information window
-//            	infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
-//            	infoDistHome.setText("Distance Home: " + "DISTANCE HERE!");
-//            	infoAlt.setText("Altitude: "+ aircraft.getAltitude());
-//            	infoMode.setText("Mode: " + "MODE HERE!");
-//            	infoSats.setText("#Sats: " + "#SATS HERE!");
-//
-//            	return v;
-//            }
-//		});
 	}
 
 
@@ -716,7 +677,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     acMarker.remove();
                 }
 
-                /* TODO use setZIndex to make sure the aircraft icons are drawn on top of polylines for flight plan (largest number goes on top)*/
                 //Add marker to map
                 acMarker = map.addMarker(new MarkerOptions()
                                 .position(aircraft.getLatLng())
@@ -842,5 +802,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     public boolean isAircraftIconSelected() {
         return aircraft.isSelected();
+    }
+
+    public ConflictStatus getConflictStatus(){
+        return aircraft.getConflictStatus();
     }
 }

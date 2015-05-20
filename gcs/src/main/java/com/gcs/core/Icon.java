@@ -30,6 +30,10 @@ public class Icon {
 	private int commVertLocation;
 	private int commHorLocation;
 	private int commScaling;
+
+//    private enum ConflictStatus {
+//        BLUE, GRAY, RED
+//    }
 	
 	/* TODO make sure all values from resources are loaded at creation of class and not when this method is called from onCreate */
 	public void setIconSettings(Resources res){
@@ -46,20 +50,23 @@ public class Icon {
 		commScaling			= res.getInteger(R.integer.CommScaling);
 	}
 	
-	public void generateIcon(boolean isOnUniqueAltitude, boolean isInConflict, float heading, int batLevel, int communicationSignal){
+	public void generateIcon(ConflictStatus conflictStatus, float heading, int batLevel, int communicationSignal){
 		
 		Bitmap baseIcon, batteryIcon, communicationIcon;
-		
-		//Get the base icon (conflictStatus:red, blue, gray)
-		if(isOnUniqueAltitude){
-			baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_gray); /* TODO make the gray aircraft icon darker for visibility */
-		} else {
-			if (isInConflict){
-				baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_red);
-			} else {
-				baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_blue);
-			}
-		}
+
+        switch (conflictStatus) {
+            case BLUE:
+                baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_blue);
+                break;
+            case GRAY:
+                baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_gray); /* TODO make the gray aircraft icon darker for visibility */
+                break;
+            case RED:
+                baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_red);
+                break;
+            default:
+                baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_blue);
+        }
 		
 		//Place the icon on a white circle
 		baseIcon = addCircle(baseIcon);
