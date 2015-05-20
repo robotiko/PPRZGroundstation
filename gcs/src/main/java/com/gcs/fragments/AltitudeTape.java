@@ -134,8 +134,8 @@ public class AltitudeTape extends Fragment {
         int backgroundImg;
 
         if(isAircraftIconSelected) {
-            /* TODO add yellow label for selection */
-            backgroundImg = R.drawable.altitude_label_small_gray;
+            backgroundImg = R.drawable.altitude_label_small_yellow;
+
         } else {
             ConflictStatus conflictStatus = ((MainActivity) getActivity()).getConflictStatus();
 
