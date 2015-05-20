@@ -766,7 +766,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 .icon(icon)
                                 .flat(true)
                                 .title(" " + aircraft.getLabelCharacter())
-                                .infoWindowAnchor(0.5f, 1-1*aircraft.getIconBoundFactor())
+                                .infoWindowAnchor(0.5f, aircraft.getIconBoundOffset())
                                 .draggable(false)
                 );
 

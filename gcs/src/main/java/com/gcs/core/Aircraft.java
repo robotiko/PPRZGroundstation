@@ -213,7 +213,7 @@ public class Aircraft {
     	return mIcon.getIconScalingFactor();
     }
 
-    public float getIconBoundFactor() {return mIcon.getIconBoundFactor(); }
+    public float getIconBoundOffset() {return mIcon.getIconBoundOffset(); }
     
     //Set and get functions for waypoints
     public void addWaypoint(float lat, float lon, float alt, short seq, byte targetSys, byte targetComp) {

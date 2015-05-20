@@ -12,7 +12,6 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 
 public class Icon {
 	
@@ -21,7 +20,6 @@ public class Icon {
 	private Bitmap AC_Icon;
 	
 	private float scalingFactor = 1.0f;
-	private float iconBoundFactor = 1.0f;
 	private int circleColor = Color.WHITE;
 	
 	private int resolution;
@@ -144,11 +142,10 @@ public class Icon {
     	//Create bitmap to work with
     	Bitmap mutableBitmap = baseIcon.copy(Bitmap.Config.ARGB_8888, true);
     	Canvas c = new Canvas(mutableBitmap);
-    	int center = mutableBitmap.getWidth()/2;
+        int center = mutableBitmap.getWidth()/2;
     	
     	//Set scaling factor to avoid icon size changing with heading while printing the aircraft icon on the map
     	setScalingFactor(mutableBitmap.getWidth());
-        setIconBoundFactor(mutableBitmap.getHeight());
 
         //Add battery icon to the base icon
     	int batVert = (resolution/2)*batteryVertLocation/100;
@@ -178,10 +175,6 @@ public class Icon {
     private void setScalingFactor(int widthActual) {
     	scalingFactor = ((float)widthActual)/resolution;
     }
-
-    private void setIconBoundFactor(int iconHeight) {
-        iconBoundFactor = ((float) resolution)/iconHeight;
-    }
 	
 	public Bitmap getIcon(){
 		return AC_Icon;
@@ -191,9 +184,7 @@ public class Icon {
 		return scalingFactor;
 	}
 
-	public float getIconBoundFactor() {
-		return iconBoundFactor;
-	}
+	public float getIconBoundOffset() { return ((AC_Icon.getHeight()-resolution)/2.0f)/AC_Icon.getHeight(); }
 	
 	public void setCircleColor(int color) {
 		circleColor = color;
