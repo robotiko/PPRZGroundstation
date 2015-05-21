@@ -23,6 +23,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
 import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
+import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -56,7 +57,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends FragmentActivity implements OnMapReadyCallback, OnMarkerClickListener, OnInfoWindowClickListener {
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback, OnMarkerClickListener, OnInfoWindowClickListener, OnMarkerDragListener {
 	
 	private static final String TAG = MainActivity.class.getSimpleName();
 	
@@ -177,7 +178,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             aircraftMarkerUpdater();
 
             /* TODO remove this?? (see other to do to decide what the correct call location is */
-            waypointUpdater();
+//            waypointUpdater();
 	    	
 			//Update altitude tape
 	    	if (isAltitudeUpdated){
@@ -614,6 +615,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		//Enable clicklistener on markers
 		map.setOnMarkerClickListener(this);
 
+        //Enable drag listener on markers
+        map.setOnMarkerDragListener(this);
+
         //Enable clicklistener on infowindows
         map.setOnInfoWindowClickListener(this);
 
@@ -640,6 +644,28 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
 		return true;
 	}
+
+    /* Marker drag listener for moving waypoint */
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDragEnd(Marker marker) {
+        int wpNumber =  Integer.parseInt(marker.getSnippet());
+        LatLng pos = marker.getPosition();
+
+        /* TODO change waypoint location change to setfunction of the service */
+        aircraft.setWpLatLon((float) pos.latitude,(float) pos.longitude,wpNumber);
+        waypointUpdater();
+    }
 
     /* Info window click listener to hide it*/
     @Override
@@ -781,7 +807,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     //Add waypoint marker to map
                     wpMarker = map.addMarker(new MarkerOptions()
                                     .position(aircraft.getWpLatLng(i))
-                                    .anchor((float) 0.5, (float) 0.5)
                                     .flat(true)
                                     .snippet(String.valueOf(aircraft.getWpSeq(i)))
                                     .draggable(false)
@@ -802,7 +827,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         .width(4)
                         .color(Color.WHITE));
             }
-
         });
     }
 

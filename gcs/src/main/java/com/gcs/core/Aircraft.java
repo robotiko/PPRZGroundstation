@@ -241,6 +241,11 @@ public class Aircraft {
     	wp.setLon(lon);
     	waypoints.set(wpNumber,wp);
 	}
+
+    public void setWpLatLon(float lat, float lon, int wpNumber) {
+        setWpLat(lat,wpNumber);
+        setWpLon(lon,wpNumber);
+    }
     
     public void setWpAlt(float alt, int wpNumber) {
     	Waypoint wp = waypoints.get(wpNumber);
