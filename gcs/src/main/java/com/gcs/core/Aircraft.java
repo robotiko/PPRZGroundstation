@@ -278,6 +278,15 @@ public class Aircraft {
 		LatLng latLng = new LatLng(waypoints.get(wpNumber).getLat(),waypoints.get(wpNumber).getLon());
 		return latLng;
 	}
+
+    public List<LatLng> getWpLatLngList() {
+        List<LatLng> points  = new ArrayList<LatLng>();
+
+        for (int i = 0; i < getNumberOfWaypoints(); i++) {
+            points.add(getWpLatLng(i));
+        }
+        return points;
+    }
     
     public float getWpAlt(int wpNumber) {
 		return waypoints.get(wpNumber).getAlt();

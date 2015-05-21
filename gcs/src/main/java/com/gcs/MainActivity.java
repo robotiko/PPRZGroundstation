@@ -10,6 +10,8 @@ import com.aidl.core.model.Speed;
 import com.aidl.core.model.Battery;
 import com.aidl.core.model.Position;
 import com.gcs.core.ConflictStatus;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
 import com.gcs.core.Aircraft;
 import com.gcs.fragments.AltitudeTape;
@@ -74,11 +76,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private AltitudeTape altitudeTapeFragment;
 	
 	Aircraft aircraft;
-	Marker acMarker, wpMarker, infoWindow;
-	
-	SupportMapFragment mapFragment;
 
-    private List<Marker> wpMarkers  = new ArrayList<Marker>();;
+    SupportMapFragment mapFragment;
+	Marker acMarker, wpMarker, infoWindow;
+    Polyline flightPath;
+
+    private List<Marker> wpMarkers  = new ArrayList<Marker>();
 	  
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +96,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		
 		// Instantiate aircraft object
 		aircraft = new Aircraft(this);
-		aircraft.setIconSettings();
+		aircraft.setIconSettings(); //Fix to instantiate the icon class
 		
 		//Add some waypoints (TEMPORARY)
 		/*                  [lat,        lon,        alt,   index,     targetSys,targetComp] */
@@ -635,7 +638,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
             /* TODO prevent info window from translating on rotation (square problem) */
         }
-
 		return true;
 	}
 
@@ -759,6 +761,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapReady(GoogleMap map) {
 
+                ///* WAYPOINT MARKERS *///
                 /* TODO Change call location of the waypoint update to the appropriate location (when new waypoints are received??) */
 
                 //If the wps are already initiated, remove them from the map and clear the list that holds them
@@ -785,6 +788,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     );
                     wpMarkers.add(wpMarker);
                 }
+
+                ///* FLIGHT PATH *///
+                // If the flight path has been drawn before, remove it to be updated
+                if(flightPath != null) {
+                    flightPath.remove();
+                }
+
+                // Draw the flight path with the specified characteristics
+                /* TODO make a custom waypoint marker to let their center coincide with the polyline points */
+                flightPath = map.addPolyline(new PolylineOptions()
+                        .addAll(aircraft.getWpLatLngList())
+                        .width(4)
+                        .color(Color.WHITE));
             }
 
         });
