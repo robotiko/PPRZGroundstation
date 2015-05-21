@@ -159,7 +159,7 @@ public class Aircraft {
     }
 
     public void setConflictStatus(boolean newIsInConflict, boolean newIsOnUniqueAltitude) {
-        mState.setConflictStatus(newIsInConflict,newIsOnUniqueAltitude);
+        mState.setConflictStatus(newIsInConflict, newIsOnUniqueAltitude);
     }
 
     public ConflictStatus getConflictStatus() {
@@ -294,6 +294,8 @@ public class Aircraft {
 	public byte getWpTargetComp(int wpNumber) {
 		return waypoints.get(wpNumber).getTargetComp();
 	}
+
+	public int getNumberOfWaypoints() { return waypoints.size(); }
 	
     //Set and get functions for class attributes
     public int getCommunicationSignal(){

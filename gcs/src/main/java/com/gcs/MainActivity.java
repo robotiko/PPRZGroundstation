@@ -25,7 +25,6 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -52,6 +51,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, OnMarkerClickListener, OnInfoWindowClickListener {
 	
 	private static final String TAG = MainActivity.class.getSimpleName();
@@ -65,7 +67,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	private Button connectButton;
 	private boolean isConnected;
-//	private boolean isAircraftIconSelected = false;
 	private boolean isAltitudeUpdated = false;
 
 	private TelemetryFragment telemetryFragment;
@@ -74,11 +75,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	Aircraft aircraft;
 	Marker acMarker, wpMarker, infoWindow;
-	GroundOverlay mapOverlay;
 	
 	SupportMapFragment mapFragment;
-	
-	private float protectedZoneDiameter;
+
+    private List<Marker> wpMarkers  = new ArrayList<Marker>();;
 	  
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -117,9 +117,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Get the map and register for the ready callback
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-        // Value for the size of the protected zone around the aircraft icon
-        protectedZoneDiameter = (float) getResources().getInteger(R.integer.ProtectedZoneDiameter);
         
         // Start the interface update handler
 		interfaceUpdater.run();	/* TODO check if there is a better moment to start this handler (on first heartbeat?) */
@@ -174,7 +171,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 
 	    	//Update map (icons, waypoints and information windows)
-            updateAircraftMarker();
+            aircraftMarkerUpdater();
+
+            /* TODO remove this?? (see other to do to decide what the correct call location is */
+            waypointUpdater();
 	    	
 			//Update altitude tape
 	    	if (isAltitudeUpdated){
@@ -646,12 +646,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //If the infowindow marker is clicked, remove it
         if(marker.equals(infoWindow)) {
             aircraft.setIsSelected(false);
-            Log.d("infowindow","windowclick-OFF");
+            Log.d("infowindow", "windowclick-OFF");
         }
     }
 
 	/* Update the objects that are displayed on the map */
-	public void updateAircraftMarker(){
+	public void aircraftMarkerUpdater(){
 
 		//Determine the color of the aicraft icon based on selection status
 		if(aircraft.isSelected()) {
@@ -705,7 +705,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                             View v = getLayoutInflater().inflate(R.layout.info_window_detail, null);
 
-                        /* TODO add content to the detailed infowindow */
+                            /* TODO add content to the detailed infowindow */
 
                             TextView infoAirtime = (TextView) v.findViewById(R.id.info_airtime);
                             TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
@@ -761,19 +761,30 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 /* TODO Change call location of the waypoint update to the appropriate location (when new waypoints are received??) */
 
-                //Clear marker from map (if it exists)
-                if (wpMarker != null) {
-                    wpMarker.remove();
+                //If the wps are already initiated, remove them from the map and clear the list that holds them
+                if(!wpMarkers.isEmpty()) {
+                    //Remove markers from map
+                    for (int i = 0; i < aircraft.getNumberOfWaypoints(); i++) {
+                        wpMarkers.get(i).remove();
+                    }
+
+                    //Clear the marker list
+                    wpMarkers.clear();
                 }
 
-                //Add marker to map (size remains constant with zooming)
-                wpMarker = map.addMarker(new MarkerOptions()
-                                .position(aircraft.getWpLatLng(0))
-                                .anchor((float) 0.5, (float) 0.5)
-                                .flat(true)
-                                .title("Waypoint")
-                                .draggable(false)
-                );
+                //(Re)generate waypoint markers
+                for (int i = 0; i < aircraft.getNumberOfWaypoints(); i++) {
+
+                    //Add waypoint marker to map
+                    wpMarker = map.addMarker(new MarkerOptions()
+                                    .position(aircraft.getWpLatLng(i))
+                                    .anchor((float) 0.5, (float) 0.5)
+                                    .flat(true)
+                                    .snippet(String.valueOf(aircraft.getWpSeq(i)))
+                                    .draggable(false)
+                    );
+                    wpMarkers.add(wpMarker);
+                }
             }
 
         });
