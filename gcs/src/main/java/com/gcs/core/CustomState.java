@@ -1,6 +1,6 @@
 package com.gcs.core;
 
-import com.model.State;
+import com.sharedlib.model.State;
 
 public class CustomState extends State {
 

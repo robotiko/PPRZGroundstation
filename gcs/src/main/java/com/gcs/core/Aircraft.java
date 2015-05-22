@@ -8,11 +8,11 @@ import android.graphics.Bitmap;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.model.Altitude;
-import com.model.Attitude;
-import com.model.Battery;
-import com.model.Speed;
-import com.model.Position;
+import com.sharedlib.model.Altitude;
+import com.sharedlib.model.Attitude;
+import com.sharedlib.model.Battery;
+import com.sharedlib.model.Speed;
+import com.sharedlib.model.Position;
 
 public class Aircraft {
 	

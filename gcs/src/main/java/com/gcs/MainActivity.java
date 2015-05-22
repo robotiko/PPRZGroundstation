@@ -1,18 +1,18 @@
 package com.gcs;
 
-import com.aidl.IEventListener;
-import com.aidl.IMavLinkServiceClient;
-import com.aidl.core.ConnectionParameter;
-import com.aidl.core.model.Altitude;
-import com.aidl.core.model.Attitude;
-import com.aidl.core.model.Heartbeat;
-import com.aidl.core.model.Speed;
-import com.aidl.core.model.Battery;
-import com.aidl.core.model.Position;
+import com.aidllib.IEventListener;
+import com.aidllib.IMavLinkServiceClient;
+import com.aidllib.core.ConnectionParameter;
+import com.aidllib.core.model.Altitude;
+import com.aidllib.core.model.Attitude;
+import com.aidllib.core.model.Heartbeat;
+import com.aidllib.core.model.Speed;
+import com.aidllib.core.model.Battery;
+import com.aidllib.core.model.Position;
 import com.gcs.core.ConflictStatus;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
+import com.sharedlib.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
 import com.gcs.core.Aircraft;
 import com.gcs.fragments.AltitudeTape;
 import com.gcs.fragments.BatteryFragment;
@@ -271,7 +271,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //	    		}
 	    		
 	    		/* TODO Enable the waypoint service case once available */
-//	    		case "WAYPOINT_UPDATED": {
+//	    		case "WAYPOINTS_UPDATED": {
 //	    			updateWaypoints();
 //	    			break;
 //	    		}

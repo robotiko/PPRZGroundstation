@@ -8,10 +8,10 @@
         <option name="gradleJvm" value="1.7" />
         <option name="modules">
           <set>
+            <option value="$PROJECT_DIR$/../PPRZServices/PPRZServices/aidllib" />
+            <option value="$PROJECT_DIR$/../PPRZServices/PPRZServices/sharedlib" />
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/gcs" />
-            <option value="$PROJECT_DIR$/pPRZAidlLib" />
-            <option value="$PROJECT_DIR$/sharedLib" />
           </set>
         </option>
       </GradleProjectSettings>
