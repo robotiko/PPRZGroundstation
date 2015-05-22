@@ -1,5 +1,4 @@
-include ':aidllib', ':sharedlib'
-include ':gcs'
+include ':aidllib', ':sharedlib', ':app'
 
 project(':aidllib').projectDir = new File(settingsDir, '../PPRZServices/PPRZServices/aidllib')
 project(':sharedlib').projectDir = new File(settingsDir, '../PPRZServices/PPRZServices/sharedlib')

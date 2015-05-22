@@ -11,7 +11,7 @@
             <option value="$PROJECT_DIR$/../PPRZServices/PPRZServices/aidllib" />
             <option value="$PROJECT_DIR$/../PPRZServices/PPRZServices/sharedlib" />
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/gcs" />
+            <option value="$PROJECT_DIR$/app" />
           </set>
         </option>
       </GradleProjectSettings>
