@@ -150,9 +150,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	@Override
     public void onStart() {
         super.onStart();
+
+        ComponentName componentName = new ComponentName("com.pprzservices", "com.pprzservices.service.MavLinkService");
+        Intent intent = new Intent();
+        intent.setComponent(componentName);
+        if (!bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)) {
+
+            // TODO: Handle service not binding problems
+
+            Log.e(TAG, "The service could not be bound");
+        } else {
+            Log.d(TAG, "Service was bound");
+        }
         
-        Intent intent = new Intent(IMavLinkServiceClient.class.getName());
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+//        Intent intent = new Intent(IMavLinkServiceClient.class.getName());
+//        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 	
 	@Override
@@ -198,8 +210,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder serviceClient) {
 			mServiceClient = IMavLinkServiceClient.Stub.asInterface(serviceClient);
+
+			if (mServiceClient == null)
+				Log.d(TAG, "mServiceClient is null");
+
 			try {
 				mServiceClient.addEventListener(TAG, listener);
+
+                Log.d(TAG, "Listener has been added");
+
 			} catch (RemoteException e) {
 				Log.e(TAG, "Failed to add listener", e);
 			}
