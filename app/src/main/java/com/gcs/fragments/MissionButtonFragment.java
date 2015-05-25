@@ -1,5 +1,6 @@
 package com.gcs.fragments;
 
+import com.gcs.MainActivity;
 import com.gcs.R;
 
 import android.os.Bundle;
@@ -25,9 +26,7 @@ public class MissionButtonFragment extends Fragment {
 	/* TODO implement actions for clicks on the mission buttons */
 	/* TODO make custom buttons to replace the current textbuttons, if clicked color changes */
 	
-	public void onLandRequest(View v) {
-		Log.d("COMMAND","LAND");
-	}
+	public void onLandRequest(View v) { Log.d("COMMAND","LAND"); }
 	
 	public void onTakeOffRequest(View v) {
 		Log.d("COMMAND","TAKE-OFF");

@@ -310,6 +310,8 @@ public class Aircraft {
 	}
 
 	public int getNumberOfWaypoints() { return waypoints.size(); }
+
+	public void clearWpList() { waypoints.clear();}
 	
     //Set and get functions for class attributes
     public int getCommunicationSignal(){

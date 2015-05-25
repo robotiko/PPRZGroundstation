@@ -3,6 +3,7 @@ package com.gcs;
 import com.aidllib.IEventListener;
 import com.aidllib.IMavLinkServiceClient;
 import com.aidllib.core.ConnectionParameter;
+import com.aidllib.core.mavlink.waypoints.Waypoint;
 import com.aidllib.core.model.Altitude;
 import com.aidllib.core.model.Attitude;
 import com.aidllib.core.model.Heartbeat;
@@ -98,14 +99,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Instantiate aircraft object
 		aircraft = new Aircraft(this);
 		aircraft.setIconSettings(); //Fix to instantiate the icon class
-		
-		//Add some waypoints (TEMPORARY)
-		/*                  [lat,        lon,        alt,   index,     targetSys,targetComp] */
-		aircraft.addWaypoint(51.990968f, 4.375053f, 5.0f,  (short) 0, (byte) 0, (byte) 0);
-		aircraft.addWaypoint(51.990968f, 4.377670f, 10.0f, (short) 1, (byte) 0, (byte) 0);
-		aircraft.addWaypoint(51.990074f, 4.377670f, 15.0f, (short) 2, (byte) 0, (byte) 0);
-		aircraft.addWaypoint(51.990074f, 4.375053f, 20.0f, (short) 3, (byte) 0, (byte) 0);
-		
+
 		// Create a handle to the telemetry fragment
 		telemetryFragment = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);
 		
@@ -162,9 +156,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         } else {
             Log.d(TAG, "Service was bound");
         }
-        
-//        Intent intent = new Intent(IMavLinkServiceClient.class.getName());
-//        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 	
 	@Override
@@ -183,14 +174,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    @Override 
 	    public void run() {
 
-            //only update if selection status corresponds with
-
-
-	    	//Update map (icons, waypoints and information windows)
+	    	//Update aircraft icons on map
             aircraftMarkerUpdater();
-
-            /* TODO remove this?? (see other to do to decide what the correct call location is */
-//            waypointUpdater();
 	    	
 			//Update altitude tape
 	    	if (isAltitudeUpdated){
@@ -264,6 +249,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		}
 	    		
 	    		case "ALTITUDE_SPEED_UPDATED": {
+                    isConnected = true;
 	    			updateAltitude();
 	    			updateSpeed();
 	    			break;
@@ -289,17 +275,27 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //	    			break;
 //	    		}
 	    		
-	    		/* TODO Enable the waypoint service case once available */
-//	    		case "WAYPOINTS_UPDATED": {
-//	    			updateWaypoints();
-//	    			break;
-//	    		}
+	    		case "WAYPOINTS_UPDATED": {
+	    			updateWaypoints();
+	    			break;
+	    		}
 	    		
 	    		default:
 	    			break;
     		}
     	}
     };
+
+    public void requestWps() {
+        if (isConnected) {
+            try {
+                mServiceClient.requestWpList();
+                Log.d("message","Requesting waypoints");
+            } catch (RemoteException e) {
+                Log.e(TAG, "Error while requesting waypoints");
+            }
+        }
+    }
     
     ////////UPDATE METHODS FOR AIRCRAFT DATA
     
@@ -425,8 +421,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			@Override
 			public void run() {
 				try {
-					/* TODO finish the setting of received waypoint data from service */
+					List<Waypoint> waypoints = mServiceClient.getWpList();
+                    aircraft.clearWpList();
+
+                    for (int i = 0; i < waypoints.size(); i++) {
+                        /* TODO add the dynamic setting of the waypoint sequence number, targetSys and targetComp  */
+                        aircraft.addWaypoint(waypoints.get(i).getLat(),waypoints.get(i).getLon(),waypoints.get(i).getAlt(),(short) i,(byte) 0, (byte) 0);
+                    }
                     waypointUpdater();
+
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating waypoints", t);
 				}
@@ -596,6 +599,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	public void onLandRequest(View v) {
 		missionButtons.onLandRequest(v);
+
+        /* TODO Find a better location for waypoint update call */
+        //Temporary button use to request waypoints
+        requestWps();
 	}
 	
 	public void onTakeOffRequest(View v) {
@@ -621,8 +628,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		Criteria criteria = new Criteria();
 		String provider = locationManager.getBestProvider(criteria, true);
 		Location myLocation = locationManager.getLastKnownLocation(provider);
-		LatLng currentLocation =  new LatLng(myLocation.getLatitude(),myLocation.getLongitude());
-		map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 18.0f));
+		LatLng currentLocation =  new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 18.0f));
 		
 		//Disable rotation and tilt gestures
 		map.getUiSettings().setRotateGesturesEnabled(false);
@@ -639,10 +646,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Enable clicklistener on infowindows
         map.setOnInfoWindowClickListener(this);
-
-        //Temporary load of waypoints
-        /* TODO improve the location of waypoint update call */
-        waypointUpdater();
 	}
 
 
@@ -840,7 +843,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
                 // Draw the flight path with the specified characteristics
-                /* TODO make a custom waypoint marker to let their center coincide with the polyline points */
                 flightPath = map.addPolyline(new PolylineOptions()
                         .addAll(aircraft.getWpLatLngList())
                         .width(4)

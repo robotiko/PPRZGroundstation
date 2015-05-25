@@ -6,7 +6,7 @@
 .idea/workspace.xml
 .idea/libraries
 local.properties
-gcs.iml
+app.iml
 /*/build/
 /build
 app/build
