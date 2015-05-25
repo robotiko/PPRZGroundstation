@@ -63,7 +63,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private static final String TAG = MainActivity.class.getSimpleName();
 	
 	private Handler handler, interfaceUpdateHandler;
-	private int mInterval = 500; // seconds * 1000
+	private int mInterval = 100; // seconds * 1000
 	
 	IMavLinkServiceClient mServiceClient;
 	MissionButtonFragment missionButtons;
@@ -328,7 +328,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					aircraft.setAltitude(mAltitude.getAltitude());
 					aircraft.setTargetAltitude(mAltitude.getTargetAltitude());
 					
-					telemetryFragment.setText(String.valueOf(mAltitude.getAltitude()));
+//					telemetryFragment.setText(String.valueOf(mAltitude.getAltitude()));
+                    telemetryFragment.setText(String.format("%.2f", mAltitude.getAltitude()));
 					
 					/* Set isAltitudeUpdated to be true at first update of altitude */
 					if(!isAltitudeUpdated) isAltitudeUpdated = true;
@@ -766,7 +767,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             //Setting the values in the information window
                             infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
                             infoDistHome.setText("Distance Home: " + "DISTANCE HERE!");
-                            infoAlt.setText("Altitude: " + aircraft.getAltitude());
+                            infoAlt.setText("Altitude: " + String.format("%.2f", aircraft.getAltitude()));
                             infoMode.setText("Mode: " + "MODE HERE!");
                             infoSats.setText("#Sats: " + "#SATS HERE!");
 
