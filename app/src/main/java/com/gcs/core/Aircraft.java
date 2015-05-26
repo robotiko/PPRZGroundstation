@@ -13,6 +13,7 @@ import com.google.android.gms.maps.model.Polyline;
 import com.sharedlib.model.Altitude;
 import com.sharedlib.model.Attitude;
 import com.sharedlib.model.Battery;
+import com.sharedlib.model.Heartbeat;
 import com.sharedlib.model.Speed;
 import com.sharedlib.model.Position;
 
@@ -23,15 +24,16 @@ public class Aircraft {
 	public Aircraft(Context context){
 	    this.context = context;
 	}
-	
-	private Attitude       mAttitude = new Attitude();
-	private Altitude       mAltitude = new Altitude();
-	private Speed          mSpeed    = new Speed();
-	private Battery        mBattery  = new Battery();
-	private CustomState    mState    = new CustomState(); 
-	private Position       mPosition = new Position();
-	private Icon		   mIcon     = new Icon();
-	private List<Waypoint> waypoints = new ArrayList<Waypoint>();
+
+	private Heartbeat	   mHeartbeat = new Heartbeat();
+	private Attitude       mAttitude  = new Attitude();
+	private Altitude       mAltitude  = new Altitude();
+	private Speed          mSpeed     = new Speed();
+	private Battery        mBattery   = new Battery();
+	private CustomState    mState     = new CustomState();
+	private Position       mPosition  = new Position();
+	private Icon		   mIcon      = new Icon();
+	private List<Waypoint> waypoints  = new ArrayList<Waypoint>();
 
     public Marker acMarker, infoWindow;
     public List<Marker> wpMarkers  = new ArrayList<Marker>();
@@ -42,7 +44,46 @@ public class Aircraft {
 	private final int targetLabelId     = TextView.generateViewId();
 	private final String labelCharacter = String.valueOf((char)(64+AltitudeLabelId));
 	private boolean isSelected          = false;
-	
+
+
+    //Set and get functions for heartbeat
+    public byte getSysid() {
+        return mHeartbeat.getSysid();
+    }
+
+    public byte getCompid() {
+        return mHeartbeat.getCompid();
+    }
+
+    public byte getMavlinkVersion() {
+        return mHeartbeat.getMavlinkVersion();
+    }
+
+    public void setHeartbeat(byte sysid, byte compid) {
+        mHeartbeat.setSysid(sysid);
+        mHeartbeat.setCompid(compid);
+    }
+
+    public void setSysid(byte sysid) {
+        mHeartbeat.setSysid(sysid);
+    }
+
+    public void setCompid(byte compid) {
+        mHeartbeat.setCompid(compid);
+    }
+
+    public void setMavlinkVersion(byte mavlinkVersion) {
+        mHeartbeat.setMavlinkVersion(mavlinkVersion);
+    }
+
+    public boolean hasHeartbeat() {
+        return mHeartbeat.heartbeatState != Heartbeat.HeartbeatState.FIRST_HEARTBEAT;
+    }
+
+    public boolean isConnectionAlive() {
+        return mHeartbeat.heartbeatState != Heartbeat.HeartbeatState.LOST_HEARTBEAT;
+    }
+
 	//Set and get functions for attitude
 	public void setRollPitchYaw(double roll, double pitch, double yaw) {
     	mAttitude.setRollPitchYaw(roll, pitch, yaw);

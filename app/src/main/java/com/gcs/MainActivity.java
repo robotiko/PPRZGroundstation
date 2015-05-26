@@ -11,7 +11,6 @@ import com.aidllib.core.model.Speed;
 import com.aidllib.core.model.Battery;
 import com.aidllib.core.model.Position;
 import com.gcs.core.ConflictStatus;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.sharedlib.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
 import com.gcs.core.Aircraft;
@@ -55,7 +54,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, OnMarkerClickListener, OnInfoWindowClickListener, OnMarkerDragListener {
@@ -153,7 +151,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             Log.d(TAG, "Service was bound");
         }
     }
-	
+
 	@Override
     public void onDestroy() {
     	try {
@@ -225,11 +223,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     			case "CONNECTED": {
     				Log.d(TAG, "Connected!");
     				isConnected = true;
-    				updateConnectButton();  				
+    				updateConnectButton();
 	    			break;
     			}   			
 	
 	    		case "HEARTBEAT_FIRST": {
+                    updateHeartbeat();
 	    			break;
 	    		}
 	    			
@@ -246,7 +245,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		}
 	    		
 	    		case "ALTITUDE_SPEED_UPDATED": {
-                    isConnected = true;
+//                    isConnected = true;
 	    			updateAltitude();
 	    			updateSpeed();
 	    			break;
@@ -295,6 +294,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
     
     ////////UPDATE METHODS FOR AIRCRAFT DATA
+
+    /**
+     * This runnable object is created to update the heartbeat
+     */
+    private void updateHeartbeat() {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Heartbeat mHeartbeat = getAttribute("HEARTBEAT");
+                    aircraft.setHeartbeat(mHeartbeat.getSysId(),mHeartbeat.getCompId());
+                } catch (Throwable t){
+
+                }
+            }
+        });
+    }
+
     
 	/**
 	 * This runnable object is created to update the attitude
@@ -385,7 +402,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					Position mPosition = getAttribute("POSITION");
 					aircraft.setSatVisible(mPosition.getSatVisible());
 					aircraft.setLlaHdg(mPosition.getLat(), mPosition.getLon(), mPosition.getAlt(), (short) mPosition.getHdg());
-					//TODO check if heading should be an int or short (and make changes accordingly)
+					//TODO Change heading to int when this is changed in the service
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating position", t);
 				}
@@ -831,11 +848,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     //Add waypoint marker to map
                     Marker wpMarker = map.addMarker(new MarkerOptions()
-                                    .position(aircraft.getWpLatLng(i))
-                                    .flat(true)
-                                    .snippet(String.valueOf(aircraft.getWpSeq(i)))
-                                        .draggable(false)
-                    );
+										.position(aircraft.getWpLatLng(i))
+										.flat(true)
+										.snippet(String.valueOf(aircraft.getWpSeq(i)))
+										.draggable(true)
+						);
                     aircraft.wpMarkers.add(wpMarker);
                 }
 
