@@ -18,5 +18,6 @@
     <string name="land_button">Land</string>
     <string name="take_off_button">Take-Off</string>
     <string name="go_home_button">Go Home</string>
+    <string name="waypoint_button">Update Waypoints</string>
     
 </resources>

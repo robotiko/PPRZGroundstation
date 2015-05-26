@@ -423,13 +423,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					List<Waypoint> waypoints = mServiceClient.getWpList();
-                    aircraft.clearWpList();
+
+                    if(aircraft.getNumberOfWaypoints()>0) {
+                        aircraft.clearWpList();
+                    }
 
                     for (int i = 0; i < waypoints.size(); i++) {
                         /* TODO add the dynamic setting of the waypoint sequence number, targetSys and targetComp  */
                         aircraft.addWaypoint(waypoints.get(i).getLat(),waypoints.get(i).getLon(),waypoints.get(i).getAlt(),(short) i,(byte) 0, (byte) 0);
                     }
                     waypointUpdater();
+                    Toast.makeText(getApplicationContext(), "Waypoints updated.", Toast.LENGTH_SHORT).show();
 
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating waypoints", t);
@@ -603,7 +607,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         /* TODO Find a better location for waypoint update call */
         //Temporary button use to request waypoints
-        requestWps();
+//        requestWps();
 	}
 	
 	public void onTakeOffRequest(View v) {
@@ -613,6 +617,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	public void onGoHomeRequest(View v) {
 		missionButtons.onGoHomeRequest(v);
 	}
+
+    public void onWaypointRequest(View v) {
+        missionButtons.onWaypointRequest(v);
+        requestWps();
+    }
 
 	/////////////////////////MAPS/////////////////////////
 	

@@ -31,7 +31,7 @@ public class AltitudeTape extends Fragment {
 	private int groundLevelTape   = 848; //0 meter
 	private int flightCeilingTape = 35; //20 m
 	private double flightCeiling  = 20; //[m]
-	private double MSA 			  = 0;//[m]
+	private double groundLevel	  = 0;//[m]
 	
 	@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -216,7 +216,7 @@ public class AltitudeTape extends Fragment {
 	private int altitudeToLabelLocation(double altitude) {
 		
 		int lengthBar = groundLevelTape - flightCeilingTape;
-		double verticalRange = flightCeiling - MSA; 	
+		double verticalRange = flightCeiling - groundLevel;
 		int labelLocation = (int) (groundLevelTape-((altitude/verticalRange)*lengthBar));
 		
 		return labelLocation;
@@ -226,7 +226,7 @@ public class AltitudeTape extends Fragment {
 	private double labelLocationToAltitude(float labelLocation) {
 		
 		int lengthBar = groundLevelTape - flightCeilingTape;
-		double verticalRange = flightCeiling - MSA;
+		double verticalRange = flightCeiling - groundLevel;
 		double altitude = verticalRange*((double) groundLevelTape-labelLocation)/lengthBar;
 		
 		return altitude;
@@ -238,8 +238,8 @@ public class AltitudeTape extends Fragment {
 		double dropAltitude = labelLocationToAltitude(dropLocation);
 
 		//If the label is dropped outside the altitude tape, set the target altitude at the bounds.
-		if (dropAltitude < MSA) {
-			dropAltitude = MSA;
+		if (dropAltitude < groundLevel) {
+			dropAltitude = groundLevel;
 		} else if (dropAltitude > flightCeiling) {
 			dropAltitude = flightCeiling;
 		}
