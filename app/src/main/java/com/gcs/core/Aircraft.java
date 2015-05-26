@@ -8,6 +8,8 @@ import android.graphics.Bitmap;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.Polyline;
 import com.sharedlib.model.Altitude;
 import com.sharedlib.model.Attitude;
 import com.sharedlib.model.Battery;
@@ -30,6 +32,10 @@ public class Aircraft {
 	private Position       mPosition = new Position();
 	private Icon		   mIcon     = new Icon();
 	private List<Waypoint> waypoints = new ArrayList<Waypoint>();
+
+    public Marker acMarker, infoWindow;
+    public List<Marker> wpMarkers  = new ArrayList<Marker>();
+	public Polyline flightPath;
 	
 	private int communicationSignal     = 0;
 	private final int AltitudeLabelId   = TextView.generateViewId();

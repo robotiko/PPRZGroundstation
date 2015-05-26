@@ -80,10 +80,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	Aircraft aircraft;
 
     SupportMapFragment mapFragment;
-	Marker acMarker, wpMarker, infoWindow;
-    Polyline flightPath;
-
-    private List<Marker> wpMarkers  = new ArrayList<Marker>();
 	  
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -180,6 +176,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			//Update altitude tape
 	    	if (isAltitudeUpdated){
 	    		updateAltitudeTape();
+                isAltitudeUpdated = false;
 	    	}
 	    	
 	    	//Restart this updater after the set interval
@@ -604,10 +601,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	public void onLandRequest(View v) {
 		missionButtons.onLandRequest(v);
-
-        /* TODO Find a better location for waypoint update call */
-        //Temporary button use to request waypoints
-//        requestWps();
 	}
 	
 	public void onTakeOffRequest(View v) {
@@ -664,7 +657,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     public boolean onMarkerClick(final Marker marker) {
 
         //If the aircraft icon is clicked, select it or unselect it
-        if(marker.equals(acMarker)) {
+        if(marker.equals(aircraft.acMarker)) {
             if(!aircraft.isSelected()) {
                 aircraft.setIsSelected(true);
                 Log.d("infowindow","markerclick-ON");
@@ -704,7 +697,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     public void onInfoWindowClick(final Marker marker) {
 
         //If the infowindow marker is clicked, remove it
-        if(marker.equals(infoWindow)) {
+        if(marker.equals(aircraft.infoWindow)) {
             aircraft.setIsSelected(false);
             Log.d("infowindow", "windowclick-OFF");
         }
@@ -733,12 +726,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 ///////* Marker for display of aircraft icon on map *///////
 
                 //Clear marker from map (if it exists)
-                if (acMarker != null) {
-                    acMarker.remove();
+                if (aircraft.acMarker != null) {
+                    aircraft.acMarker.remove();
                 }
 
                 //Add marker to map
-                acMarker = map.addMarker(new MarkerOptions()
+                aircraft.acMarker = map.addMarker(new MarkerOptions()
                                 .position(aircraft.getLatLng())
                                 .anchor((float) 0.5, (float) 0.5)
                                 .icon(icon)
@@ -806,7 +799,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                     });
                 }
-				acMarker.showInfoWindow();
+                aircraft.acMarker.showInfoWindow();
             }
         });
 	}
@@ -823,37 +816,37 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 /* TODO Change call location of the waypoint update to the appropriate location (when new waypoints are received??) */
 
                 //If the wps are already initiated, remove them from the map and clear the list that holds them
-                if(!wpMarkers.isEmpty()) {
+                if(!aircraft.wpMarkers.isEmpty()) {
                     //Remove markers from map
                     for (int i = 0; i < aircraft.getNumberOfWaypoints(); i++) {
-                        wpMarkers.get(i).remove();
+                        aircraft.wpMarkers.get(i).remove();
                     }
 
                     //Clear the marker list
-                    wpMarkers.clear();
+                    aircraft.wpMarkers.clear();
                 }
 
                 //(Re)generate waypoint markers
                 for (int i = 0; i < aircraft.getNumberOfWaypoints(); i++) {
 
                     //Add waypoint marker to map
-                    wpMarker = map.addMarker(new MarkerOptions()
+                    Marker wpMarker = map.addMarker(new MarkerOptions()
                                     .position(aircraft.getWpLatLng(i))
                                     .flat(true)
                                     .snippet(String.valueOf(aircraft.getWpSeq(i)))
-                                    .draggable(false)
+                                        .draggable(false)
                     );
-                    wpMarkers.add(wpMarker);
+                    aircraft.wpMarkers.add(wpMarker);
                 }
 
                 ///* FLIGHT PATH *///
                 // If the flight path has been drawn before, remove it to be updated
-                if(flightPath != null) {
-                    flightPath.remove();
+                if(aircraft.flightPath != null) {
+                    aircraft.flightPath.remove();
                 }
 
                 // Draw the flight path with the specified characteristics
-                flightPath = map.addPolyline(new PolylineOptions()
+                aircraft.flightPath = map.addPolyline(new PolylineOptions()
                         .addAll(aircraft.getWpLatLngList())
                         .width(4)
                         .color(Color.WHITE));

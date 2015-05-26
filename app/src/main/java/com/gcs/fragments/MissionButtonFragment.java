@@ -38,5 +38,7 @@ public class MissionButtonFragment extends Fragment {
 		Log.d("COMMAND","GO HOME");
 	}
 
-	public void onWaypointRequest(View v) { Log.d("COMMAND", "Update waypoints"); }
+	public void onWaypointRequest(View v) {
+        Log.d("COMMAND", "Update waypoints");
+    }
 }
