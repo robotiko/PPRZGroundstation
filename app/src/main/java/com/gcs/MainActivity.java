@@ -341,7 +341,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					Altitude mAltitude = getAttribute("ALTITUDE");
 					aircraft.setAltitude(mAltitude.getAltitude());
 					aircraft.setTargetAltitude(mAltitude.getTargetAltitude());
-					
+
 //					telemetryFragment.setText(String.valueOf(mAltitude.getAltitude()));
                     telemetryFragment.setText(String.format("%.2f", mAltitude.getAltitude()));
 					
@@ -682,7 +682,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 aircraft.setIsSelected(false);
                 Log.d("infowindow","markerclick-OFF");
             }
-            /* TODO prevent info window from translating on rotation (square problem) */
         }
 		return true;
 	}
@@ -704,7 +703,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         int wpNumber =  Integer.parseInt(marker.getSnippet());
         LatLng pos = marker.getPosition();
 
-        /* TODO change waypoint location change to setfunction of the service */
+        /* TODO implement waypoint location change setfunction for the service */
         aircraft.setWpLatLon((float) pos.latitude,(float) pos.longitude,wpNumber);
         waypointUpdater();
     }
@@ -828,9 +827,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap map) {
-
-                ///* WAYPOINT MARKERS *///
-                /* TODO Change call location of the waypoint update to the appropriate location (when new waypoints are received??) */
 
                 //If the wps are already initiated, remove them from the map and clear the list that holds them
                 if(!aircraft.wpMarkers.isEmpty()) {

@@ -15,20 +15,20 @@ import android.view.View;
 import android.view.View.DragShadowBuilder;
 import android.view.DragEvent;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 public class AltitudeTape extends Fragment {
 	
-	private RelativeLayout relativelayout;
+	private FrameLayout framelayout;
 	private View rootView;
 	
 	private boolean labelCreated = false;
 	private boolean targetCreated = false;
 	
 	/* TODO Determine altitude label location based on the height of the bar and the the dynamic vertical range of the drones (flight ceiling - ground level) */
-	private int groundLevelTape   = 848; //0 meter
+	private int groundLevelTape   = 900; //0 meter
 	private int flightCeilingTape = 35; //20 m
 	private double flightCeiling  = 20; //[m]
 	private double groundLevel	  = 0;//[m]
@@ -47,6 +47,7 @@ public class AltitudeTape extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        //Only used for on-click listener
         ImageView altitudeTape = (ImageView) getView().findViewById(R.id.altitudeTapeView);
 
         //OnCLickListener on the altitude tape
@@ -56,8 +57,8 @@ public class AltitudeTape extends Fragment {
             	Log.d("test","altitude tape clicked!!");
             }
         });
-        
-        relativelayout = (RelativeLayout) rootView.findViewById(R.id.relativelayout);
+
+        framelayout = (FrameLayout) rootView.findViewById(R.id.altitudeTapeFragment);
     }
 	
 	//OnCLickListener for the altitude labels
@@ -134,7 +135,7 @@ public class AltitudeTape extends Fragment {
         int backgroundImg;
 
         if(isAircraftIconSelected) {
-            backgroundImg = R.drawable.altitude_label_small_yellow;
+            backgroundImg = R.drawable.altitude_label_small_yellow_flipped;
 
         } else {
             ConflictStatus conflictStatus = ((MainActivity) getActivity()).getConflictStatus();
@@ -153,30 +154,36 @@ public class AltitudeTape extends Fragment {
                     backgroundImg =  R.drawable.altitude_label_small_blue;
             }
         }
-		
-		/* TODO change the horizontal location of the altitude labels and flip them around */
-		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(80, 60);
-        params.leftMargin = 50;
+
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 60);
         params.topMargin = altitudeToLabelLocation(altitude);
+
+        //Set alignment of the label based on the selection status
+        if(!((MainActivity)getActivity()).isAircraftIconSelected()) {
+            params.gravity = Gravity.RIGHT;
+        } else {
+            params.gravity = Gravity.LEFT;
+        }
+
+        /* TODO Improve the location of the label text for the flipped/selected label */
 
         TextView label;
 		if(!labelCreated){
-	        label = new TextView(getActivity());
+            label = new TextView(getActivity());
             label.setId(labelId);
             label.setBackgroundResource(backgroundImg);
-
-	        label.setText("      "+ labelCharacter);
+            label.setText("      " + labelCharacter);
 	        label.setTypeface(null, Typeface.BOLD);
-	        label.setGravity(Gravity.CENTER_VERTICAL);
-	        label.setOnClickListener(onLabelClick(label));
+            label.setGravity(Gravity.CENTER_VERTICAL);
+            label.setOnClickListener(onLabelClick(label));
 	        label.setOnLongClickListener(onLabelLongClick(label));
 	        rootView.setOnDragListener(new MyDragListener());
-	        relativelayout.addView(label,params);
+	        framelayout.addView(label, params);
 	        labelCreated = true;
 		} else {
 			label = (TextView)  getView().findViewById(labelId);
             label.setBackgroundResource(backgroundImg);
-			relativelayout.updateViewLayout(label, params);
+            framelayout.updateViewLayout(label, params);
 		}
 	}
 
@@ -184,22 +191,22 @@ public class AltitudeTape extends Fragment {
 	public void setTargetLabel(double targetAltitude, int targetLabelId) {
 		
 		/* TODO make a better indicating icon/bug for the target altitude */
-		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(80, 50);
-        params.leftMargin = 50;
+		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 60);
         params.topMargin = altitudeToLabelLocation(targetAltitude);
+        params.gravity = Gravity.RIGHT;
 
 		View target;
 		if(!targetCreated) {
 			target = new View(getActivity());
 			target.setBackgroundResource(R.drawable.altitude_label_small_red);
-			target.setId(targetLabelId);
-			target.setVisibility(View.VISIBLE);
-			relativelayout.addView(target,params);
+            target.setId(targetLabelId);
+            target.setVisibility(View.VISIBLE);
+            framelayout.addView(target,params);
 			targetCreated = true;
 		} else {
-			target = (View) getView().findViewById(targetLabelId);
+			target = getView().findViewById(targetLabelId);
 			target.setVisibility(View.VISIBLE);
-			relativelayout.updateViewLayout(target,params);
+            framelayout.updateViewLayout(target,params);
 		}
 	}
 	

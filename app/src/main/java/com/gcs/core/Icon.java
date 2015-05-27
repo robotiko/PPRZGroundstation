@@ -59,7 +59,7 @@ public class Icon {
                 baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_blue);
                 break;
             case GRAY:
-                baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_gray); /* TODO make the gray aircraft icon darker for visibility */
+                baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_gray);
                 break;
             case RED:
                 baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_red);
