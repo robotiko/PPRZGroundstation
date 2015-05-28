@@ -5,6 +5,7 @@ import com.gcs.R;
 import com.gcs.core.ConflictStatus;
 
 import android.content.ClipData;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -155,26 +156,28 @@ public class AltitudeTape extends Fragment {
             }
         }
 
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 60);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 70);
         params.topMargin = altitudeToLabelLocation(altitude);
+        int textGravity;
 
         //Set alignment of the label based on the selection status
         if(!((MainActivity)getActivity()).isAircraftIconSelected()) {
             params.gravity = Gravity.RIGHT;
+            textGravity = Gravity.CENTER;
         } else {
             params.gravity = Gravity.LEFT;
+            textGravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
         }
-
-        /* TODO Improve the location of the label text for the flipped/selected label */
 
         TextView label;
 		if(!labelCreated){
             label = new TextView(getActivity());
             label.setId(labelId);
             label.setBackgroundResource(backgroundImg);
-            label.setText("      " + labelCharacter);
+            label.setMinWidth(20);
+            label.setText("   " + labelCharacter);
 	        label.setTypeface(null, Typeface.BOLD);
-            label.setGravity(Gravity.CENTER_VERTICAL);
+            label.setGravity(textGravity);
             label.setOnClickListener(onLabelClick(label));
 	        label.setOnLongClickListener(onLabelLongClick(label));
 	        rootView.setOnDragListener(new MyDragListener());
@@ -183,6 +186,7 @@ public class AltitudeTape extends Fragment {
 		} else {
 			label = (TextView)  getView().findViewById(labelId);
             label.setBackgroundResource(backgroundImg);
+            label.setGravity(textGravity);
             framelayout.updateViewLayout(label, params);
 		}
 	}
@@ -191,7 +195,7 @@ public class AltitudeTape extends Fragment {
 	public void setTargetLabel(double targetAltitude, int targetLabelId) {
 		
 		/* TODO make a better indicating icon/bug for the target altitude */
-		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 60);
+		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 70);
         params.topMargin = altitudeToLabelLocation(targetAltitude);
         params.gravity = Gravity.RIGHT;
 
