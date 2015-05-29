@@ -44,8 +44,8 @@ public class MissionButtonFragment extends Fragment {
     }
 	
 	/* TODO implement actions for clicks on the mission buttons */
-	/* TODO make custom buttons to replace the current text buttons, if clicked color changes */
-	
+    /* TODO Make sure that only one button can be active: use isGoingHome, isLanding and IstakingOff booleans from service to check this */
+
 	public void onLandRequest(View v) {
 
         if(landButtonClicked) {
@@ -100,16 +100,16 @@ public class MissionButtonFragment extends Fragment {
                 break;
             case LAND:
                 if(active) {
-                    landButton.setBackgroundResource(R.drawable.home_button_active);
+                    landButton.setBackgroundResource(R.drawable.land_button_active);
                 } else {
-                    landButton.setBackgroundResource(R.drawable.home_button_inactive);
+                    landButton.setBackgroundResource(R.drawable.land_button_inactive);
                 }
                 break;
             case TAKEOFF:
                 if(active) {
-                    takeOffButton.setBackgroundResource(R.drawable.home_button_active);
+                    takeOffButton.setBackgroundResource(R.drawable.take_off_button_active);
                 } else {
-                    takeOffButton.setBackgroundResource(R.drawable.home_button_inactive);
+                    takeOffButton.setBackgroundResource(R.drawable.take_off_button_inactive);
                 }
                 break;
             default:

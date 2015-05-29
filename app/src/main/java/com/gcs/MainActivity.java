@@ -36,6 +36,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
@@ -674,11 +675,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 		//Draw home marker on map
         aircraft.homeMarker = map.addMarker(new MarkerOptions()
-                        .position(aircraft.getHomeLocation())
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-                        .flat(true)
-                        .title("HOME")
-                        .draggable(false)
+				.position(aircraft.getHomeLocation())
+				.icon(BitmapDescriptorFactory.fromResource(R.drawable.home_icon))
+				.flat(true)
+				.title("HOME")
+				.draggable(false)
         );
 	}
 
