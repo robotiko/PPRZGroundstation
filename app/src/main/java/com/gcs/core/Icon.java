@@ -31,10 +31,6 @@ public class Icon {
 	private int commHorLocation;
 	private int commScaling;
 
-//    private enum ConflictStatus {
-//        BLUE, GRAY, RED
-//    }
-	
 	/* TODO make sure all values from resources are loaded at creation of class and not when this method is called from onCreate */
 	public void setIconSettings(Resources res){
 		this.res = res;

@@ -1,28 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+
+    <!-- Airspace parameters -->
+    <integer name="flightCeiling">20</integer>              <!-- meters -->
+    <integer name="groundLevel">0</integer>                 <!-- meters -->
+
+    <!-- Communication signal parameters -->
+    <integer name="maxRange">1000</integer>                 <!-- meters -->
+
+    <!-- ICON DRAWING -->
     <!-- Battery values -->
-    <integer name="HalfBatteryLevel">50</integer>
-    <integer name="LowBatteryLevel">20</integer>
+    <integer name="HalfBatteryLevel">50</integer>           <!-- percentage -->
+    <integer name="LowBatteryLevel">20</integer>            <!-- percentage -->
     
     <!-- Communication values -->
-    <integer name="HalfCommunicationSignal">60</integer>
-    <integer name="LowCommunicationSignal">30</integer>
-    <integer name="NoCommunicationSignal">0</integer>
-    
-    <!-- Protected zone diameter in meters-->
-    <integer name="ProtectedZoneDiameter">30</integer>
-    
+    <integer name="HalfCommunicationSignal">60</integer>    <!-- percentage -->
+    <integer name="LowCommunicationSignal">30</integer>     <!-- percentage -->
+    <integer name="NoCommunicationSignal">0</integer>       <!-- percentage -->
+
     <!-- Aircraft icon parameters -->
-    <integer name="IconResolution">200</integer> 	 <!-- pixels                        -->
-    <integer name="IconAlpha">100</integer>          <!-- [0-255] alpha value of the protected zone (transparancy) -->
+    <integer name="IconResolution">200</integer> 	        <!-- pixels                        -->
+    <integer name="IconAlpha">100</integer>                 <!-- [0-255] alpha value of the protected zone (transparancy) -->
     
-    <integer name="BatteryVertLocation">75</integer> <!-- percent of radius from center -->
-    <integer name="BatteryHorLocation">20</integer>  <!-- percent of radius from center -->
-    <integer name="BatteryScaling">15</integer>	     <!-- percent of the original image -->
+    <integer name="BatteryVertLocation">75</integer>        <!-- percent of radius from center -->
+    <integer name="BatteryHorLocation">20</integer>         <!-- percent of radius from center -->
+    <integer name="BatteryScaling">15</integer>	            <!-- percent of the original image -->
     
-    <integer name="CommVertLocation">75</integer>	 <!-- percent of radius from center -->
-    <integer name="CommHorLocation">20</integer>	 <!-- percent of radiusfrom center  -->
-    <integer name="CommScaling">20</integer>	     <!-- percent of the original image -->
+    <integer name="CommVertLocation">75</integer>	        <!-- percent of radius from center -->
+    <integer name="CommHorLocation">20</integer>	        <!-- percent of radiusfrom center  -->
+    <integer name="CommScaling">20</integer>	            <!-- percent of the original image -->
     
 </resources>

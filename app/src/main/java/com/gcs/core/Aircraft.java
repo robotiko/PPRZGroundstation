@@ -5,8 +5,10 @@ import java.util.List;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.location.Location;
 import android.widget.TextView;
 
+import com.gcs.R;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polyline;
@@ -35,18 +37,19 @@ public class Aircraft {
 	private Icon		   mIcon      = new Icon();
 	private List<Waypoint> waypoints  = new ArrayList<Waypoint>();
 
-    public Marker acMarker, infoWindow;
+    public Marker acMarker, infoWindow, homeMarker;
     public List<Marker> wpMarkers  = new ArrayList<Marker>();
 	public Polyline flightPath;
 	
-	private int communicationSignal     = 0;
 	private final int AltitudeLabelId   = TextView.generateViewId();
 	private final int targetLabelId     = TextView.generateViewId();
 	private final String labelCharacter = String.valueOf((char)(64+AltitudeLabelId));
 	private boolean isSelected          = false;
 
+    /* TODO find out where to put home location (in an attribute of the aircraft class?) */
+    private LatLng homeLocation;
 
-    //Set and get functions for heartbeat
+    //////////// HEARTBEAT ////////////
     public byte getSysid() {
         return mHeartbeat.getSysid();
     }
@@ -84,7 +87,7 @@ public class Aircraft {
         return mHeartbeat.heartbeatState != Heartbeat.HeartbeatState.LOST_HEARTBEAT;
     }
 
-	//Set and get functions for attitude
+    //////////// ATTITUDE ////////////
 	public void setRollPitchYaw(double roll, double pitch, double yaw) {
     	mAttitude.setRollPitchYaw(roll, pitch, yaw);
     }
@@ -100,8 +103,8 @@ public class Aircraft {
     public double getYaw() {
     	return mAttitude.getYaw();
     }
-	
-	//Set and get functions for Altitude
+
+    //////////// ALTITUDE ////////////
     public void setAltitude(double altitude) {
     	mAltitude.setAltitude(altitude);
     }
@@ -125,8 +128,8 @@ public class Aircraft {
     public double getAGL() {
     	return mAltitude.getAGL();
     }
-    
-  //Set and get functions for Speed
+
+    //////////// SPEED ////////////
     public void setGroundAndAirSpeeds(double groundSpeed, double airSpeed, double climbSpeed) {
     	mSpeed.setGroundAndAirSpeeds(groundSpeed,airSpeed,climbSpeed);
     }
@@ -150,8 +153,8 @@ public class Aircraft {
     public double getTargetSpeed() {
     	return mSpeed.getTargetSpeed();
     }
-    
-  //Set and get functions for Battery
+
+    //////////// BATTERY ////////////
     public int getBattVolt() {
         return mBattery.getBattVolt();
     }
@@ -171,8 +174,8 @@ public class Aircraft {
     public void setBatteryState(int battVolt, int battLevel, int battCurrent) {
     	mBattery.setBatteryState(battVolt,battLevel,battCurrent);
     }
-    
-    //Set and get functions for State
+
+    //////////// STATE ////////////
     public boolean isArmed() {
         return mState.isArmed();
     }
@@ -212,8 +215,8 @@ public class Aircraft {
     public ConflictStatus getConflictStatus() {
         return mState.getConflictStatus();
     }
-    
-  //Set and get functions for position
+
+    //////////// POSITION ////////////
     public byte getSatVisible() {
     	return mPosition.getSatVisible();
 	}
@@ -222,12 +225,12 @@ public class Aircraft {
 		return mPosition.getTimeStamp();
 	}
 	
-	public int getLat() {
-		return mPosition.getLat();
+	public double getLat() {
+		return mPosition.getLat()*1e-7;
 	}
 	
-	public int getLon() {
-		return mPosition.getLon();
+	public double getLon() {
+		return mPosition.getLon()*1e-7;
 	}
 	
 	public LatLng getLatLng() {
@@ -251,10 +254,10 @@ public class Aircraft {
 	public void setLlaHdg(int lat, int lon, int alt, short hdg) {
 		mPosition.setLlaHdg(lat, lon, alt, hdg);
 	}
-	
-	//Set and get functions for icon
+
+    //////////// ICON ////////////
     public void generateIcon() {
-    	mIcon.generateIcon(mState.getConflictStatus(), (float) mAttitude.getYaw(), getBattLevel(), communicationSignal);
+    	mIcon.generateIcon(mState.getConflictStatus(), (float) mAttitude.getYaw(), getBattLevel(), getCommunicationSignal());
     }
     
     public void setCircleColor(int color) {
@@ -270,8 +273,8 @@ public class Aircraft {
     }
 
     public float getIconBoundOffset() {return mIcon.getIconBoundOffset(); }
-    
-    //Set and get functions for waypoints
+
+    //////////// WAYPOINTS ////////////
     public void addWaypoint(float lat, float lon, float alt, short seq, byte targetSys, byte targetComp) {
     	Waypoint wp = new Waypoint(lat, lon, alt, seq, targetSys, targetComp);
         waypoints.add(wp);
@@ -286,24 +289,24 @@ public class Aircraft {
     public void setWpLon(float lon, int wpNumber) {
     	Waypoint wp = waypoints.get(wpNumber);
     	wp.setLon(lon);
-    	waypoints.set(wpNumber,wp);
+    	waypoints.set(wpNumber, wp);
 	}
 
     public void setWpLatLon(float lat, float lon, int wpNumber) {
-        setWpLat(lat,wpNumber);
-        setWpLon(lon,wpNumber);
+        setWpLat(lat, wpNumber);
+        setWpLon(lon, wpNumber);
     }
     
     public void setWpAlt(float alt, int wpNumber) {
     	Waypoint wp = waypoints.get(wpNumber);
     	wp.setAlt(alt);
-    	waypoints.set(wpNumber,wp);
+    	waypoints.set(wpNumber, wp);
     }
     
 	public void setWpSeq(short seq, int wpNumber) {
 		Waypoint wp = waypoints.get(wpNumber);
     	wp.setSeq(seq);
-    	waypoints.set(wpNumber,wp);
+    	waypoints.set(wpNumber, wp);
 	}
 	
 	public void setWpTargetSys(byte targetSys, int wpNumber) {
@@ -359,14 +362,17 @@ public class Aircraft {
 	public int getNumberOfWaypoints() { return waypoints.size(); }
 
 	public void clearWpList() { waypoints.clear();}
-	
-    //Set and get functions for class attributes
+
+    //////////// CLASS ATTRIBUTES ////////////
     public int getCommunicationSignal(){
-    	return communicationSignal;
-    }
-    
-    public void setCommunicationSignal(int communicationSignal){
-    	this.communicationSignal = communicationSignal;
+
+        double boundaryLevel = 0.01;
+        int maxRange         = context.getResources().getInteger(R.integer.maxRange);
+
+        double scalingFactor = (1f/maxRange)*(Math.pow((1/boundaryLevel),(1f/4))-1);
+        int signalStrength = (int) (1/Math.pow(scalingFactor*getDistanceHome()+1,4)*100);
+
+        return signalStrength;
     }
     
     public int getAltLabelId(){
@@ -384,8 +390,22 @@ public class Aircraft {
 	public void setIsSelected(boolean isSelected) {
 		this.isSelected = isSelected;
 	}
-    
-    //Other
+
+    public void setHomeLocation(LatLng homeLocation) {
+        this.homeLocation = homeLocation;
+    }
+
+    public LatLng getHomeLocation() {
+        return homeLocation;
+    }
+
+    public float getDistanceHome(){
+        float[] distance = new float[1];
+        Location.distanceBetween(getLat(),getLon(),homeLocation.latitude,homeLocation.longitude,distance);
+        return distance[0];
+    }
+
+    //////////// OTHER ////////////
     public void setIconSettings(){
     	mIcon.setIconSettings(context.getResources());
     }

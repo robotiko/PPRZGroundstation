@@ -12,9 +12,12 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 public class MissionButtonFragment extends Fragment {
+
+    private static final String TAG = MissionButtonFragment.class.getName();
 	
 	private View rootView;
     private Button homeButton, landButton, takeOffButton;
+    private Boolean homeButtonClicked = false, landButtonClicked = false, takeOffButtonClicked = false;
 
     private enum ButtonName {
         HOME, LAND, TAKEOFF
@@ -45,20 +48,38 @@ public class MissionButtonFragment extends Fragment {
 	
 	public void onLandRequest(View v) {
 
+        if(landButtonClicked) {
+            landButtonClicked = false;
+        } else {
+            landButtonClicked = true;
+        }
+
         //Set button to active
-        setButtonAppearance(true, ButtonName.LAND);
+        setButtonAppearance(landButtonClicked, ButtonName.LAND);
     }
 	
 	public void onTakeOffRequest(View v) {
 
+        if(takeOffButtonClicked) {
+            takeOffButtonClicked = false;
+        } else {
+            takeOffButtonClicked = true;
+        }
+
         //Set button to active
-        setButtonAppearance(true, ButtonName.TAKEOFF);
+        setButtonAppearance(takeOffButtonClicked, ButtonName.TAKEOFF);
 	}
 
 	public void onGoHomeRequest(View v) {
 
+        if(homeButtonClicked) {
+            homeButtonClicked = false;
+        } else {
+            homeButtonClicked = true;
+        }
+
 		//Set button to active
-        setButtonAppearance(true, ButtonName.HOME);
+        setButtonAppearance(homeButtonClicked, ButtonName.HOME);
 	}
 
 	public void onWaypointRequest(View v) {
@@ -91,6 +112,9 @@ public class MissionButtonFragment extends Fragment {
                     takeOffButton.setBackgroundResource(R.drawable.home_button_inactive);
                 }
                 break;
+            default:
+                Log.e(TAG,"Button appearance could not be changed because the provided button name was not recognized");
+            break;
         }
     }
 }

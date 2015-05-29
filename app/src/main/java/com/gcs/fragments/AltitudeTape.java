@@ -4,6 +4,7 @@ import com.gcs.MainActivity;
 import com.gcs.R;
 import com.gcs.core.ConflictStatus;
 
+import android.app.Activity;
 import android.content.ClipData;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -29,11 +30,12 @@ public class AltitudeTape extends Fragment {
 	private boolean targetCreated = false;
 	
 	/* TODO Determine altitude label location based on the height of the bar and the the dynamic vertical range of the drones (flight ceiling - ground level) */
-	private int groundLevelTape   = 900; //0 meter
-	private int flightCeilingTape = 35; //20 m
-	private double flightCeiling  = 20; //[m]
-	private double groundLevel	  = 0;//[m]
-	
+	private final int groundLevelTape   = 900; //0 meter
+	private final int flightCeilingTape = 35;  //20 m
+
+    private double flightCeiling;              //[m]
+	private double groundLevel;                //[m]
+
 	@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
         Bundle savedInstanceState) {
@@ -60,6 +62,9 @@ public class AltitudeTape extends Fragment {
         });
 
         framelayout = (FrameLayout) rootView.findViewById(R.id.altitudeTapeFragment);
+
+        flightCeiling  = getResources().getInteger(R.integer.flightCeiling);
+        groundLevel    = getResources().getInteger(R.integer.groundLevel);
     }
 	
 	//OnCLickListener for the altitude labels

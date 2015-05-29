@@ -109,6 +109,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Get the map and register for the ready callback
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        /* TODO remove this when service provides the home location */
+        // TEMPORARY SETTING OF HOME LOCATION
+        LatLng homeLocation = new LatLng(51.990826, 4.378248);
+        aircraft.setHomeLocation(homeLocation);
         
         // Start the interface update handler
 		interfaceUpdater.run();	/* TODO check if there is a better moment to start this handler (on first heartbeat?) */
@@ -401,7 +406,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 				try {
 					Position mPosition = getAttribute("POSITION");
 					aircraft.setSatVisible(mPosition.getSatVisible());
-					aircraft.setLlaHdg(mPosition.getLat(), mPosition.getLon(), mPosition.getAlt(), (short) mPosition.getHdg());
+                    aircraft.setLlaHdg(mPosition.getLat(), mPosition.getLon(), mPosition.getAlt(), (short) mPosition.getHdg());
 					//TODO Change heading to int when this is changed in the service
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating position", t);
@@ -420,7 +425,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 				try {
 					State mState = getAttribute("STATE");
 					aircraft.setIsFlying(mState.isFlying());
-					aircraft.setArmed(mState.isArmed());
+                    aircraft.setArmed(mState.isArmed());
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating state", t);
 				}
@@ -666,6 +671,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Enable clicklistener on infowindows
         map.setOnInfoWindowClickListener(this);
+
+		//Draw home marker on map
+        aircraft.homeMarker = map.addMarker(new MarkerOptions()
+                        .position(aircraft.getHomeLocation())
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                        .flat(true)
+                        .title("HOME")
+                        .draggable(false)
+        );
 	}
 
 
@@ -704,7 +718,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng pos = marker.getPosition();
 
         /* TODO implement waypoint location change setfunction for the service */
-        aircraft.setWpLatLon((float) pos.latitude,(float) pos.longitude,wpNumber);
+        aircraft.setWpLatLon((float) pos.latitude, (float) pos.longitude,wpNumber);
         waypointUpdater();
     }
 
@@ -732,7 +746,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		//Generate an icon
 		aircraft.generateIcon();
 		final BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(aircraft.getIcon());
-		final LatLng aircraftLocation = new LatLng(aircraft.getLat()*1e-7, aircraft.getLon()*1e-7);
+		final LatLng aircraftLocation = new LatLng(aircraft.getLat(), aircraft.getLon());
 
 		//Call GoogleMaps
         mapFragment.getMapAsync(new OnMapReadyCallback() {
