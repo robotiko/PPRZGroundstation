@@ -38,9 +38,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -62,11 +59,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private static final String TAG = MainActivity.class.getSimpleName();
 	
 	private Handler handler, interfaceUpdateHandler;
-	private int mInterval = 100; // seconds * 1000
+	private int mInterval = 500; // seconds * 1000
 	
 	IMavLinkServiceClient mServiceClient;
 	MissionButtonFragment missionButtons;
-	Intent intent;
 	
 	private Button connectButton;
 	private boolean isConnected;
@@ -80,6 +76,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private Home home;
 
     SupportMapFragment mapFragment;
+
+	/* Find memory leaks: https://developer.android.com/tools/debugging/debugging-memory.html */
 	  
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

@@ -19,7 +19,8 @@ public class Icon {
 
     Resources res;
 	
-	private Bitmap AC_Icon;
+	private Bitmap AC_Icon, iconRed, iconGray, iconBlue, batteryGreen, batteryYellow, batteryRed,
+            communicationEmpty, communicationLow, communicationMid, communicationFull;
 
     private boolean firstTimeDrawing = true;
 	
@@ -48,6 +49,22 @@ public class Icon {
         commVertLocation    = res.getInteger(R.integer.CommVertLocation);
         commHorLocation     = res.getInteger(R.integer.CommHorLocation);
         commScaling			= res.getInteger(R.integer.CommScaling);
+
+        //Aircraft icons
+        iconRed  = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_red);
+        iconGray = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_gray);
+        iconBlue = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_blue);
+
+        //Battery icons
+        batteryGreen  = BitmapFactory.decodeResource(res, R.drawable.battery_icon_green);
+        batteryYellow = BitmapFactory.decodeResource(res, R.drawable.battery_icon_yellow);
+        batteryRed    = BitmapFactory.decodeResource(res, R.drawable.battery_icon_red);
+
+        //Communication icons
+        communicationEmpty = BitmapFactory.decodeResource(res, R.drawable.communication_icon_empty);
+        communicationLow   = BitmapFactory.decodeResource(res, R.drawable.communication_icon_low);
+        communicationMid   = BitmapFactory.decodeResource(res, R.drawable.communication_icon_mid);
+        communicationFull  = BitmapFactory.decodeResource(res, R.drawable.communication_icon_full);
     }
 	
 	public void generateIcon(ConflictStatus conflictStatus, float heading, int batLevel, int communicationSignal, Resources res){
@@ -63,16 +80,16 @@ public class Icon {
 
         switch (conflictStatus) {
             case BLUE:
-                baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_blue);
+                baseIcon = iconBlue;
                 break;
             case GRAY:
-                baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_gray);
+                baseIcon = iconGray;
                 break;
             case RED:
-                baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_red);
+                baseIcon = iconRed;
                 break;
             default:
-                baseIcon = BitmapFactory.decodeResource(res, R.drawable.aircraft_icon_blue);
+                baseIcon = iconBlue;
         }
 		
 		//Place the icon on a white circle
@@ -87,37 +104,40 @@ public class Icon {
 		/* TODO set the integer values to the correct orders to comply with the provided battery values */
 		
 		if(batLevel > halfBat) { //high battery level
-			batteryIcon = BitmapFactory.decodeResource(res, R.drawable.battery_icon_green);
+			batteryIcon = batteryGreen;
 		}
 		else if (halfBat >= batLevel && batLevel > lowBat) { //middle battery level
-			batteryIcon = BitmapFactory.decodeResource(res, R.drawable.battery_icon_yellow);
+			batteryIcon = batteryYellow;
 		}
 		else { //low battery level
-			batteryIcon = BitmapFactory.decodeResource(res, R.drawable.battery_icon_red);
+			batteryIcon = batteryRed;
 		}
 
-		//Get the communication icon (full,mid,low,empty)
+        //Get the communication icon (full,mid,low,empty)
 		int halfComm = res.getInteger(R.integer.HalfCommunicationSignal);
 		int lowComm  = res.getInteger(R.integer.LowBatteryLevel);
 		int NoComm   = res.getInteger(R.integer.NoCommunicationSignal);
 		
 		if (communicationSignal > halfComm) { //High signal strength
-			communicationIcon = BitmapFactory.decodeResource(res, R.drawable.communication_icon_full);
+			communicationIcon = communicationFull;
 		}
 		else if (halfComm >= communicationSignal && communicationSignal > lowComm) { //Middle signal strength
-			communicationIcon = BitmapFactory.decodeResource(res, R.drawable.communication_icon_mid);
+			communicationIcon = communicationMid;
 		}
 		else if (lowComm >= communicationSignal && communicationSignal > NoComm) { //Low signal strength
-			communicationIcon = BitmapFactory.decodeResource(res, R.drawable.communication_icon_low);
+			communicationIcon = communicationLow;
 		}
 		else { //No signal
-			communicationIcon = BitmapFactory.decodeResource(res, R.drawable.communication_icon_empty);
+			communicationIcon = communicationEmpty;
 		}
 
 		//Place battery- and communication icons
 		baseIcon = stackIcons(baseIcon,batteryIcon,communicationIcon);
 		
 		//TODO add speedvector to icon
+        if (AC_Icon != null) {
+            AC_Icon.recycle();
+        }
 
 		AC_Icon = baseIcon;
 	}
