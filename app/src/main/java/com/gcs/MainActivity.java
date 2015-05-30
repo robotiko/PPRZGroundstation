@@ -11,6 +11,7 @@ import com.aidllib.core.model.Speed;
 import com.aidllib.core.model.Battery;
 import com.aidllib.core.model.Position;
 import com.gcs.core.ConflictStatus;
+import com.gcs.core.Home;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.sharedlib.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
 import com.gcs.core.Aircraft;
@@ -36,7 +37,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
@@ -75,8 +75,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private TelemetryFragment telemetryFragment;
 	private BatteryFragment batteryFragment;
 	private AltitudeTape altitudeTapeFragment;
-	
-	Aircraft aircraft;
+
+	private Aircraft aircraft;
+	private Home home;
 
     SupportMapFragment mapFragment;
 	  
@@ -94,6 +95,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Instantiate aircraft object
 		aircraft = new Aircraft(this);
 		aircraft.setIconSettings(); //Fix to instantiate the icon class
+
+		// Instantiate home object
+		home = new Home();
 
 		// Create a handle to the telemetry fragment
 		telemetryFragment = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);
@@ -114,7 +118,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         /* TODO remove this when service provides the home location */
         // TEMPORARY SETTING OF HOME LOCATION
         LatLng homeLocation = new LatLng(51.990826, 4.378248);
-        aircraft.setHomeLocation(homeLocation);
+		home.setHomeLocation(homeLocation);
         
         // Start the interface update handler
 		interfaceUpdater.run();	/* TODO check if there is a better moment to start this handler (on first heartbeat?) */
@@ -407,9 +411,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 				try {
 					Position mPosition = getAttribute("POSITION");
 					aircraft.setSatVisible(mPosition.getSatVisible());
+                    //TODO Change heading to int when this is changed in the service
                     aircraft.setLlaHdg(mPosition.getLat(), mPosition.getLon(), mPosition.getAlt(), (short) mPosition.getHdg());
-					//TODO Change heading to int when this is changed in the service
-				} catch (Throwable t) {
+                    aircraft.setDistanceHome(home.getHomeLocation());
+                } catch (Throwable t) {
 					Log.e(TAG, "Error while updating position", t);
 				}
 			}
@@ -674,8 +679,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         map.setOnInfoWindowClickListener(this);
 
 		//Draw home marker on map
-        aircraft.homeMarker = map.addMarker(new MarkerOptions()
-				.position(aircraft.getHomeLocation())
+        home.homeMarker = map.addMarker(new MarkerOptions()
+				.position(home.getHomeLocation())
 				.icon(BitmapDescriptorFactory.fromResource(R.drawable.home_icon))
 				.flat(true)
 				.title("HOME")
@@ -799,8 +804,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                             //Setting the values in the information window
                             infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
-                            infoDistHome.setText("Distance Home: " + "DISTANCE HERE!");
-                            infoAlt.setText("Altitude: " + String.format("%.2f", aircraft.getAltitude()));
+                            infoDistHome.setText("Distance Home: " + String.format("%.1f", aircraft.getDistanceHome()) + "m");
+                            infoAlt.setText("Altitude: " + String.format("%.1f", aircraft.getAltitude()) + "m");
                             infoMode.setText("Mode: " + "MODE HERE!");
                             infoSats.setText("#Sats: " + "#SATS HERE!");
 

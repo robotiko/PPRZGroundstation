@@ -37,7 +37,7 @@ public class Aircraft {
 	private Icon		   mIcon      = new Icon();
 	private List<Waypoint> waypoints  = new ArrayList<Waypoint>();
 
-    public Marker acMarker, infoWindow, homeMarker;
+    public Marker acMarker, infoWindow;
     public List<Marker> wpMarkers  = new ArrayList<Marker>();
 	public Polyline flightPath;
 	
@@ -45,9 +45,8 @@ public class Aircraft {
 	private final int targetLabelId     = TextView.generateViewId();
 	private final String labelCharacter = String.valueOf((char)(64+AltitudeLabelId));
 	private boolean isSelected          = false;
+    private float distanceHome          = 0f;
 
-    /* TODO find out where to put home location (in an attribute of the aircraft class?) */
-    private LatLng homeLocation;
 
     //////////// HEARTBEAT ////////////
     public byte getSysid() {
@@ -288,7 +287,7 @@ public class Aircraft {
     
     public void setWpLon(float lon, int wpNumber) {
     	Waypoint wp = waypoints.get(wpNumber);
-    	wp.setLon(lon);
+        wp.setLon(lon);
     	waypoints.set(wpNumber, wp);
 	}
 
@@ -299,13 +298,13 @@ public class Aircraft {
     
     public void setWpAlt(float alt, int wpNumber) {
     	Waypoint wp = waypoints.get(wpNumber);
-    	wp.setAlt(alt);
+        wp.setAlt(alt);
     	waypoints.set(wpNumber, wp);
     }
     
 	public void setWpSeq(short seq, int wpNumber) {
 		Waypoint wp = waypoints.get(wpNumber);
-    	wp.setSeq(seq);
+        wp.setSeq(seq);
     	waypoints.set(wpNumber, wp);
 	}
 	
@@ -370,7 +369,7 @@ public class Aircraft {
         int maxRange         = context.getResources().getInteger(R.integer.maxRange);
 
         double scalingFactor = (1f/maxRange)*(Math.pow((1/boundaryLevel),(1f/4))-1);
-        int signalStrength = (int) (1/Math.pow(scalingFactor*getDistanceHome()+1,4)*100);
+        int signalStrength = (int) (1/Math.pow(scalingFactor*distanceHome+1,4)*100);
 
         return signalStrength;
     }
@@ -391,18 +390,14 @@ public class Aircraft {
 		this.isSelected = isSelected;
 	}
 
-    public void setHomeLocation(LatLng homeLocation) {
-        this.homeLocation = homeLocation;
-    }
-
-    public LatLng getHomeLocation() {
-        return homeLocation;
-    }
-
-    public float getDistanceHome(){
+    public void setDistanceHome(LatLng homeLocation) {
         float[] distance = new float[1];
-        Location.distanceBetween(getLat(),getLon(),homeLocation.latitude,homeLocation.longitude,distance);
-        return distance[0];
+        Location.distanceBetween(mPosition.getLat(),mPosition.getLon(),homeLocation.latitude,homeLocation.longitude,distance);
+        distanceHome = distance[0];
+    }
+
+    public float getDistanceHome() {
+        return distanceHome;
     }
 
     //////////// OTHER ////////////
