@@ -6,6 +6,7 @@ import java.util.List;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.location.Location;
+import android.util.Log;
 import android.widget.TextView;
 
 import com.gcs.R;
@@ -130,7 +131,7 @@ public class Aircraft {
 
     //////////// SPEED ////////////
     public void setGroundAndAirSpeeds(double groundSpeed, double airSpeed, double climbSpeed) {
-    	mSpeed.setGroundAndAirSpeeds(groundSpeed,airSpeed,climbSpeed);
+    	mSpeed.setGroundAndAirSpeeds(groundSpeed, airSpeed, climbSpeed);
     }
     
     public void setTargetSpeed(double targetSpeed) {
@@ -215,6 +216,25 @@ public class Aircraft {
         return mState.getConflictStatus();
     }
 
+    //////////// ICON ////////////
+    public void generateIcon() {
+        mIcon.generateIcon(mState.getConflictStatus(), (float) mAttitude.getYaw(), getBattLevel(), getCommunicationSignal(), context.getResources());
+    }
+
+    public void setCircleColor(int color) {
+        mIcon.setCircleColor(color);
+    }
+
+    public Bitmap getIcon() {
+        return mIcon.getIcon();
+    }
+
+    public float getIconScalingFactor() {
+        return mIcon.getIconScalingFactor();
+    }
+
+    public float getIconBoundOffset() {return mIcon.getIconBoundOffset(); }
+
     //////////// POSITION ////////////
     public byte getSatVisible() {
     	return mPosition.getSatVisible();
@@ -223,7 +243,8 @@ public class Aircraft {
 	public int getTimeStamp() {
 		return mPosition.getTimeStamp();
 	}
-	
+
+    /* TODO remove *1e-7 terms once the service has been corrected for this */
 	public double getLat() {
 		return mPosition.getLat()*1e-7;
 	}
@@ -253,25 +274,6 @@ public class Aircraft {
 	public void setLlaHdg(int lat, int lon, int alt, short hdg) {
 		mPosition.setLlaHdg(lat, lon, alt, hdg);
 	}
-
-    //////////// ICON ////////////
-    public void generateIcon() {
-    	mIcon.generateIcon(mState.getConflictStatus(), (float) mAttitude.getYaw(), getBattLevel(), getCommunicationSignal());
-    }
-    
-    public void setCircleColor(int color) {
-    	mIcon.setCircleColor(color);
-    }
-    
-    public Bitmap getIcon() {
-		return mIcon.getIcon();
-	}
-    
-    public float getIconScalingFactor() {
-    	return mIcon.getIconScalingFactor();
-    }
-
-    public float getIconBoundOffset() {return mIcon.getIconBoundOffset(); }
 
     //////////// WAYPOINTS ////////////
     public void addWaypoint(float lat, float lon, float alt, short seq, byte targetSys, byte targetComp) {
@@ -392,16 +394,12 @@ public class Aircraft {
 
     public void setDistanceHome(LatLng homeLocation) {
         float[] distance = new float[1];
-        Location.distanceBetween(mPosition.getLat(),mPosition.getLon(),homeLocation.latitude,homeLocation.longitude,distance);
+        /* TODO change getLat() and getLon() to mPosition.getLat() and mPosition.getLon() once the service has been corrected*/
+        Location.distanceBetween(getLat(),getLon(),homeLocation.latitude,homeLocation.longitude,distance);
         distanceHome = distance[0];
     }
 
     public float getDistanceHome() {
         return distanceHome;
-    }
-
-    //////////// OTHER ////////////
-    public void setIconSettings(){
-    	mIcon.setIconSettings(context.getResources());
     }
 }

@@ -94,7 +94,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		
 		// Instantiate aircraft object
 		aircraft = new Aircraft(this);
-		aircraft.setIconSettings(); //Fix to instantiate the icon class
+//		aircraft.setIconSettings(); //Fix to instantiate the icon class
 
 		// Instantiate home object
 		home = new Home();
@@ -654,13 +654,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
 		
 		//Go to current location
-		map.setMyLocationEnabled(true);
-		LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-		Criteria criteria = new Criteria();
-		String provider = locationManager.getBestProvider(criteria, true);
-		Location myLocation = locationManager.getLastKnownLocation(provider);
-		LatLng currentLocation =  new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 18.0f));
+//		map.setMyLocationEnabled(true);
+//		LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+//		Criteria criteria = new Criteria();
+//		String provider = locationManager.getBestProvider(criteria, true);
+//		Location myLocation = locationManager.getLastKnownLocation(provider);
+//		LatLng currentLocation =  new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+//        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 18.0f));
+
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(home.getHomeLocation(),18.0f));
 		
 		//Disable rotation and tilt gestures
 		map.getUiSettings().setRotateGesturesEnabled(false);

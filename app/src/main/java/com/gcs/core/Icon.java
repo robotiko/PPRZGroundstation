@@ -3,6 +3,7 @@ package com.gcs.core;
 
 import com.gcs.R;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,18 +13,23 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 public class Icon {
-	
-	Resources res;
+
+    Resources res;
 	
 	private Bitmap AC_Icon;
+
+    private boolean firstTimeDrawing = true;
 	
 	private float scalingFactor = 1.0f;
 	private int circleColor = Color.WHITE;
-	
-	private int resolution;
-	private int protectedZoneAlpha;
+
+    private int resolution;
+    private int protectedZoneAlpha;
+    private int sideOffsetArrow;
+
 	private int batteryVertLocation;
 	private int batteryHorLocation;
 	private int batteryScaling;
@@ -31,23 +37,28 @@ public class Icon {
 	private int commHorLocation;
 	private int commScaling;
 
-	/* TODO make sure all values from resources are loaded at creation of class and not when this method is called from onCreate */
-	public void setIconSettings(Resources res){
-		this.res = res;
-		
-		resolution          = res.getInteger(R.integer.IconResolution);
-		protectedZoneAlpha  = res.getInteger(R.integer.IconAlpha);
-		
-		batteryVertLocation = res.getInteger(R.integer.BatteryVertLocation);
-		batteryHorLocation  = res.getInteger(R.integer.BatteryHorLocation);
-		batteryScaling      = res.getInteger(R.integer.BatteryScaling);
-		commVertLocation    = res.getInteger(R.integer.CommVertLocation);
-		commHorLocation     = res.getInteger(R.integer.CommHorLocation);
-		commScaling			= res.getInteger(R.integer.CommScaling);
-	}
+    private void setIconDrawingSettings() {
+        resolution          = res.getInteger(R.integer.IconResolution);
+        protectedZoneAlpha  = res.getInteger(R.integer.IconAlpha);
+        sideOffsetArrow = (int) (0.25*resolution);
+
+        batteryVertLocation = res.getInteger(R.integer.BatteryVertLocation);
+        batteryHorLocation  = res.getInteger(R.integer.BatteryHorLocation);
+        batteryScaling      = res.getInteger(R.integer.BatteryScaling);
+        commVertLocation    = res.getInteger(R.integer.CommVertLocation);
+        commHorLocation     = res.getInteger(R.integer.CommHorLocation);
+        commScaling			= res.getInteger(R.integer.CommScaling);
+    }
 	
-	public void generateIcon(ConflictStatus conflictStatus, float heading, int batLevel, int communicationSignal){
-		
+	public void generateIcon(ConflictStatus conflictStatus, float heading, int batLevel, int communicationSignal, Resources res){
+
+        this.res = res;
+
+        if(firstTimeDrawing) {
+            setIconDrawingSettings();
+            firstTimeDrawing = false;
+        }
+
 		Bitmap baseIcon, batteryIcon, communicationIcon;
 
         switch (conflictStatus) {
@@ -68,7 +79,7 @@ public class Icon {
 		baseIcon = addCircle(baseIcon);
     	
 		//Rotate the base icon
-		baseIcon = RotateBitmap(baseIcon,(float) heading);
+		baseIcon = RotateBitmap(baseIcon, heading);
 		
 		//Get the battery icon (full,half,low)
 		int halfBat = res.getInteger(R.integer.HalfBatteryLevel);
@@ -125,8 +136,7 @@ public class Icon {
 		canvas.drawCircle(resolution/2, resolution/2, resolution/2, paint);
 
 		Drawable icon = new BitmapDrawable(res, source);
-		int sideOffset = (int) (0.25*resolution);
-		icon.setBounds(sideOffset, sideOffset, resolution-sideOffset, resolution-sideOffset);
+		icon.setBounds(sideOffsetArrow, sideOffsetArrow, resolution-sideOffsetArrow, resolution-sideOffsetArrow);
 		icon.draw(canvas);
 		
 		return mutableBitmap;
@@ -154,7 +164,7 @@ public class Icon {
     	int batVert = (resolution/2)*batteryVertLocation/100;
     	int batHor  = (resolution/2)*batteryHorLocation/100;
     	int batHalfWidth = (batteryScaling/2)*batteryIcon.getWidth()/100;	
-		int batHalfHeight = (batteryScaling/2)*batteryIcon.getHeight()/100;	
+		int batHalfHeight = (batteryScaling/2)*batteryIcon.getHeight()/100;
 		
         Drawable bat = new BitmapDrawable(res, batteryIcon);
         //(int left, int top, int right, int bottom)
