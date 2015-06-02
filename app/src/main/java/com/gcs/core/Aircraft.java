@@ -5,8 +5,14 @@ import java.util.List;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
-import android.util.Log;
 import android.widget.TextView;
 
 import com.gcs.R;
@@ -35,7 +41,6 @@ public class Aircraft {
 	private Battery        mBattery   = new Battery();
 	private CustomState    mState     = new CustomState();
 	private Position       mPosition  = new Position();
-	private Icon		   mIcon      = new Icon();
 	private List<Waypoint> waypoints  = new ArrayList<Waypoint>();
 
     public Marker acMarker, infoWindow;
@@ -216,25 +221,6 @@ public class Aircraft {
         return mState.getConflictStatus();
     }
 
-    //////////// ICON ////////////
-    public void generateIcon() {
-        mIcon.generateIcon(mState.getConflictStatus(), (float) mAttitude.getYaw(), getBattLevel(), getCommunicationSignal(), context.getResources());
-    }
-
-    public void setCircleColor(int color) {
-        mIcon.setCircleColor(color);
-    }
-
-    public Bitmap getIcon() {
-        return mIcon.getIcon();
-    }
-
-    public float getIconScalingFactor() {
-        return mIcon.getIconScalingFactor();
-    }
-
-    public float getIconBoundOffset() {return mIcon.getIconBoundOffset(); }
-
     //////////// POSITION ////////////
     public byte getSatVisible() {
     	return mPosition.getSatVisible();
@@ -401,5 +387,201 @@ public class Aircraft {
 
     public float getDistanceHome() {
         return distanceHome;
+    }
+
+    //////////// ICON ////////////
+    //////////////////////////////////////////////////////
+    private Bitmap AC_Icon, mutableBitmapIcons, batteryIcon, communicationIcon;
+    private Drawable iconArrow;
+    private static boolean firstTimeDrawing = true;
+
+    //Set color of circle
+    private int circleColor = Color.WHITE;
+    Paint paint = new Paint();
+
+    private static int resolution, protectedZoneAlpha, sideOffsetArrow, batteryVertLocation, batteryHorLocation,
+            batteryScaling, commVertLocation, commHorLocation, commScaling, halfBat, lowBat, halfComm, lowComm, NoComm;
+    private int shownBattery = 0, shownComm = 0, shownBaseIcon = 0;
+
+    BitmapFactory.Options batteryBitmapOptions, communicationBitmapOptions = newOptions();
+
+    private BitmapFactory.Options newOptions() {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 1;
+        options.inMutable = true;
+        return options;
+    }
+
+    private void setIconDrawingSettings() {
+        resolution          = context.getResources().getInteger(R.integer.IconResolution);
+        protectedZoneAlpha  = context.getResources().getInteger(R.integer.IconAlpha);
+        sideOffsetArrow     = (int) (0.25*resolution);
+
+        batteryVertLocation = context.getResources().getInteger(R.integer.BatteryVertLocation);
+        batteryHorLocation  = context.getResources().getInteger(R.integer.BatteryHorLocation);
+        batteryScaling      = context.getResources().getInteger(R.integer.BatteryScaling);
+        commVertLocation    = context.getResources().getInteger(R.integer.CommVertLocation);
+        commHorLocation     = context.getResources().getInteger(R.integer.CommHorLocation);
+        commScaling			= context.getResources().getInteger(R.integer.CommScaling);
+
+        //Get the battery icon (full,half,low)
+        halfBat = context.getResources().getInteger(R.integer.HalfBatteryLevel);
+        lowBat  = context.getResources().getInteger(R.integer.LowBatteryLevel);
+
+        //Get the communication icon (full,mid,low,empty)
+        halfComm = context.getResources().getInteger(R.integer.HalfCommunicationSignal);
+        lowComm  = context.getResources().getInteger(R.integer.LowBatteryLevel);
+        NoComm   = context.getResources().getInteger(R.integer.NoCommunicationSignal);
+    }
+
+    public void generateIcon(){
+
+        //If it is the first time this method is called, set all resources
+        if(firstTimeDrawing) {
+            setIconDrawingSettings();
+            firstTimeDrawing = false;
+        } else {
+            mutableBitmapIcons.recycle();
+        }
+
+        //Determine which color heading indicator (arrow) to draw
+        int baseIconRef;
+        switch (mState.getConflictStatus()) {
+            case BLUE:
+                baseIconRef = R.drawable.aircraft_icon_blue;
+                break;
+            case GRAY:
+                baseIconRef = R.drawable.aircraft_icon_gray;
+                break;
+            case RED:
+                baseIconRef = R.drawable.aircraft_icon_red;
+                break;
+            default:
+                baseIconRef = R.drawable.aircraft_icon_blue;
+        }
+
+////////////////////////////////////////////////
+        //Place the icon(arrow) on a white circle
+
+        //Bitmap and canvas to draw a circle on
+        Bitmap baseIcon = Bitmap.createBitmap(resolution, resolution, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(baseIcon);
+
+        //Paint settings
+        paint.setColor(circleColor);
+        paint.setAlpha(protectedZoneAlpha);
+        paint.setFlags(Paint.ANTI_ALIAS_FLAG);
+
+        //Draw the circle on the canvas
+        canvas.drawCircle(resolution/2, resolution/2, resolution/2, paint);
+
+        //Check if the arrow icon should be changed, else keep the one that was already loaded
+        if(shownBaseIcon == 0 || shownBaseIcon != baseIconRef) {
+            iconArrow = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),baseIconRef));
+            shownBaseIcon = baseIconRef;
+        }
+
+        //Place the heading indicating arrow on the circle
+        iconArrow.setBounds(sideOffsetArrow, sideOffsetArrow, resolution - sideOffsetArrow, resolution - sideOffsetArrow);
+        iconArrow.draw(canvas);
+
+////////////////////////////////////////////////
+////////////////////////////////////////////////
+        //Rotate the base icon
+
+        //Rotation matrix
+        Matrix matrix = new Matrix();
+        matrix.postRotate((float) mAttitude.getYaw());
+
+        //Apply the rotation matrix to the base icon
+        baseIcon =  Bitmap.createBitmap(baseIcon, 0, 0, baseIcon.getWidth(), baseIcon.getHeight(), matrix, true);
+
+////////////////////////////////////////////////
+
+        /* TODO set the integer values to the correct orders to comply with the provided battery values */
+        //Determine which battery icon to draw
+        int batteryIconRef;
+        if(mBattery.getBattLevel() > halfBat) { //high battery level
+            batteryIconRef = R.drawable.battery_icon_green;
+        }
+        else if (halfBat >= mBattery.getBattLevel() && mBattery.getBattLevel() > lowBat) { //middle battery level
+            batteryIconRef = R.drawable.battery_icon_yellow;
+        }
+        else { //low battery level
+            batteryIconRef = R.drawable.battery_icon_red;
+        }
+
+        //Determine which communication icon to draw
+        int communicationIconRef;
+        int communicationSignal = getCommunicationSignal();
+        if (communicationSignal > halfComm) { //High signal strength
+            communicationIconRef = R.drawable.communication_icon_full;
+        }
+        else if (halfComm >= communicationSignal && communicationSignal > lowComm) { //Middle signal strength
+            communicationIconRef = R.drawable.communication_icon_mid;
+        }
+        else if (lowComm >= communicationSignal && communicationSignal > NoComm) { //Low signal strength
+            communicationIconRef = R.drawable.communication_icon_low;
+        }
+        else { //No signal
+            communicationIconRef = R.drawable.communication_icon_empty;
+        }
+
+////////////////////////////////////////////////
+        //Place battery- and communication icons
+
+        //Bitmap to work with for placing the battery and communication icons
+        mutableBitmapIcons = baseIcon.copy(Bitmap.Config.ARGB_8888, true);
+        Canvas c = new Canvas(mutableBitmapIcons);
+        int center = mutableBitmapIcons.getWidth()/2;
+
+        //Get the battery- and communication icons from resources
+        batteryIcon = BitmapFactory.decodeResource(context.getResources(), batteryIconRef);
+        communicationIcon = BitmapFactory.decodeResource(context.getResources(), communicationIconRef);
+
+        //Add battery icon to the base icon
+        int batVert = (resolution/2)*batteryVertLocation/100;
+        int batHor  = (resolution/2)*batteryHorLocation/100;
+        int batHalfWidth = (batteryScaling/2)*batteryIcon.getWidth()/100;
+        int batHalfHeight = (batteryScaling/2)*batteryIcon.getHeight()/100;
+
+        Drawable bat = new BitmapDrawable(context.getResources(), batteryIcon);
+        //(int left, int top, int right, int bottom)
+        bat.setBounds(center+batHor-batHalfWidth, center-batVert-batHalfHeight, center+batHor+batHalfWidth, center-batVert+batHalfHeight);
+        bat.draw(c);
+
+        //Add communication icon to the base icon
+        int commVert = (resolution/2)*commVertLocation/100;
+        int commHor  = (resolution/2)*commHorLocation/100;
+        int commHalfWidth = (commScaling/2)*communicationIcon.getWidth()/100;
+        int commHalfHeight = (commScaling/2)*communicationIcon.getHeight()/100;
+
+        Drawable comm = new BitmapDrawable(context.getResources(), communicationIcon);
+        //(int left, int top, int right, int bottom)
+        comm.setBounds(center - commHor - commHalfWidth, center - commVert - commHalfHeight, center - commHor + commHalfWidth, center - commVert + commHalfHeight);
+        comm.draw(c);
+
+////////////////////////////////////////////////
+
+        //TODO add speedvector to icon
+
+        //Recycle the previous aircraft icon in order to safe memory and avoid garbage collection
+        if (AC_Icon != null) {
+            AC_Icon.recycle();
+            AC_Icon = null;
+        }
+
+        //Update with the newly generated icon
+        AC_Icon = baseIcon;
+    }
+
+    public Bitmap getIcon(){
+        return AC_Icon;
+    }
+
+    public float getIconBoundOffset() { return ((AC_Icon.getHeight()-resolution)/2.0f)/AC_Icon.getHeight(); }
+
+    public void setCircleColor(int color) {
+        circleColor = color;
     }
 }

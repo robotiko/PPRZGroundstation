@@ -91,7 +91,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		isConnected = false;
 		
 		// Instantiate aircraft object
-		aircraft = new Aircraft(this);
+		aircraft = new Aircraft(getApplicationContext());
 //		aircraft.setIconSettings(); //Fix to instantiate the icon class
 
 		// Instantiate home object
@@ -162,6 +162,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 	@Override
     public void onDestroy() {
+		super.onDestroy();
+
     	try {
 			mServiceClient.removeEventListener(TAG);
 		} catch (RemoteException e) {
@@ -184,7 +186,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		updateAltitudeTape();
                 isAltitudeUpdated = false;
 	    	}
-	    	
+
+            Log.d(TAG,"Updating the interface");
+
 	    	//Restart this updater after the set interval
 	    	interfaceUpdateHandler.postDelayed(interfaceUpdater, mInterval);
 	    }
@@ -312,7 +316,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void run() {
                 try {
                     Heartbeat mHeartbeat = getAttribute("HEARTBEAT");
-                    aircraft.setHeartbeat(mHeartbeat.getSysId(),mHeartbeat.getCompId());
+                    aircraft.setHeartbeat(mHeartbeat.getSysId(), mHeartbeat.getCompId());
                 } catch (Throwable t){
 
                 }
@@ -849,7 +853,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onMapReady(GoogleMap map) {
 
                 //If the wps are already initiated, remove them from the map and clear the list that holds them
-                if(!aircraft.wpMarkers.isEmpty()) {
+                if (!aircraft.wpMarkers.isEmpty()) {
                     //Remove markers from map
                     for (int i = 0; i < aircraft.getNumberOfWaypoints(); i++) {
                         aircraft.wpMarkers.get(i).remove();
@@ -864,17 +868,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     //Add waypoint marker to map
                     Marker wpMarker = map.addMarker(new MarkerOptions()
-										.position(aircraft.getWpLatLng(i))
-										.flat(true)
-										.snippet(String.valueOf(aircraft.getWpSeq(i)))
-										.draggable(true)
-						);
+                                    .position(aircraft.getWpLatLng(i))
+                                    .flat(true)
+                                    .snippet(String.valueOf(aircraft.getWpSeq(i)))
+                                    .draggable(true)
+                    );
                     aircraft.wpMarkers.add(wpMarker);
                 }
 
                 ///* FLIGHT PATH *///
                 // If the flight path has been drawn before, remove it to be updated
-                if(aircraft.flightPath != null) {
+                if (aircraft.flightPath != null) {
                     aircraft.flightPath.remove();
                 }
 
@@ -886,7 +890,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
     }
-
 
 	/////////////////////////ALTITUDE TAPE/////////////////////////
 
@@ -901,11 +904,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		}
 		
 		/* Set the location (actual) altitude label on the altitude tape */
-		altitudeTapeFragment.setLabel(aircraft.getAltitude(),aircraft.getAltLabelId(),aircraft.getLabelCharacter(),aircraft.isSelected());
+		altitudeTapeFragment.setLabel(aircraft.getAltitude(), aircraft.getAltLabelId(), aircraft.getLabelCharacter(), aircraft.isSelected());
 	}
 
     public void setIsSelected(boolean isSelected){
         aircraft.setIsSelected(isSelected);
+
+        updateAltitudeTape();
     }
 
     public boolean isAircraftIconSelected() {
