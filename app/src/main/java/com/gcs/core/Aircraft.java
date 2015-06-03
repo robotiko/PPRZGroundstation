@@ -29,9 +29,13 @@ import com.sharedlib.model.Position;
 public class Aircraft {
 	
 	private Context context;
-	
+    private static int aircraftCount;
+    private int aircraftNumber;
+
 	public Aircraft(Context context){
 	    this.context = context;
+        aircraftCount++;
+        aircraftNumber = aircraftCount;
 	}
 
 	private Heartbeat	   mHeartbeat = new Heartbeat();
@@ -49,10 +53,10 @@ public class Aircraft {
 	
 	private final int AltitudeLabelId   = TextView.generateViewId();
 	private final int targetLabelId     = TextView.generateViewId();
-	private final String labelCharacter = String.valueOf((char)(64+AltitudeLabelId));
+	private final String labelCharacter = String.valueOf((char) (64 + AltitudeLabelId));
 	private boolean isSelected          = false;
+    private boolean isLabelCreated      = false;
     private float distanceHome          = 0f;
-
 
     //////////// HEARTBEAT ////////////
     public byte getSysid() {
@@ -378,6 +382,14 @@ public class Aircraft {
 		this.isSelected = isSelected;
 	}
 
+    public boolean isLabelCreated() {
+        return isLabelCreated;
+    }
+
+    public void setIsLabelCreated(boolean isLabelCreated) {
+        this.isLabelCreated = isLabelCreated;
+    }
+
     public void setDistanceHome(LatLng homeLocation) {
         float[] distance = new float[1];
         /* TODO change getLat() and getLon() to mPosition.getLat() and mPosition.getLon() once the service has been corrected*/
@@ -389,9 +401,18 @@ public class Aircraft {
         return distanceHome;
     }
 
+    public int getAircraftCount() {
+        return aircraftCount;
+    }
+
+    public int getAircraftNumber() {
+        return aircraftNumber;
+    }
+
+
     //////////// ICON ////////////
     //////////////////////////////////////////////////////
-    private Bitmap AC_Icon, mutableBitmapIcons, batteryIcon, communicationIcon;
+    private Bitmap AC_Icon, batteryIcon, communicationIcon;
     private Drawable iconArrow;
     private static boolean firstTimeDrawing = true;
 
@@ -401,16 +422,7 @@ public class Aircraft {
 
     private static int resolution, protectedZoneAlpha, sideOffsetArrow, batteryVertLocation, batteryHorLocation,
             batteryScaling, commVertLocation, commHorLocation, commScaling, halfBat, lowBat, halfComm, lowComm, NoComm;
-    private int shownBattery = 0, shownComm = 0, shownBaseIcon = 0;
-
-    BitmapFactory.Options batteryBitmapOptions, communicationBitmapOptions = newOptions();
-
-    private BitmapFactory.Options newOptions() {
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = 1;
-        options.inMutable = true;
-        return options;
-    }
+    private int shownBaseIcon = 0;
 
     private void setIconDrawingSettings() {
         resolution          = context.getResources().getInteger(R.integer.IconResolution);
@@ -440,8 +452,6 @@ public class Aircraft {
         if(firstTimeDrawing) {
             setIconDrawingSettings();
             firstTimeDrawing = false;
-        } else {
-            mutableBitmapIcons.recycle();
         }
 
         //Determine which color heading indicator (arrow) to draw
@@ -530,10 +540,9 @@ public class Aircraft {
 ////////////////////////////////////////////////
         //Place battery- and communication icons
 
-        //Bitmap to work with for placing the battery and communication icons
-        mutableBitmapIcons = baseIcon.copy(Bitmap.Config.ARGB_8888, true);
-        Canvas c = new Canvas(mutableBitmapIcons);
-        int center = mutableBitmapIcons.getWidth()/2;
+        //Canvas to work with for placing the battery and communication icons
+        Canvas c = new Canvas(baseIcon);
+        int center = baseIcon.getWidth()/2;
 
         //Get the battery- and communication icons from resources
         batteryIcon = BitmapFactory.decodeResource(context.getResources(), batteryIconRef);
