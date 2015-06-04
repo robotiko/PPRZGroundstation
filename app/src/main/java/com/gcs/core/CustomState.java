@@ -7,7 +7,23 @@ public class CustomState extends State {
 	private boolean isInConflict = false;
 	private boolean isOnUniqueAltitude = false;
 
-    ConflictStatus conflictStatus = ConflictStatus.BLUE;
+    private ConflictStatus conflictStatus = ConflictStatus.GRAY;
+
+    public void updateConflictStatus() {
+        if(isOnUniqueAltitude){
+            conflictStatus = ConflictStatus.GRAY;
+        } else {
+            if (isInConflict){
+                conflictStatus = ConflictStatus.RED;
+            } else {
+                conflictStatus = ConflictStatus.BLUE;
+            }
+        }
+    }
+
+    public void setConflictStatusNew(ConflictStatus NewStatus) {
+        conflictStatus = NewStatus;
+    }
 
     public void setConflictStatus(boolean newIsInConflict, boolean newIsOnUniqueAltitude) {
 

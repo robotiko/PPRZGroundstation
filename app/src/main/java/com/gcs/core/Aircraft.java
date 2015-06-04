@@ -217,8 +217,14 @@ public class Aircraft {
     	mState.setIsOnUniqueAltitude(newState);
     }
 
+    public void updateConflictStatus() { mState.updateConflictStatus(); }
+
     public void setConflictStatus(boolean newIsInConflict, boolean newIsOnUniqueAltitude) {
         mState.setConflictStatus(newIsInConflict, newIsOnUniqueAltitude);
+    }
+
+    public void setConflictStatusNew(ConflictStatus NewStatus) {
+        mState.setConflictStatusNew(NewStatus);
     }
 
     public ConflictStatus getConflictStatus() {

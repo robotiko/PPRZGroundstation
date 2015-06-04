@@ -4,6 +4,7 @@
     <!-- Airspace parameters -->
     <integer name="flightCeiling">20</integer>              <!-- meters -->
     <integer name="groundLevel">0</integer>                 <!-- meters -->
+    <integer name="verticalSeparationStandard">50</integer>  <!-- tenths of meters -->
 
     <!-- Communication signal parameters -->
     <integer name="maxRange">1000</integer>                 <!-- meters -->

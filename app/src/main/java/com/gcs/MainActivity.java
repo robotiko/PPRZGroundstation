@@ -12,6 +12,7 @@ import com.aidllib.core.model.Battery;
 import com.aidllib.core.model.Position;
 import com.gcs.core.ConflictStatus;
 import com.gcs.core.Home;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.sharedlib.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
 import com.gcs.core.Aircraft;
@@ -52,6 +53,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -75,9 +77,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private AltitudeTape altitudeTapeFragment;
 
     final ConcurrentHashMap<Integer, Aircraft> mAircraft = new ConcurrentHashMap<>();
+    private List<Polyline> mConnectingLines  = new ArrayList<>();
+    private ArrayList<Integer> conflictingAircraft = new ArrayList<>();
 
-//	private Aircraft aircraft;
 	private Home home;
+
+    private float verticalSeparationStandard;
 
     SupportMapFragment mapFragment;
 
@@ -93,6 +98,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		
 		connectButton = (Button) findViewById(R.id.connectButton);
 		isConnected = false;
+        verticalSeparationStandard = getResources().getInteger(R.integer.verticalSeparationStandard)/10f;
 		
 		// Instantiate aircraft object
         mAircraft.put(1, new Aircraft(getApplicationContext()));
@@ -111,7 +117,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mAircraft.get(2).setAltitude(10);
         mAircraft.get(2).setBatteryState(10, 1, 1);
         mAircraft.get(2).setDistanceHome(homeLocation);
-//		mAircraft.get(2).
 
 		// Create a handle to the telemetry fragment
 		telemetryFragment = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);
@@ -199,6 +204,40 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		updateAltitudeTape();
                 isAltitudeUpdated = false;
 	    	}
+
+            //check for altitude and course conflicts
+            for(int i = 1; i < mAircraft.size()+1; i++) {
+                for(int j = 1; j < mAircraft.size()+1; j++) {
+                    if(i!=j) {
+                        if(Math.abs(mAircraft.get(i).getAltitude() - mAircraft.get(j).getAltitude()) <= verticalSeparationStandard) {
+                            //Check for conflict course
+                            if(isOnconflictCourse(i,j)){ //On conflict course
+                                mAircraft.get(i).setConflictStatusNew(ConflictStatus.RED);
+                                mAircraft.get(j).setConflictStatusNew(ConflictStatus.RED);
+
+                                /* TODO make sure no double couples will be present in the conflictingAircraft list */
+                                conflictingAircraft.add(i);
+                                conflictingAircraft.add(j);
+
+                            } else { //Not on conflict course
+                                mAircraft.get(i).setConflictStatusNew(ConflictStatus.BLUE);
+                                mAircraft.get(j).setConflictStatusNew(ConflictStatus.BLUE);
+
+                                //Clear connecting lines if they still exist
+                                removeConnectingLines();
+                            }
+                        } else {
+                            mAircraft.get(i).setConflictStatusNew(ConflictStatus.GRAY);
+                            mAircraft.get(j).setConflictStatusNew(ConflictStatus.GRAY);
+
+                            //Clear connecting lines if they still exist
+                            removeConnectingLines();
+                        }
+                    }
+                }
+            }
+
+            drawConnectingLines();
 
             Log.d(TAG,"Updating the interface");
 
@@ -701,11 +740,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 		//Draw home marker on map
         home.homeMarker = map.addMarker(new MarkerOptions()
-				.position(home.getHomeLocation())
-				.icon(BitmapDescriptorFactory.fromResource(R.drawable.home_icon))
-				.flat(true)
-				.title("HOME")
-				.draggable(false)
+                        .position(home.getHomeLocation())
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.home_icon))
+                        .anchor(0.5f, 0.5f)
+                        .flat(true)
+                        .title("HOME")
+                        .draggable(false)
         );
 	}
 
@@ -903,12 +943,65 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+    ///////* Connecting lines to indicate conflicting aircraft pairs *///////
+    private void drawConnectingLines() {
+
+        //Call GoogleMaps
+        mapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap map) {
+
+                //If lines have been drawn before, remove them from the map
+                if (!mConnectingLines.isEmpty()) {
+                    for(int i=0; i< mConnectingLines.size(); i++) {
+                        mConnectingLines.get(i).remove();
+                    }
+                }
+
+                if(conflictingAircraft != null) {
+                    for (int i = 0; i < conflictingAircraft.size(); i += 2) {
+
+                        //Draw a connecting line on the map
+                        Polyline connectingLine = map.addPolyline(new PolylineOptions()
+                                .add(mAircraft.get(conflictingAircraft.get(i)).getLatLng(), mAircraft.get(conflictingAircraft.get(i+1)).getLatLng())
+                                .width(6)
+                                .color(Color.RED));
+
+                        //Save polyline object in a list to have a reference to it
+                        mConnectingLines.add(connectingLine);
+                    }
+                    //Clear all points for which the lines were drawn
+                    conflictingAircraft.clear();
+                }
+            }
+        });
+    }
+
+    private void removeConnectingLines() {
+        if (!mConnectingLines.isEmpty()) {
+            mapFragment.getMapAsync(new OnMapReadyCallback() {
+                @Override
+                public void onMapReady(GoogleMap map) {
+                    for (int i = 0; i < mConnectingLines.size(); i++) {
+                        mConnectingLines.get(i).remove();
+                    }
+                }
+            });
+        }
+    }
+
     /////////////////////////CLASS METHODS/////////////////////////
 
     private void unselectAllAircraft() {
         for(int i=1; i<mAircraft.size()+1; i++) {
             mAircraft.get(i).setIsSelected(false);
         }
+    }
+
+    private boolean isOnconflictCourse(int ac1, int ac2) {
+        /* TODO make algorithm to check conflict courses */
+        boolean isInconflictcourse = true;
+        return isInconflictcourse;
     }
 
 	/////////////////////////ALTITUDE TAPE/////////////////////////
