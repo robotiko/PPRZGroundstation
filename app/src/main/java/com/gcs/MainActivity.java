@@ -111,6 +111,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mAircraft.get(2).setAltitude(10);
         mAircraft.get(2).setBatteryState(10, 1, 1);
         mAircraft.get(2).setDistanceHome(homeLocation);
+//		mAircraft.get(2).
 
 		// Create a handle to the telemetry fragment
 		telemetryFragment = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);
@@ -306,6 +307,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     	}
     };
 
+    //Method to request the service to send (updated) waypoints
     public void requestWps() {
         if (isConnected) {
             try {
@@ -400,7 +402,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	/**
 	 * This runnable object is created to update the battery information
 	 */
-	private void updateBattery() {
+	private void  updateBattery() {
 		handler.post(new Runnable() {
 			@Override
 			public void run() {
@@ -678,6 +680,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //		LatLng currentLocation =  new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
 //      map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 18.0f));
 
+        //Move camera to the home location
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(home.getHomeLocation(),18.0f));
 		
 		//Disable rotation and tilt gestures
@@ -706,26 +709,30 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         );
 	}
 
-
 	/* Marker listener to unselect an aircraft icon*/
 	@Override
     public boolean onMarkerClick(final Marker marker) {
+        if(marker.getSnippet().contains("-")){  //Waypoint marker clicked
+            String[] numbers = marker.getSnippet().split("-");
+            int acNumber = Integer.parseInt(numbers[0]);
+            int wpNumber = Integer.parseInt(numbers[1]);
+        } else {                                //Aircraft marker clicked
+            int acNumber = Integer.parseInt(marker.getSnippet());
 
-        int clickedAircraft = Integer.parseInt(marker.getSnippet());
-
-        //When the aircraft icon is clicked, select it or unselect it
-            if(!mAircraft.get(clickedAircraft).isSelected()) {
+            //When the aircraft icon is clicked, select it or unselect it
+            if(!mAircraft.get(acNumber).isSelected()) {
                 if(aircraftSelected) {
                     //Set all aircraft on not selected
                     unselectAllAircraft();
                 }
-                mAircraft.get(clickedAircraft).setIsSelected(true);
+                mAircraft.get(acNumber).setIsSelected(true);
                 aircraftSelected = true;
                 Log.d("infowindow","markerclick-ON");
             } else {
-                mAircraft.get(clickedAircraft).setIsSelected(false);
+                mAircraft.get(acNumber).setIsSelected(false);
                 Log.d("infowindow","markerclick-OFF");
             }
+        }
 		return true;
 	}
 
@@ -896,6 +903,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+    /////////////////////////CLASS METHODS/////////////////////////
+
+    private void unselectAllAircraft() {
+        for(int i=1; i<mAircraft.size()+1; i++) {
+            mAircraft.get(i).setIsSelected(false);
+        }
+    }
+
 	/////////////////////////ALTITUDE TAPE/////////////////////////
 
 	public void updateAltitudeTape(){
@@ -934,11 +949,5 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     public ConflictStatus getConflictStatus(int acNumber){
         return mAircraft.get(acNumber).getConflictStatus();
-    }
-
-    private void unselectAllAircraft() {
-        for(int i=1; i<mAircraft.size()+1; i++) {
-            mAircraft.get(i).setIsSelected(false);
-        }
     }
 }
