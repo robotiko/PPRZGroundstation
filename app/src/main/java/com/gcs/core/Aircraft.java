@@ -31,11 +31,13 @@ public class Aircraft {
 	private Context context;
     private static int aircraftCount;
     private int aircraftNumber;
+    private final String labelCharacter;
 
 	public Aircraft(Context context){
 	    this.context = context;
         aircraftCount++;
         aircraftNumber = aircraftCount;
+        labelCharacter = String.valueOf((char) (64 + aircraftCount));
 	}
 
 	private Heartbeat	   mHeartbeat = new Heartbeat();
@@ -45,15 +47,14 @@ public class Aircraft {
 	private Battery        mBattery   = new Battery();
 	private CustomState    mState     = new CustomState();
 	private Position       mPosition  = new Position();
-	private List<Waypoint> waypoints  = new ArrayList<Waypoint>();
+	private List<Waypoint> waypoints  = new ArrayList<>();
 
     public Marker acMarker, infoWindow;
-    public List<Marker> wpMarkers  = new ArrayList<Marker>();
+    public List<Marker> wpMarkers  = new ArrayList<>();
 	public Polyline flightPath;
 	
 	private final int AltitudeLabelId   = TextView.generateViewId();
 	private final int targetLabelId     = TextView.generateViewId();
-	private final String labelCharacter = String.valueOf((char) (64 + AltitudeLabelId));
 	private boolean isSelected          = false;
     private boolean isLabelCreated      = false;
     private float distanceHome          = 0f;
@@ -201,27 +202,27 @@ public class Aircraft {
     	mState.setArmed(newState);
     }
     
-    public boolean isInConflict() {
-        return mState.isInConflict();
-    }
+//    public boolean isInConflict() {
+//        return mState.isInConflict();
+//    }
 
-    public void setIsInConflict(boolean newState) {
-    	mState.setIsInConflict(newState);
-    }
+//    public void setIsInConflict(boolean newState) {
+//    	mState.setIsInConflict(newState);
+//    }
     
-    public boolean isOnUniqueAltitude() {
-        return mState.isOnUniqueAltitude();
-    }
+//    public boolean isOnUniqueAltitude() {
+//        return mState.isOnUniqueAltitude();
+//    }
 	
-    public void setIsOnUniqueAltitude(boolean newState) {
-    	mState.setIsOnUniqueAltitude(newState);
-    }
+//    public void setIsOnUniqueAltitude(boolean newState) {
+//    	mState.setIsOnUniqueAltitude(newState);
+//    }
 
     public void updateConflictStatus() { mState.updateConflictStatus(); }
 
-    public void setConflictStatus(boolean newIsInConflict, boolean newIsOnUniqueAltitude) {
-        mState.setConflictStatus(newIsInConflict, newIsOnUniqueAltitude);
-    }
+//    public void setConflictStatus(boolean newIsInConflict, boolean newIsOnUniqueAltitude) {
+//        mState.setConflictStatus(newIsInConflict, newIsOnUniqueAltitude);
+//    }
 
     public void setConflictStatusNew(ConflictStatus NewStatus) {
         mState.setConflictStatusNew(NewStatus);

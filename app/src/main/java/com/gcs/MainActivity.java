@@ -62,7 +62,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private static final String TAG = MainActivity.class.getSimpleName();
 	
 	private Handler handler, interfaceUpdateHandler;
-	private int mInterval = 500; // seconds * 1000
+	private int mInterval = 1000; // seconds * 1000
 	
 	IMavLinkServiceClient mServiceClient;
 	MissionButtonFragment missionButtons;
@@ -117,6 +117,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mAircraft.get(2).setAltitude(10);
         mAircraft.get(2).setBatteryState(10, 1, 1);
         mAircraft.get(2).setDistanceHome(homeLocation);
+		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
+
+		mAircraft.put(3, new Aircraft(getApplicationContext()));
+		mAircraft.get(3).setLlaHdg(519910540, 43794130, 17, (short) 300);
+		mAircraft.get(3).setAltitude(17);
+		mAircraft.get(3).setBatteryState(10, 1, 1);
+		mAircraft.get(3).setDistanceHome(homeLocation);
+		mAircraft.get(3).setRollPitchYaw(0,0,300);
+
 
 		// Create a handle to the telemetry fragment
 		telemetryFragment = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);
@@ -212,12 +221,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         if(Math.abs(mAircraft.get(i).getAltitude() - mAircraft.get(j).getAltitude()) <= verticalSeparationStandard) {
                             //Check for conflict course
                             if(isOnconflictCourse(i,j)){ //On conflict course
-                                mAircraft.get(i).setConflictStatusNew(ConflictStatus.RED);
-                                mAircraft.get(j).setConflictStatusNew(ConflictStatus.RED);
 
                                 /* TODO make sure no double couples will be present in the conflictingAircraft list */
-                                conflictingAircraft.add(i);
-                                conflictingAircraft.add(j);
+                                    conflictingAircraft.add(i);
+                                    conflictingAircraft.add(j);
 
                             } else { //Not on conflict course
                                 mAircraft.get(i).setConflictStatusNew(ConflictStatus.BLUE);
@@ -234,6 +241,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             removeConnectingLines();
                         }
                     }
+                }
+            }
+
+            if(!conflictingAircraft.isEmpty()) {
+                for (int k = 0; k < conflictingAircraft.size()-1; k++) {
+                    mAircraft.get(conflictingAircraft.get(k)).setConflictStatusNew(ConflictStatus.RED);
+                    mAircraft.get(conflictingAircraft.get(k + 1)).setConflictStatusNew(ConflictStatus.RED);
                 }
             }
 
