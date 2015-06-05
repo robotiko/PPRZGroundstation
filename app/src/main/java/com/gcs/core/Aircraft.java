@@ -13,6 +13,7 @@ import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.util.Log;
 import android.widget.TextView;
 
 import com.gcs.R;
@@ -201,28 +202,8 @@ public class Aircraft {
     public void setArmed(boolean newState) {
     	mState.setArmed(newState);
     }
-    
-//    public boolean isInConflict() {
-//        return mState.isInConflict();
-//    }
-
-//    public void setIsInConflict(boolean newState) {
-//    	mState.setIsInConflict(newState);
-//    }
-    
-//    public boolean isOnUniqueAltitude() {
-//        return mState.isOnUniqueAltitude();
-//    }
-	
-//    public void setIsOnUniqueAltitude(boolean newState) {
-//    	mState.setIsOnUniqueAltitude(newState);
-//    }
 
     public void updateConflictStatus() { mState.updateConflictStatus(); }
-
-//    public void setConflictStatus(boolean newIsInConflict, boolean newIsOnUniqueAltitude) {
-//        mState.setConflictStatus(newIsInConflict, newIsOnUniqueAltitude);
-//    }
 
     public void setConflictStatusNew(ConflictStatus NewStatus) {
         mState.setConflictStatusNew(NewStatus);

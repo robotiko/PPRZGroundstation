@@ -1,6 +1,5 @@
 package com.gcs.fragments;
 
-import com.gcs.MainActivity;
 import com.gcs.R;
 
 import android.os.Bundle;

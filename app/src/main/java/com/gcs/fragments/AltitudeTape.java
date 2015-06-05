@@ -2,16 +2,14 @@ package com.gcs.fragments;
 
 import com.gcs.MainActivity;
 import com.gcs.R;
-import com.gcs.core.Aircraft;
 import com.gcs.core.ConflictStatus;
 
-import android.app.Activity;
 import android.content.ClipData;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,14 +20,12 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.concurrent.ConcurrentHashMap;
-
 public class AltitudeTape extends Fragment {
 	
 	private FrameLayout framelayout;
 	private View rootView;
 
-    final ConcurrentHashMap<Integer, Integer> labelList = new ConcurrentHashMap<>();
+    final SparseArray<Integer> labelList = new SparseArray<>();
 
     private int draggedLabel;
 	
@@ -86,8 +82,6 @@ public class AltitudeTape extends Fragment {
                 } else {                    //Select
                     ((MainActivity)getActivity()).setIsSelected(aircraftNumber,true);
                 }
-
-	        	/* TODO implement code for selection of aircraft when multiple are available (colors etc.) */
         	}
 	    };
 	}

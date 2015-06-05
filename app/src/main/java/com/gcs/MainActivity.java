@@ -46,6 +46,7 @@ import android.os.Parcelable;
 import android.os.RemoteException;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -55,7 +56,6 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, OnMarkerClickListener, OnInfoWindowClickListener, OnMarkerDragListener {
 	
@@ -76,9 +76,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private BatteryFragment batteryFragment;
 	private AltitudeTape altitudeTapeFragment;
 
-    final ConcurrentHashMap<Integer, Aircraft> mAircraft = new ConcurrentHashMap<>();
+    final SparseArray<Aircraft> mAircraft = new SparseArray<>();
     private List<Polyline> mConnectingLines  = new ArrayList<>();
     private ArrayList<Integer> conflictingAircraft = new ArrayList<>();
+    private ArrayList<Integer> sameLevelAircraft = new ArrayList<>();
 
 	private Home home;
 
@@ -146,8 +147,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Start the interface update handler
 		interfaceUpdater.run();	/* TODO check if there is a better moment to start this handler (on first heartbeat?) */
 	}
-	
-	/* TODO Make a course extrapolation class to determine the conflictStatus of a drone */
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -223,12 +222,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             if(isOnconflictCourse(i,j)){ //On conflict course
 
                                 /* TODO make sure no double couples will be present in the conflictingAircraft list */
-                                    conflictingAircraft.add(i);
-                                    conflictingAircraft.add(j);
+                                conflictingAircraft.add(i);
+                                conflictingAircraft.add(j);
 
                             } else { //Not on conflict course
-                                mAircraft.get(i).setConflictStatusNew(ConflictStatus.BLUE);
-                                mAircraft.get(j).setConflictStatusNew(ConflictStatus.BLUE);
+                                sameLevelAircraft.add(i);
+                                sameLevelAircraft.add(j);
 
                                 //Clear connecting lines if they still exist
                                 removeConnectingLines();
@@ -244,11 +243,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
 
+            //Set the color of the aircraft that have the "red" conflict status
             if(!conflictingAircraft.isEmpty()) {
                 for (int k = 0; k < conflictingAircraft.size()-1; k++) {
                     mAircraft.get(conflictingAircraft.get(k)).setConflictStatusNew(ConflictStatus.RED);
                     mAircraft.get(conflictingAircraft.get(k + 1)).setConflictStatusNew(ConflictStatus.RED);
                 }
+            }
+
+            //Set the color of the aircraft that have the "blue" conflict status
+            if(!sameLevelAircraft.isEmpty()) {
+                for (int k = 0; k < sameLevelAircraft.size()-1; k++) {
+                    mAircraft.get(sameLevelAircraft.get(k)).setConflictStatusNew(ConflictStatus.BLUE);
+                    mAircraft.get(sameLevelAircraft.get(k+1)).setConflictStatusNew(ConflictStatus.BLUE);
+                }
+                sameLevelAircraft.clear();
             }
 
             drawConnectingLines();
@@ -1013,8 +1022,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private boolean isOnconflictCourse(int ac1, int ac2) {
-        /* TODO make algorithm to check conflict courses */
-        boolean isInconflictcourse = true;
+        /* TODO make algorithm to check conflict courses (extrapolation) */
+        boolean isInconflictcourse = false;
         return isInconflictcourse;
     }
 
