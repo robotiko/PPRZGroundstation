@@ -62,7 +62,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private static final String TAG = MainActivity.class.getSimpleName();
 	
 	private Handler handler, interfaceUpdateHandler;
-	private int mInterval = 1000; // seconds * 1000
+	private int mInterval = 500; // seconds * 1000
 	
 	IMavLinkServiceClient mServiceClient;
 	MissionButtonFragment missionButtons;
@@ -768,6 +768,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         .anchor(0.5f, 0.5f)
                         .flat(true)
                         .title("HOME")
+						.snippet("HOME")
                         .draggable(false)
         );
 	}
@@ -775,26 +776,28 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	/* Marker listener to unselect an aircraft icon*/
 	@Override
     public boolean onMarkerClick(final Marker marker) {
-        if(marker.getSnippet().contains("-")){  //Waypoint marker clicked
+        if(marker.getSnippet().contains("-")){                          //Waypoint marker clicked
             String[] numbers = marker.getSnippet().split("-");
             int acNumber = Integer.parseInt(numbers[0]);
             int wpNumber = Integer.parseInt(numbers[1]);
-        } else {                                //Aircraft marker clicked
-            int acNumber = Integer.parseInt(marker.getSnippet());
+        } else if(marker.getSnippet().equals("HOME")) {                 //Home marker clicked
+            //Do nothing yet
+        } else {                                                        //Aircraft marker clicked
+                int acNumber = Integer.parseInt(marker.getSnippet());
 
-            //When the aircraft icon is clicked, select it or unselect it
-            if(!mAircraft.get(acNumber).isSelected()) {
-                if(aircraftSelected) {
-                    //Set all aircraft on not selected
-                    unselectAllAircraft();
+                //When the aircraft icon is clicked, select it or unselect it
+                if(!mAircraft.get(acNumber).isSelected()) {
+                    if(aircraftSelected) {
+                        //Set all aircraft on not selected
+                        unselectAllAircraft();
+                    }
+                    mAircraft.get(acNumber).setIsSelected(true);
+                    aircraftSelected = true;
+                    Log.d("infowindow","markerclick-ON");
+                } else {
+                    mAircraft.get(acNumber).setIsSelected(false);
+                    Log.d("infowindow","markerclick-OFF");
                 }
-                mAircraft.get(acNumber).setIsSelected(true);
-                aircraftSelected = true;
-                Log.d("infowindow","markerclick-ON");
-            } else {
-                mAircraft.get(acNumber).setIsSelected(false);
-                Log.d("infowindow","markerclick-OFF");
-            }
         }
 		return true;
 	}
@@ -1023,7 +1026,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private boolean isOnconflictCourse(int ac1, int ac2) {
         /* TODO make algorithm to check conflict courses (extrapolation) */
-        boolean isInconflictcourse = false;
+        boolean isInconflictcourse = true;
         return isInconflictcourse;
     }
 

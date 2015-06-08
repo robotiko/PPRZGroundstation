@@ -400,7 +400,7 @@ public class Aircraft {
 
     //////////// ICON ////////////
     //////////////////////////////////////////////////////
-    private Bitmap AC_Icon, batteryIcon, communicationIcon;
+    private Bitmap AC_Icon, baseIcon, batteryIcon, communicationIcon;
     private Drawable iconArrow;
     private static boolean firstTimeDrawing = true;
 
@@ -461,8 +461,14 @@ public class Aircraft {
 ////////////////////////////////////////////////
         //Place the icon(arrow) on a white circle
 
+        //Recycle the previous base icon in order to safe memory and avoid garbage collection
+        if (baseIcon != null) {
+            baseIcon.recycle();
+            baseIcon = null;
+        }
+
         //Bitmap and canvas to draw a circle on
-        Bitmap baseIcon = Bitmap.createBitmap(resolution, resolution, Bitmap.Config.ARGB_8888);
+        baseIcon = Bitmap.createBitmap(resolution, resolution, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(baseIcon);
 
         //Paint settings
@@ -491,8 +497,8 @@ public class Aircraft {
         Matrix matrix = new Matrix();
         matrix.postRotate((float) mAttitude.getYaw());
 
-        //Apply the rotation matrix to the base icon
-        baseIcon =  Bitmap.createBitmap(baseIcon, 0, 0, baseIcon.getWidth(), baseIcon.getHeight(), matrix, true);
+        //Apply the rotation matrix to the base icon (set boolean on true for smoother edges)
+        baseIcon =  Bitmap.createBitmap(baseIcon, 0, 0, baseIcon.getWidth(), baseIcon.getHeight(), matrix, false);
 
 ////////////////////////////////////////////////
 
@@ -570,6 +576,7 @@ public class Aircraft {
 
         //Update with the newly generated icon
         AC_Icon = baseIcon;
+//        baseIcon.recycle();
     }
 
     public Bitmap getIcon(){
