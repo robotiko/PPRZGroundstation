@@ -13,6 +13,7 @@ import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.util.Log;
 import android.widget.TextView;
 
 import com.gcs.R;
@@ -30,13 +31,11 @@ public class Aircraft {
 	
 	private Context context;
     private static int aircraftCount = 0;
-//    private int aircraftNumber;
     private final String labelCharacter;
 
 	public Aircraft(Context context){
 	    this.context = context;
         aircraftCount++;
-//        aircraftNumber = aircraftCount;
         labelCharacter = String.valueOf((char) (64 + aircraftCount));
 	}
 
@@ -392,15 +391,11 @@ public class Aircraft {
         return aircraftCount;
     }
 
-//    public int getAircraftNumber() {
-//        return aircraftNumber;
-//    }
-
-
     //////////// ICON ////////////
     //////////////////////////////////////////////////////
-    private Bitmap AC_Icon, baseIcon, batteryIcon, communicationIcon;
-    private Drawable iconArrow;
+    private Bitmap AC_Icon, baseIcon;
+    private static  Bitmap batteryGreen, batteryYellow, batteryRed, commFull, commMid, commLow, commEmpty;
+    private static Drawable arrowRed, arrowBlue, arrowGray;
     private static boolean firstTimeDrawing = true;
 
     //Set color of circle
@@ -409,7 +404,6 @@ public class Aircraft {
 
     private static int resolution, protectedZoneAlpha, sideOffsetArrow, batteryVertLocation, batteryHorLocation,
             batteryScaling, commVertLocation, commHorLocation, commScaling, halfBat, lowBat, halfComm, lowComm, NoComm;
-    private int shownBaseIcon = 0;
 
     private void setIconDrawingSettings() {
         resolution          = context.getResources().getInteger(R.integer.IconResolution);
@@ -431,6 +425,22 @@ public class Aircraft {
         halfComm = context.getResources().getInteger(R.integer.HalfCommunicationSignal);
         lowComm  = context.getResources().getInteger(R.integer.LowBatteryLevel);
         NoComm   = context.getResources().getInteger(R.integer.NoCommunicationSignal);
+
+        //Arrow icons
+        arrowRed  = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),R.drawable.aircraft_icon_red));
+        arrowBlue = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),R.drawable.aircraft_icon_blue));
+        arrowGray = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),R.drawable.aircraft_icon_gray));
+
+        //Battery icons
+        batteryGreen  = BitmapFactory.decodeResource(context.getResources(), R.drawable.battery_icon_green);
+        batteryYellow = BitmapFactory.decodeResource(context.getResources(), R.drawable.battery_icon_yellow);
+        batteryRed    = BitmapFactory.decodeResource(context.getResources(), R.drawable.battery_icon_red);
+
+        //Communication icons
+        commFull  = BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_full);
+        commMid   = BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_mid);
+        commLow   = BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_low);
+        commEmpty = BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_empty);
     }
 
     public void generateIcon(){
@@ -441,20 +451,22 @@ public class Aircraft {
             firstTimeDrawing = false;
         }
 
+        Drawable iconArrow;
+
         //Determine which color heading indicator (arrow) to draw
         int baseIconRef;
         switch (mState.getConflictStatus()) {
             case BLUE:
-                baseIconRef = R.drawable.aircraft_icon_blue;
+                iconArrow = arrowBlue;
                 break;
             case GRAY:
-                baseIconRef = R.drawable.aircraft_icon_gray;
+                iconArrow = arrowGray;
                 break;
             case RED:
-                baseIconRef = R.drawable.aircraft_icon_red;
+                iconArrow = arrowRed;
                 break;
             default:
-                baseIconRef = R.drawable.aircraft_icon_blue;
+                iconArrow = arrowBlue;
         }
 
 ////////////////////////////////////////////////
@@ -478,12 +490,6 @@ public class Aircraft {
         //Draw the circle on the canvas
         canvas.drawCircle(resolution/2, resolution/2, resolution/2, paint);
 
-        //Check if the arrow icon should be changed, else keep the one that was already loaded
-        if(shownBaseIcon == 0 || shownBaseIcon != baseIconRef) {
-            iconArrow = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),baseIconRef));
-            shownBaseIcon = baseIconRef;
-        }
-
         //Place the heading indicating arrow on the circle
         iconArrow.setBounds(sideOffsetArrow, sideOffsetArrow, resolution - sideOffsetArrow, resolution - sideOffsetArrow);
         iconArrow.draw(canvas);
@@ -501,33 +507,35 @@ public class Aircraft {
 
 ////////////////////////////////////////////////
 
+        Bitmap batteryIcon;
+
         /* TODO set the integer values to the correct orders to comply with the provided battery values */
         //Determine which battery icon to draw
-        int batteryIconRef;
         if(mBattery.getBattLevel() > halfBat) { //high battery level
-            batteryIconRef = R.drawable.battery_icon_green;
+            batteryIcon = batteryGreen;
         }
         else if (halfBat >= mBattery.getBattLevel() && mBattery.getBattLevel() > lowBat) { //middle battery level
-            batteryIconRef = R.drawable.battery_icon_yellow;
+            batteryIcon = batteryYellow;
         }
         else { //low battery level
-            batteryIconRef = R.drawable.battery_icon_red;
+            batteryIcon = batteryRed;
         }
 
+        Bitmap communicationIcon;
+
         //Determine which communication icon to draw
-        int communicationIconRef;
         int communicationSignal = getCommunicationSignal();
         if (communicationSignal > halfComm) { //High signal strength
-            communicationIconRef = R.drawable.communication_icon_full;
+            communicationIcon = commFull;
         }
         else if (halfComm >= communicationSignal && communicationSignal > lowComm) { //Middle signal strength
-            communicationIconRef = R.drawable.communication_icon_mid;
+            communicationIcon = commMid;
         }
         else if (lowComm >= communicationSignal && communicationSignal > NoComm) { //Low signal strength
-            communicationIconRef = R.drawable.communication_icon_low;
+            communicationIcon = commLow;
         }
         else { //No signal
-            communicationIconRef = R.drawable.communication_icon_empty;
+            communicationIcon = commEmpty;
         }
 
 ////////////////////////////////////////////////
@@ -536,10 +544,6 @@ public class Aircraft {
         //Canvas to work with for placing the battery and communication icons
         Canvas c = new Canvas(baseIcon);
         int center = baseIcon.getWidth()/2;
-
-        //Get the battery- and communication icons from resources
-        batteryIcon = BitmapFactory.decodeResource(context.getResources(), batteryIconRef);
-        communicationIcon = BitmapFactory.decodeResource(context.getResources(), communicationIconRef);
 
         //Add battery icon to the base icon
         int batVert = (resolution/2)*batteryVertLocation/100;
