@@ -391,12 +391,13 @@ public class Aircraft {
         return aircraftCount;
     }
 
-    //////////// ICON ////////////
+    //////////////////////////////////////////////////////
+    ////////////////////// ICON //////////////////////////
     //////////////////////////////////////////////////////
     private Bitmap AC_Icon, baseIcon;
-    private static  Bitmap batteryGreen, batteryYellow, batteryRed, commFull, commMid, commLow, commEmpty;
-    private static Drawable arrowRed, arrowBlue, arrowGray;
+    private static BitmapDrawable  arrowRed, arrowBlue, arrowGray, batteryGreen, batteryYellow, batteryRed, commFull, commMid, commLow, commEmpty;
     private static boolean firstTimeDrawing = true;
+    private BitmapDrawable iconArrow, batteryIcon, communicationIcon;
 
     //Set color of circle
     private int circleColor = Color.WHITE;
@@ -405,6 +406,10 @@ public class Aircraft {
     private static int resolution, protectedZoneAlpha, sideOffsetArrow, batteryVertLocation, batteryHorLocation,
             batteryScaling, commVertLocation, commHorLocation, commScaling, halfBat, lowBat, halfComm, lowComm, NoComm;
 
+    // Matrix for rotation of an aircraft icon
+    Matrix rotationMatrix = new Matrix();
+
+    // Method that is called the first time the icon generation method is called to obtain valuies and drawables from resources
     private void setIconDrawingSettings() {
         resolution          = context.getResources().getInteger(R.integer.IconResolution);
         protectedZoneAlpha  = context.getResources().getInteger(R.integer.IconAlpha);
@@ -432,17 +437,18 @@ public class Aircraft {
         arrowGray = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),R.drawable.aircraft_icon_gray));
 
         //Battery icons
-        batteryGreen  = BitmapFactory.decodeResource(context.getResources(), R.drawable.battery_icon_green);
-        batteryYellow = BitmapFactory.decodeResource(context.getResources(), R.drawable.battery_icon_yellow);
-        batteryRed    = BitmapFactory.decodeResource(context.getResources(), R.drawable.battery_icon_red);
+        batteryGreen  = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(), R.drawable.battery_icon_green));
+        batteryYellow = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(), R.drawable.battery_icon_yellow));
+        batteryRed    = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(), R.drawable.battery_icon_red));
 
         //Communication icons
-        commFull  = BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_full);
-        commMid   = BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_mid);
-        commLow   = BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_low);
-        commEmpty = BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_empty);
+        commFull  = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_full));
+        commMid   = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_mid));
+        commLow   = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_low));
+        commEmpty = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_empty));
     }
 
+    // Method to generate an aircraft icon
     public void generateIcon(){
 
         //If it is the first time this method is called, set all resources
@@ -451,10 +457,7 @@ public class Aircraft {
             firstTimeDrawing = false;
         }
 
-        Drawable iconArrow;
-
         //Determine which color heading indicator (arrow) to draw
-        int baseIconRef;
         switch (mState.getConflictStatus()) {
             case BLUE:
                 iconArrow = arrowBlue;
@@ -470,7 +473,7 @@ public class Aircraft {
         }
 
 ////////////////////////////////////////////////
-        //Place the icon(arrow) on a white circle
+////Place the icon(arrow) on a white circle/////
 
         //Recycle the previous base icon in order to safe memory and avoid garbage collection
         if (baseIcon != null) {
@@ -480,7 +483,7 @@ public class Aircraft {
 
         //Bitmap and canvas to draw a circle on
         baseIcon = Bitmap.createBitmap(resolution, resolution, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(baseIcon);
+        Canvas circleCanvas = new Canvas(baseIcon);
 
         //Paint settings
         paint.setColor(circleColor);
@@ -488,26 +491,25 @@ public class Aircraft {
         paint.setFlags(Paint.ANTI_ALIAS_FLAG);
 
         //Draw the circle on the canvas
-        canvas.drawCircle(resolution/2, resolution/2, resolution/2, paint);
+        circleCanvas.drawCircle(resolution/2, resolution/2, resolution/2, paint);
 
         //Place the heading indicating arrow on the circle
         iconArrow.setBounds(sideOffsetArrow, sideOffsetArrow, resolution - sideOffsetArrow, resolution - sideOffsetArrow);
-        iconArrow.draw(canvas);
+        iconArrow.draw(circleCanvas);
 
 ////////////////////////////////////////////////
-////////////////////////////////////////////////
-        //Rotate the base icon
+//////////Rotate the base icon//////////////////
 
-        //Rotation matrix
-        Matrix matrix = new Matrix();
-        matrix.postRotate((float) mAttitude.getYaw());
+        //Set the rotation of the icon
+        rotationMatrix.postRotate((float) mAttitude.getYaw());
 
         //Apply the rotation matrix to the base icon (set boolean on true for smoother edges)
-        baseIcon =  Bitmap.createBitmap(baseIcon, 0, 0, baseIcon.getWidth(), baseIcon.getHeight(), matrix, false);
+        baseIcon =  Bitmap.createBitmap(baseIcon, 0, 0, baseIcon.getWidth(), baseIcon.getHeight(), rotationMatrix, true);
+
+        //Set the rotation matrix back to identity for next iteration
+        rotationMatrix.reset();
 
 ////////////////////////////////////////////////
-
-        Bitmap batteryIcon;
 
         /* TODO set the integer values to the correct orders to comply with the provided battery values */
         //Determine which battery icon to draw
@@ -520,8 +522,6 @@ public class Aircraft {
         else { //low battery level
             batteryIcon = batteryRed;
         }
-
-        Bitmap communicationIcon;
 
         //Determine which communication icon to draw
         int communicationSignal = getCommunicationSignal();
@@ -542,30 +542,26 @@ public class Aircraft {
         //Place battery- and communication icons
 
         //Canvas to work with for placing the battery and communication icons
-        Canvas c = new Canvas(baseIcon);
+        Canvas iconCanvas = new Canvas(baseIcon);
         int center = baseIcon.getWidth()/2;
 
         //Add battery icon to the base icon
         int batVert = (resolution/2)*batteryVertLocation/100;
         int batHor  = (resolution/2)*batteryHorLocation/100;
-        int batHalfWidth = (batteryScaling/2)*batteryIcon.getWidth()/100;
-        int batHalfHeight = (batteryScaling/2)*batteryIcon.getHeight()/100;
-
-        Drawable bat = new BitmapDrawable(context.getResources(), batteryIcon);
+        int batHalfWidth = (batteryScaling/2)*batteryIcon.getIntrinsicWidth()/100;
+        int batHalfHeight = (batteryScaling/2)*batteryIcon.getIntrinsicHeight()/100;
         //(int left, int top, int right, int bottom)
-        bat.setBounds(center+batHor-batHalfWidth, center-batVert-batHalfHeight, center+batHor+batHalfWidth, center-batVert+batHalfHeight);
-        bat.draw(c);
+        batteryIcon.setBounds(center+batHor-batHalfWidth, center-batVert-batHalfHeight, center+batHor+batHalfWidth, center-batVert+batHalfHeight);
+        batteryIcon.draw(iconCanvas);
 
         //Add communication icon to the base icon
         int commVert = (resolution/2)*commVertLocation/100;
         int commHor  = (resolution/2)*commHorLocation/100;
-        int commHalfWidth = (commScaling/2)*communicationIcon.getWidth()/100;
-        int commHalfHeight = (commScaling/2)*communicationIcon.getHeight()/100;
-
-        Drawable comm = new BitmapDrawable(context.getResources(), communicationIcon);
+        int commHalfWidth = (commScaling/2)*communicationIcon.getIntrinsicWidth()/100;
+        int commHalfHeight = (commScaling/2)*communicationIcon.getIntrinsicHeight()/100;
         //(int left, int top, int right, int bottom)
-        comm.setBounds(center - commHor - commHalfWidth, center - commVert - commHalfHeight, center - commHor + commHalfWidth, center - commVert + commHalfHeight);
-        comm.draw(c);
+        communicationIcon.setBounds(center - commHor - commHalfWidth, center - commVert - commHalfHeight, center - commHor + commHalfWidth, center - commVert + commHalfHeight);
+        communicationIcon.draw(iconCanvas);
 
 ////////////////////////////////////////////////
 

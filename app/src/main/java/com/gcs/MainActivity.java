@@ -62,7 +62,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private static final String TAG = MainActivity.class.getSimpleName();
 	
 	private Handler handler, interfaceUpdateHandler;
-	private int mInterval = 500; // seconds * 1000
+	private int mInterval = 900; // seconds * 1000
 	
 	IMavLinkServiceClient mServiceClient;
 	MissionButtonFragment missionButtons;
@@ -202,11 +202,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    @Override 
 	    public void run() {
 
-            //Update aircraft icons on map
-            for(int i = 1; i<mAircraft.size()+1;i++) {
-                aircraftMarkerUpdater(i);
-            }
-
 			//Update altitude tape
 	    	if (isAltitudeUpdated){
 	    		updateAltitudeTape();
@@ -258,6 +253,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     mAircraft.get(sameLevelAircraft.get(k+1)).setConflictStatusNew(ConflictStatus.BLUE);
                 }
                 sameLevelAircraft.clear();
+            }
+
+            //Update aircraft icons on map
+            for(int i = 1; i<mAircraft.size()+1;i++) {
+                aircraftMarkerUpdater(i);
             }
 
             drawConnectingLines();
@@ -853,7 +853,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 		//Generate an icon
         mAircraft.get(aircraftNumber).generateIcon();
-		final BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(mAircraft.get(aircraftNumber).getIcon());
 
 		//Call GoogleMaps
         mapFragment.getMapAsync(new OnMapReadyCallback() {
@@ -871,7 +870,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 mAircraft.get(aircraftNumber).acMarker = map.addMarker(new MarkerOptions()
                                 .position(mAircraft.get(aircraftNumber).getLatLng())
                                 .anchor((float) 0.5, (float) 0.5)
-                                .icon(icon)
+                                .icon(BitmapDescriptorFactory.fromBitmap(mAircraft.get(aircraftNumber).getIcon()))
                                 .flat(true)
                                 .title(" " + mAircraft.get(aircraftNumber).getLabelCharacter())
                                 .snippet(String.valueOf(aircraftNumber))
