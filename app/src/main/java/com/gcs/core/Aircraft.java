@@ -13,7 +13,6 @@ import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
-import android.util.Log;
 import android.widget.TextView;
 
 import com.gcs.R;
@@ -30,14 +29,14 @@ import com.sharedlib.model.Position;
 public class Aircraft {
 	
 	private Context context;
-    private static int aircraftCount;
-    private int aircraftNumber;
+    private static int aircraftCount = 0;
+//    private int aircraftNumber;
     private final String labelCharacter;
 
 	public Aircraft(Context context){
 	    this.context = context;
         aircraftCount++;
-        aircraftNumber = aircraftCount;
+//        aircraftNumber = aircraftCount;
         labelCharacter = String.valueOf((char) (64 + aircraftCount));
 	}
 
@@ -393,9 +392,9 @@ public class Aircraft {
         return aircraftCount;
     }
 
-    public int getAircraftNumber() {
-        return aircraftNumber;
-    }
+//    public int getAircraftNumber() {
+//        return aircraftNumber;
+//    }
 
 
     //////////// ICON ////////////
@@ -576,7 +575,6 @@ public class Aircraft {
 
         //Update with the newly generated icon
         AC_Icon = baseIcon;
-//        baseIcon.recycle();
     }
 
     public Bitmap getIcon(){
