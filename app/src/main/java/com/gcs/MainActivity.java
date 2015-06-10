@@ -202,12 +202,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    @Override 
 	    public void run() {
 
-			//Update altitude tape
-	    	if (isAltitudeUpdated){
-	    		updateAltitudeTape();
-                isAltitudeUpdated = false;
-	    	}
-
             //check for altitude and course conflicts
             for(int i = 1; i < mAircraft.size()+1; i++) {
                 for(int j = 1; j < mAircraft.size()+1; j++) {
@@ -223,16 +217,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             } else { //Not on conflict course
                                 sameLevelAircraft.add(i);
                                 sameLevelAircraft.add(j);
-
-                                //Clear connecting lines if they still exist
-                                removeConnectingLines();
                             }
                         } else {
                             mAircraft.get(i).setConflictStatusNew(ConflictStatus.GRAY);
                             mAircraft.get(j).setConflictStatusNew(ConflictStatus.GRAY);
-
-                            //Clear connecting lines if they still exist
-                            removeConnectingLines();
                         }
                     }
                 }
@@ -255,16 +243,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 sameLevelAircraft.clear();
             }
 
-            //Update aircraft icons on map
-            for(int i = 1; i<mAircraft.size()+1;i++) {
-                aircraftMarkerUpdater(i);
+
+            //Update the altitude tape
+            if (isAltitudeUpdated){
+                updateAltitudeTape();
+                isAltitudeUpdated = false;
             }
 
+            //Update aircraft icons and display them on the map
+            aircraftMarkerUpdater();
+
+            //Draw the connecting lines on the map that indicate conflicts
             drawConnectingLines();
 
             Log.d(TAG,"Updating the interface");
 
-	    	//Restart this updater after the set interval
+            //Restart this updater after the set interval
 	    	interfaceUpdateHandler.postDelayed(interfaceUpdater, mInterval);
 	    }
 	  };
@@ -840,80 +834,85 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 	/* Update the objects that are displayed on the map */
-	public void aircraftMarkerUpdater(int acNumber){
+	public void aircraftMarkerUpdater(){
 
-        final int aircraftNumber = acNumber;
+        // Loop over the aircraft to generate their markers
+        for(int acNumber = 1; acNumber<mAircraft.size()+1;acNumber++) {
+            //Determine the color of the aircraft icon based on selection status
+            if(mAircraft.get(acNumber).isSelected()) {
+                mAircraft.get(acNumber).setCircleColor(Color.YELLOW);
+            } else {
+                mAircraft.get(acNumber).setCircleColor(Color.WHITE);
+            }
 
-		//Determine the color of the aircraft icon based on selection status
-		if(mAircraft.get(aircraftNumber).isSelected()) {
-            mAircraft.get(aircraftNumber).setCircleColor(Color.YELLOW);
-		} else {
-            mAircraft.get(aircraftNumber).setCircleColor(Color.WHITE);
-		}
+            //Generate an icon
+            mAircraft.get(acNumber).generateIcon();
+        }
 
-		//Generate an icon
-        mAircraft.get(aircraftNumber).generateIcon();
-
-		//Call GoogleMaps
+        //Call GoogleMaps
         mapFragment.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap map) {
 
-                ///////* Marker for display of aircraft icon on map *///////
+                for(int aircraftNumber = 1; aircraftNumber<mAircraft.size()+1;aircraftNumber++) {
+                    ///////* Marker for display of aircraft icon on map *///////
 
-                //Clear marker from map (if it exists)
-                if (mAircraft.get(aircraftNumber).acMarker != null) {
-                    mAircraft.get(aircraftNumber).acMarker.remove();
-                }
+                    //Clear marker from map (if it exists)
+                    if (mAircraft.get(aircraftNumber).acMarker != null) {
+                        mAircraft.get(aircraftNumber).acMarker.remove();
+                    }
 
-                //Add marker to map
-                mAircraft.get(aircraftNumber).acMarker = map.addMarker(new MarkerOptions()
-                                .position(mAircraft.get(aircraftNumber).getLatLng())
-                                .anchor((float) 0.5, (float) 0.5)
-                                .icon(BitmapDescriptorFactory.fromBitmap(mAircraft.get(aircraftNumber).getIcon()))
-                                .flat(true)
-                                .title(" " + mAircraft.get(aircraftNumber).getLabelCharacter())
-                                .snippet(String.valueOf(aircraftNumber))
-                                .infoWindowAnchor(0.5f, mAircraft.get(aircraftNumber).getIconBoundOffset())
-                                .draggable(false)
-                );
+                    //Add marker to map
+                    mAircraft.get(aircraftNumber).acMarker = map.addMarker(new MarkerOptions()
+                                    .position(mAircraft.get(aircraftNumber).getLatLng())
+                                    .anchor((float) 0.5, (float) 0.5)
+                                    .icon(BitmapDescriptorFactory.fromBitmap(mAircraft.get(aircraftNumber).getIcon()))
+                                    .flat(true)
+                                    .title(" " + mAircraft.get(aircraftNumber).getLabelCharacter())
+                                    .snippet(String.valueOf(aircraftNumber))
+                                    .infoWindowAnchor(0.5f, mAircraft.get(aircraftNumber).getIconBoundOffset())
+                                    .draggable(false)
+                    );
 
-                //Show either the label or the detailed information window of the aicraft based on selection status
-                if (mAircraft.get(aircraftNumber).isSelected()) {
+                    //Show either the label or the detailed information window of the aicraft based on selection status
+                    if (mAircraft.get(aircraftNumber).isSelected()) {
+                        //Make aircraft number final to use in inner class
+                        final int acNumber = aircraftNumber;
 
-                    map.setInfoWindowAdapter(new InfoWindowAdapter() {
+                        map.setInfoWindowAdapter(new InfoWindowAdapter() {
 
-                        // Use default InfoWindow frame
-                        @Override
-                        public View getInfoWindow(Marker marker) {
-                            return (null);
-                        }
+                            // Use default InfoWindow frame
+                            @Override
+                            public View getInfoWindow(Marker marker) {
+                                return (null);
+                            }
 
-                        // Defines the contents of the InfoWindow
-                        @Override
-                        public View getInfoContents(Marker marker) {
+                            // Defines the contents of the InfoWindow
+                            @Override
+                            public View getInfoContents(Marker marker) {
 
-                            View v = getLayoutInflater().inflate(R.layout.info_window_detail, null);
+                                View v = getLayoutInflater().inflate(R.layout.info_window_detail, null);
 
                             /* TODO add content to the detailed infowindow */
 
-                            TextView infoAirtime = (TextView) v.findViewById(R.id.info_airtime);
-                            TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
-                            TextView infoAlt = (TextView) v.findViewById(R.id.info_alt);
-                            TextView infoMode = (TextView) v.findViewById(R.id.info_mode);
-                            TextView infoSats = (TextView) v.findViewById(R.id.info_sats);
+                                TextView infoAirtime = (TextView) v.findViewById(R.id.info_airtime);
+                                TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
+                                TextView infoAlt = (TextView) v.findViewById(R.id.info_alt);
+                                TextView infoMode = (TextView) v.findViewById(R.id.info_mode);
+                                TextView infoSats = (TextView) v.findViewById(R.id.info_sats);
 
-                            //Setting the values in the information window
-                            infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
-                            infoDistHome.setText("Distance Home: " + String.format("%.1f", mAircraft.get(aircraftNumber).getDistanceHome()) + "m");
-                            infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(aircraftNumber).getAltitude()) + "m");
-                            infoMode.setText("Mode: " + "MODE HERE!");
-                            infoSats.setText("#Sats: " + "#SATS HERE!");
+                                //Setting the values in the information window
+                                infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
+                                infoDistHome.setText("Distance Home: " + String.format("%.1f", mAircraft.get(acNumber).getDistanceHome()) + "m");
+                                infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(acNumber).getAltitude()) + "m");
+                                infoMode.setText("Mode: " + "MODE HERE!");
+                                infoSats.setText("#Sats: " + "#SATS HERE!");
 
-                            return v;
-                        }
-                    });
-                    mAircraft.get(aircraftNumber).acMarker.showInfoWindow();
+                                return v;
+                            }
+                        });
+                        mAircraft.get(aircraftNumber).acMarker.showInfoWindow();
+                    }
                 }
             }
         });
@@ -978,9 +977,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 //If lines have been drawn before, remove them from the map
                 if (!mConnectingLines.isEmpty()) {
-                    for(int i=0; i< mConnectingLines.size(); i++) {
+                    for (int i = 0; i < mConnectingLines.size(); i++) {
                         mConnectingLines.get(i).remove();
                     }
+					mConnectingLines.clear();
                 }
 
                 if(conflictingAircraft != null) {
@@ -1000,19 +1000,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         });
-    }
-
-    private void removeConnectingLines() {
-        if (!mConnectingLines.isEmpty()) {
-            mapFragment.getMapAsync(new OnMapReadyCallback() {
-                @Override
-                public void onMapReady(GoogleMap map) {
-                    for (int i = 0; i < mConnectingLines.size(); i++) {
-                        mConnectingLines.get(i).remove();
-                    }
-                }
-            });
-        }
     }
 
     /////////////////////////CLASS METHODS/////////////////////////
