@@ -28,7 +28,6 @@ import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -75,17 +74,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private TelemetryFragment telemetryFragment;
 	private BatteryFragment batteryFragment;
 	private AltitudeTape altitudeTapeFragment;
+    private SupportMapFragment mapFragment;
 
     final SparseArray<Aircraft> mAircraft = new SparseArray<>();
     private List<Polyline> mConnectingLines  = new ArrayList<>();
     private ArrayList<Integer> conflictingAircraft = new ArrayList<>();
     private ArrayList<Integer> sameLevelAircraft = new ArrayList<>();
+    private List<String> missionBlocks;
 
 	private Home home;
 
     private float verticalSeparationStandard;
-
-    SupportMapFragment mapFragment;
 
 	/* Find memory leaks: https://developer.android.com/tools/debugging/debugging-memory.html */
 	  
@@ -356,8 +355,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    			updateWaypoints();
 	    			break;
 	    		}
-	    		
-	    		default:
+
+                case "MISSION_BLOCKS_UPDATED": {
+                    updateMissionBlocks();
+                    break;
+                }
+
+                case "CURRENT_BLOCK_UPDATED": {
+//                    updateMissionBlocksSpinnerSelection();
+                    break;
+                }
+
+                default:
 	    			break;
     		}
     	}
@@ -465,7 +474,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 				try {
 					Battery mBattery = getAttribute("BATTERY");
                     mAircraft.get(1).setBatteryState(mBattery.getBattVolt(), mBattery.getBattLevel(), mBattery.getBattCurrent());
-					batteryFragment.setText(String.valueOf(mBattery.getBattVolt()));
+                    batteryFragment.setText(String.valueOf(mBattery.getBattVolt()));
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the battery information", t);
 				}
@@ -538,6 +547,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			}
 		});
 	}
+
+    private void updateMissionBlocks() {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    missionBlocks = mServiceClient.getMissionBlockList();
+//                    blockCount.setText(getString(R.string.block_count) + " " + String.format("%d", blocks.size()));
+//                    updateMissionBlocksSpinner();
+                } catch (RemoteException e) {
+                    // TODO: Handle exception
+                }
+            }
+        });
+    }
 
 
 	////////OTHER COMMUNICATION FUNCTIONS
