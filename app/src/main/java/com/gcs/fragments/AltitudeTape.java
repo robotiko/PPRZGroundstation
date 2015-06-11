@@ -20,12 +20,15 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 public class AltitudeTape extends Fragment {
 	
 	private FrameLayout framelayout;
 	private View rootView;
 
     final SparseArray<Integer> labelList = new SparseArray<>();
+    private ArrayList<Integer> redGroupLabelIds = new ArrayList<>();
 
     private int draggedLabel;
 	
@@ -92,7 +95,7 @@ public class AltitudeTape extends Fragment {
 			@Override
 			public boolean onLongClick(View v) {
 				
-	            ClipData data = ClipData.newPlainText("","");
+	            ClipData data = ClipData.newPlainText("", "");
 	            View.DragShadowBuilder myShadow = new DragShadowBuilder(tv);
 	            /* TODO Offset the label that is dragged to be able to see it */
 
@@ -132,8 +135,9 @@ public class AltitudeTape extends Fragment {
         };
     }
 
-    //Method to draw aircraft labels on the altitude tape
-	public void setLabel(double altitude, int labelId, String labelCharacter, boolean isAircraftIconSelected, boolean labelCreated, int acNumber){
+    //Method to draw single labels on the altitude tape
+	public void setLabel(double altitude, int labelId, String labelCharacter, boolean isAircraftIconSelected, boolean labelCreated, int acNumber, int visibility){
+        removeGroupLabels();
 
         if(labelList.get(labelId) == null) {
             labelList.put(labelId,acNumber);
@@ -180,6 +184,7 @@ public class AltitudeTape extends Fragment {
             label = new TextView(getActivity());
             label.setId(labelId);
             label.setBackgroundResource(backgroundImg);
+            label.setVisibility(visibility);
             label.setMinWidth(20);
             label.setText("   " + labelCharacter);
 	        label.setTypeface(null, Typeface.BOLD);
@@ -193,10 +198,49 @@ public class AltitudeTape extends Fragment {
 		} else {
 			label = (TextView)  getView().findViewById(labelId);
             label.setBackgroundResource(backgroundImg);
+            label.setVisibility(visibility);
             label.setGravity(textGravity);
             framelayout.updateViewLayout(label, params);
 		}
 	}
+
+    //Method to draw group labels on the altitude tape
+    public void drawGroupLabel(boolean inConflict, double altitude, String labelCharacters, int ac1, int ac2) {
+        removeGroupLabels();
+
+        int backgroundImg;
+        if(inConflict) {
+            backgroundImg =  R.drawable.altitude_label_large_red;
+        } else {
+            backgroundImg =  R.drawable.altitude_label_large_blue;
+        }
+
+//        String pair = String.valueOf(ac1)+String.valueOf(ac2);
+        Log.d("test",labelCharacters);
+
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 70);
+        params.topMargin = altitudeToLabelLocation(altitude);
+
+        TextView redGroupLabel;
+        redGroupLabel = new TextView(getActivity());
+        redGroupLabel.setText("   " + labelCharacters);
+        redGroupLabel.setTypeface(null, Typeface.BOLD);
+        redGroupLabel.setGravity(Gravity.CENTER);
+        redGroupLabel.setId(TextView.generateViewId());
+        redGroupLabel.setBackgroundResource(backgroundImg);
+        framelayout.addView(redGroupLabel, params);
+
+        redGroupLabelIds.add(redGroupLabel.getId());
+    }
+
+private void removeGroupLabels() {
+    if(!redGroupLabelIds.isEmpty()) {
+        for(int i = 0; i < redGroupLabelIds.size(); i++) {
+            Log.d("test", String.valueOf(redGroupLabelIds.get(i)));
+            framelayout.removeView(getView().findViewById(redGroupLabelIds.get(i)));
+        }
+    }
+}
 
     //Method to draw the target altitude on the altitude tape
 	public void setTargetLabel(double targetAltitude, int targetLabelId) {
