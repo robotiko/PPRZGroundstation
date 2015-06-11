@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
- 
-    <item name="blue" type="color">#2196F3</item>
     
     <item name="green" type="color">#FF99CC00</item>
-    
-    <item name="red" type="color">#FFFF4444</item>
     
     <item name="white" type="color">#FFFFFF</item>
 
     <item name="yellow" type="color">#FFFFFF00</item>
+
+    <item name="red" type="color">#CB2026</item>
+
+    <item name="gray" type="color">#666666</item>
+
+    <item name="blue" type="color">#0099CC</item>
  
 </resources> 

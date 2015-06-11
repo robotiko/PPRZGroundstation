@@ -801,21 +801,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         } else if(marker.getSnippet().equals("HOME")) {                 //Home marker clicked
             //Do nothing yet
         } else {                                                        //Aircraft marker clicked
-                int acNumber = Integer.parseInt(marker.getSnippet());
+            int acNumber = Integer.parseInt(marker.getSnippet());
 
-                //When the aircraft icon is clicked, select it or unselect it
-                if(!mAircraft.get(acNumber).isSelected()) {
-                    if(aircraftSelected) {
-                        //Set all aircraft on not selected
-                        unselectAllAircraft();
-                    }
-                    mAircraft.get(acNumber).setIsSelected(true);
-                    aircraftSelected = true;
-                    Log.d("infowindow","markerclick-ON");
-                } else {
-                    mAircraft.get(acNumber).setIsSelected(false);
-                    Log.d("infowindow","markerclick-OFF");
+            //When the aircraft icon is clicked, select it or unselect it
+            if(!mAircraft.get(acNumber).isSelected()) {
+                if(aircraftSelected) {
+                    //Set all aircraft on not selected
+                    unselectAllAircraft();
                 }
+                mAircraft.get(acNumber).setIsSelected(true);
+                aircraftSelected = true;
+                Log.d("infowindow","markerclick-ON");
+            } else {
+                mAircraft.get(acNumber).setIsSelected(false);
+                Log.d("infowindow","markerclick-OFF");
+            }
+            //Update the map
+            aircraftMarkerUpdater();
         }
 		return true;
 	}
@@ -864,7 +866,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         for(int acNumber = 1; acNumber<mAircraft.size()+1;acNumber++) {
             //Determine the color of the aircraft icon based on selection status
             if(mAircraft.get(acNumber).isSelected()) {
-                mAircraft.get(acNumber).setCircleColor(Color.YELLOW);
+                mAircraft.get(acNumber).setCircleColor(getResources().getColor(R.color.yellow));
             } else {
                 mAircraft.get(acNumber).setCircleColor(Color.WHITE);
             }
@@ -1036,7 +1038,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private boolean isOnconflictCourse(int ac1, int ac2) {
         /* TODO make algorithm to check conflict courses (extrapolation) */
-        boolean isInconflictcourse = true;
+        boolean isInconflictcourse = false;
         return isInconflictcourse;
     }
 
@@ -1059,6 +1061,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		}
 	}
 
+    // Method to be called by the altitudetape fragment to change selection status and update the interface
     public void setIsSelected(int aircraftNumber, boolean isSelected){
         if(isSelected) {
             unselectAllAircraft();
@@ -1066,6 +1069,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         mAircraft.get(aircraftNumber).setIsSelected(isSelected);
         updateAltitudeTape();
+        aircraftMarkerUpdater();
     }
 
     public void setIsLabelCreated(boolean isLabelCreated,int acNumber) {

@@ -10,6 +10,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -396,15 +397,19 @@ public class Aircraft {
     //////////////////////////////////////////////////////
     private Bitmap AC_Icon, baseIcon;
     private static BitmapDrawable  arrowRed, arrowBlue, arrowGray, batteryGreen, batteryYellow, batteryRed, commFull, commMid, commLow, commEmpty;
+    private static int resolution, protectedZoneAlpha, sideOffsetArrow, batteryVertLocation, batteryHorLocation, batteryScaling, commVertLocation,
+                       commHorLocation, commScaling, halfBat, lowBat, halfComm, lowComm, NoComm, colorRED, colorBLUE, colorGRAY, colorYELLOW;
     private static boolean firstTimeDrawing = true;
     private BitmapDrawable iconArrow, batteryIcon, communicationIcon;
 
-    //Set color of circle
     private int circleColor = Color.WHITE;
-    Paint paint = new Paint();
 
-    private static int resolution, protectedZoneAlpha, sideOffsetArrow, batteryVertLocation, batteryHorLocation,
-            batteryScaling, commVertLocation, commHorLocation, commScaling, halfBat, lowBat, halfComm, lowComm, NoComm;
+    Paint circlePaint = new Paint();
+    Paint labelFillPaint = new Paint();
+    Paint labelFramePaint = new Paint();
+    Paint labelTextPaint = new Paint();
+
+
 
     // Matrix for rotation of an aircraft icon
     Matrix rotationMatrix = new Matrix();
@@ -446,6 +451,12 @@ public class Aircraft {
         commMid   = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_mid));
         commLow   = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_low));
         commEmpty = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_empty));
+
+        //Colors for labels
+        colorRED   = context.getResources().getColor(R.color.red);
+        colorBLUE   = context.getResources().getColor(R.color.blue);
+        colorGRAY   = context.getResources().getColor(R.color.gray);
+        colorYELLOW = context.getResources().getColor(R.color.yellow);
     }
 
     // Method to generate an aircraft icon
@@ -461,15 +472,19 @@ public class Aircraft {
         switch (mState.getConflictStatus()) {
             case BLUE:
                 iconArrow = arrowBlue;
+                labelFillPaint.setColor(colorBLUE);
                 break;
             case GRAY:
                 iconArrow = arrowGray;
+                labelFillPaint.setColor(colorGRAY);
                 break;
             case RED:
                 iconArrow = arrowRed;
+                labelFillPaint.setColor(colorRED);
                 break;
             default:
                 iconArrow = arrowBlue;
+                labelFillPaint.setColor(colorBLUE);
         }
 
 ////////////////////////////////////////////////
@@ -486,12 +501,12 @@ public class Aircraft {
         Canvas circleCanvas = new Canvas(baseIcon);
 
         //Paint settings
-        paint.setColor(circleColor);
-        paint.setAlpha(protectedZoneAlpha);
-        paint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        circlePaint.setColor(circleColor);
+        circlePaint.setAlpha(protectedZoneAlpha);
+        circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
 
         //Draw the circle on the canvas
-        circleCanvas.drawCircle(resolution/2, resolution/2, resolution/2, paint);
+        circleCanvas.drawCircle(resolution/2, resolution/2, resolution/2, circlePaint);
 
         //Place the heading indicating arrow on the circle
         iconArrow.setBounds(sideOffsetArrow, sideOffsetArrow, resolution - sideOffsetArrow, resolution - sideOffsetArrow);
@@ -562,6 +577,25 @@ public class Aircraft {
         //(int left, int top, int right, int bottom)
         communicationIcon.setBounds(center - commHor - commHalfWidth, center - commVert - commHalfHeight, center - commHor + commHalfWidth, center - commVert + commHalfHeight);
         communicationIcon.draw(iconCanvas);
+
+////////////////////////////////////////////////
+        //Add label (left, top, right, bottom, Paint paint)
+
+        //Fill
+        labelFillPaint.setStyle(Paint.Style.FILL);
+        if(isSelected) { labelFillPaint.setColor(colorYELLOW);}
+        iconCanvas.drawRect(center + 47, center - 100, center + 97, center - 50, labelFillPaint);
+        //Frame
+        labelFramePaint.setColor(Color.BLACK);
+        labelFramePaint.setStyle(Paint.Style.STROKE);
+        labelFramePaint.setStrokeWidth(3);
+        iconCanvas.drawRect(center+47, center-100, center+97, center-50, labelFramePaint);
+        //Text
+        labelTextPaint.setColor(Color.BLACK);
+        labelTextPaint.setTextSize(30);
+        labelTextPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        labelTextPaint.setTextAlign(Paint.Align.CENTER);
+        iconCanvas.drawText(labelCharacter, center+72, center-65, labelTextPaint);
 
 ////////////////////////////////////////////////
 
