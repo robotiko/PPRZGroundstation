@@ -82,6 +82,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private ArrayList<Integer> sameLevelAircraft = new ArrayList<>();
     private List<String> missionBlocks;
 
+    ///TEST
+    private ArrayList<Integer> conflicts = new ArrayList<>();
+
 	private Home home;
 
     private float verticalSeparationStandard;
@@ -208,11 +211,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         if(Math.abs(mAircraft.get(i).getAltitude() - mAircraft.get(j).getAltitude()) <= verticalSeparationStandard) {
                             //Check for conflict course
                             if(isOnconflictCourse(i,j)){ //On conflict course
-
-                                /* TODO make sure no double couples will be present in the conflictingAircraft list */
                                 conflictingAircraft.add(i);
                                 conflictingAircraft.add(j);
-
                             } else { //Not on conflict course
                                 sameLevelAircraft.add(i);
                                 sameLevelAircraft.add(j);
@@ -225,9 +225,37 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
 
+            // Remove double couples from the conflictlist
+            if (conflictingAircraft.size() > 2) {
+                //Loop starting at the end of the list to be able to remove double pairs
+                for (int p = conflictingAircraft.size() - 2; p > 1; p -= 2) {
+                    for (int q = 0; q < p; q += 2) {
+                        if (conflictingAircraft.get(p + 1) == conflictingAircraft.get(q) && conflictingAircraft.get(p) == conflictingAircraft.get(q + 1)) {
+                            conflictingAircraft.remove(p + 1);
+                            conflictingAircraft.remove(p);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Remove double couples from the samelevellist
+            if (sameLevelAircraft.size() > 2) {
+                //Loop starting at the end of the list to be able to remove double pairs
+                for (int r = sameLevelAircraft.size() - 2; r > 1; r -= 2) {
+                    for (int s = 0; s < r; s += 2) {
+                        if (sameLevelAircraft.get(r + 1) == sameLevelAircraft.get(s) && sameLevelAircraft.get(r) == sameLevelAircraft.get(s + 1)) {
+                            sameLevelAircraft.remove(r + 1);
+                            sameLevelAircraft.remove(r);
+                            break;
+                        }
+                    }
+                }
+            }
+
             //Set the color of the aircraft that have the "red" conflict status
             if(!conflictingAircraft.isEmpty()) {
-                for (int k = 0; k < conflictingAircraft.size()-1; k++) {
+                for (int k = 0; k < conflictingAircraft.size(); k+=2) {
                     mAircraft.get(conflictingAircraft.get(k)).setConflictStatusNew(ConflictStatus.RED);
                     mAircraft.get(conflictingAircraft.get(k + 1)).setConflictStatusNew(ConflictStatus.RED);
                 }
@@ -235,13 +263,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             //Set the color of the aircraft that have the "blue" conflict status
             if(!sameLevelAircraft.isEmpty()) {
-                for (int k = 0; k < sameLevelAircraft.size()-1; k++) {
+                for (int k = 0; k < sameLevelAircraft.size(); k+=2) {
                     mAircraft.get(sameLevelAircraft.get(k)).setConflictStatusNew(ConflictStatus.BLUE);
                     mAircraft.get(sameLevelAircraft.get(k+1)).setConflictStatusNew(ConflictStatus.BLUE);
                 }
                 sameLevelAircraft.clear();
             }
-
 
             //Update the altitude tape
             if (isAltitudeUpdated){
