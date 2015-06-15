@@ -32,13 +32,13 @@ public class AltitudeTape extends Fragment {
     private ArrayList<Integer> aircraftInGroupList = new ArrayList<>();
     private ConcurrentHashMap<String, Integer> stringToLabelIdList = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Integer,String> labelIdToStringList = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer> groupSelectionIdList = new ConcurrentHashMap<>();
     private String selectedGroup = null;
 
     private int draggedLabel;
+    private int yellowLabel, blueLabel, grayLabel, redLabel, LargeBlueLabel, LargeRedLabel;
 
-    private boolean groupUnselected = false;
-    private boolean groupSelected = false;
-	private boolean targetCreated = false;
+    private boolean groupDeselected = false, groupSelected = false, targetCreated = false;
 	
 	/* TODO Determine altitude label location based on the height of the bar and the the dynamic vertical range of the drones (flight ceiling - ground level) */
 	private final int groundLevelTape   = 900; //0 meter
@@ -50,10 +50,16 @@ public class AltitudeTape extends Fragment {
 	@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
         Bundle savedInstanceState) {
+
+        yellowLabel    = R.drawable.altitude_label_small_yellow_flipped;
+        blueLabel      = R.drawable.altitude_label_small_blue;
+        grayLabel      = R.drawable.altitude_label_small_gray;
+        redLabel       = R.drawable.altitude_label_small_red;
+        LargeBlueLabel = R.drawable.altitude_label_large_blue;
+        LargeRedLabel  = R.drawable.altitude_label_large_red;
 		
         // Inflate the layout for this fragment
 		rootView = inflater.inflate(R.layout.altitude_tape, container, false);
-        
         return rootView;    
     }
 	
@@ -70,6 +76,10 @@ public class AltitudeTape extends Fragment {
             public void onClick(View v) {
                 //Set the group selection to null go back to normal display of the labels
                 selectedGroup = null;
+                //Remove selected group labels from tape
+                removeGroupSelectedAircraft();
+                //Deselect all aircraft
+                ((MainActivity) getActivity()).deselectAllAircraft();
             }
         });
 
@@ -84,9 +94,10 @@ public class AltitudeTape extends Fragment {
 	    return new View.OnClickListener() {
 	        public void onClick(View v) {
                 if(groupSelected) {
-                        selectedGroup = null;
-                        groupSelected = false;
-                        groupUnselected = true;
+                    selectedGroup = null;
+                    groupSelected = false;
+                    groupDeselected = true;
+                    removeGroupSelectedAircraft();
                 }
 
                 int aircraftNumber = labelList.get(v.getId());
@@ -105,9 +116,20 @@ public class AltitudeTape extends Fragment {
     View.OnClickListener onGroupLabelClick(final View tv) {
         return new View.OnClickListener() {
             public void onClick(View v) {
-                    groupSelected = true;
-                    selectedGroup = labelIdToStringList.get(v.getId());
-                    drawGroupSelection(v.getId());
+                groupSelected = true;
+                selectedGroup = labelIdToStringList.get(v.getId());
+
+                //Hide group label from view
+                TextView groupLabel = (TextView) getView().findViewById(v.getId());
+                groupLabel.setVisibility(View.GONE);
+
+                //Set the selection status aircraft icons
+                String[] acCharacters = labelIdToStringList.get(v.getId()).split(" ");
+                int[] acNumbers = new int[ acCharacters.length ];
+                for(int i = 0; i< acCharacters.length; i++) {
+                    acNumbers[i] = Character.getNumericValue(acCharacters[i].charAt(0)) - 9;
+                }
+                ((MainActivity) getActivity()).setGroupSelected(acNumbers);
             }
         };
     }
@@ -126,11 +148,11 @@ public class AltitudeTape extends Fragment {
                 draggedLabel = v.getId();
 	            
 	            // Starts the drag
-	            v.startDrag(data,  		// the data to be dragged
-	                        myShadow,  	// the drag shadow builder
-	                        null,      	// no need to use local data
-	                        0          	// flags (not currently used, set to 0)
-	            );
+	            v.startDrag(data,        // the data to be dragged
+                        myShadow,    // the drag shadow builder
+                        null,        // no need to use local data
+                        0            // flags (not currently used, set to 0)
+                );
 				return true;
 			}
 		};
@@ -166,25 +188,22 @@ public class AltitudeTape extends Fragment {
             }
 
             int backgroundImg;
-
             if (isAircraftIconSelected) {
-                backgroundImg = R.drawable.altitude_label_small_yellow_flipped;
-
+                backgroundImg = yellowLabel;
             } else {
                 ConflictStatus conflictStatus = ((MainActivity) getActivity()).getConflictStatus(acNumber);
-
                 switch (conflictStatus) {
                     case BLUE:
-                        backgroundImg = R.drawable.altitude_label_small_blue;
+                        backgroundImg = blueLabel;
                         break;
                     case GRAY:
-                        backgroundImg = R.drawable.altitude_label_small_gray;
+                        backgroundImg = grayLabel;
                         break;
                     case RED:
-                        backgroundImg = R.drawable.altitude_label_small_red;
+                        backgroundImg = redLabel;
                         break;
                     default:
-                        backgroundImg = R.drawable.altitude_label_small_blue;
+                        backgroundImg = blueLabel;
                 }
             }
 
@@ -235,20 +254,19 @@ public class AltitudeTape extends Fragment {
         aircraftInGroupList.add(ac1);
         aircraftInGroupList.add(ac2);
 
-        groupUnselected = false;
+        groupDeselected = false;
 
         if(selectedGroup == null || !selectedGroup.equals(labelCharacters)) {
             int backgroundImg;
             if (inConflict) {
-                backgroundImg = R.drawable.altitude_label_large_red;
+                backgroundImg  = LargeRedLabel;
             } else {
-                backgroundImg = R.drawable.altitude_label_large_blue;
+                backgroundImg = LargeBlueLabel;
             }
 
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 70);
             params.topMargin = altitudeToLabelLocation(altitude);
             params.gravity = Gravity.RIGHT;
-//        textGravity = Gravity.CENTER;
 
             TextView groupLabel;
             if (!stringToLabelIdList.containsKey(labelCharacters)) {
@@ -260,9 +278,9 @@ public class AltitudeTape extends Fragment {
                 groupLabel.setId(labelId);
                 groupLabel.setBackgroundResource(backgroundImg);
                 groupLabel.setOnClickListener(onGroupLabelClick(groupLabel));
-                framelayout.addView(groupLabel,params);
-                stringToLabelIdList.put(labelCharacters,labelId);
-                labelIdToStringList.put(labelId,labelCharacters);
+                framelayout.addView(groupLabel, params);
+                stringToLabelIdList.put(labelCharacters, labelId);
+                labelIdToStringList.put(labelId, labelCharacters);
             } else {
                 groupLabel = (TextView) getView().findViewById(stringToLabelIdList.get(labelCharacters));
                 groupLabel.setBackgroundResource(backgroundImg);
@@ -273,27 +291,43 @@ public class AltitudeTape extends Fragment {
         }
     }
 
-    private void drawGroupSelection(int groupViewId) {
-        //Hide group label from view
-        TextView groupLabel = (TextView) getView().findViewById(groupViewId);
-        groupLabel.setVisibility(View.GONE);
+    public void drawGroupSelection(double altitude, String labelCharacter) {
 
-        //Obtain references to involved aircraft
-        String[] acCharacters = labelIdToStringList.get(groupViewId).split(" ");
-        for(int i = 0; i< acCharacters.length; i++) {
-//            Log.d("test",String.valueOf(Character.getNumericValue(acCharacters[i].charAt(0))-9));
-        }
+        ////maybe: int acNumber
 
-        ///////////////////////////////////////
-        int backgroundImg = R.drawable.altitude_label_small_yellow_flipped;
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 70);
         params.gravity = Gravity.LEFT;
-        int textGravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
+        params.topMargin = altitudeToLabelLocation(altitude);
+
+        TextView groupselectionLabel;
+
+        if (!groupSelectionIdList.containsKey(labelCharacter)) {
+            int labelId = TextView.generateViewId();
+            groupselectionLabel = new TextView(getActivity());
+            groupselectionLabel.setText("   " + labelCharacter);
+            groupselectionLabel.setTypeface(null, Typeface.BOLD);
+            groupselectionLabel.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+            groupselectionLabel.setId(labelId);
+            groupselectionLabel.setBackgroundResource(yellowLabel);
+            //Onclicklistener??
+            framelayout.addView(groupselectionLabel, params);
+            groupSelectionIdList.put(labelCharacter,labelId);
+        } else {
+            groupselectionLabel = (TextView) getView().findViewById(groupSelectionIdList.get(labelCharacter));
+            framelayout.updateViewLayout(groupselectionLabel, params);
+        }
+    }
+
+    private void removeGroupSelectedAircraft() {
+        for (String key : groupSelectionIdList.keySet()) {
+            framelayout.removeView(getView().findViewById(groupSelectionIdList.get(key)));
+        }
+        groupSelectionIdList.clear();
     }
 
     //Method called from mainactivity if no group labels are drawn. Then if there are still labelId's in the list, remove them from the view and list.
     public void removeGroupLabels() {
-        if(!stringToLabelIdList.isEmpty() && groupUnselected) {
+        if(!stringToLabelIdList.isEmpty() && groupDeselected) {
             for (String key : stringToLabelIdList.keySet()) {
                 framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
             }

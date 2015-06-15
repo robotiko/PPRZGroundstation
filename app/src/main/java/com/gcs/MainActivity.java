@@ -80,10 +80,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private List<Polyline> mConnectingLines  = new ArrayList<>();
     private ArrayList<Integer> conflictingAircraft = new ArrayList<>();
     private ArrayList<Integer> sameLevelAircraft = new ArrayList<>();
-    private List<String> missionBlocks;
-
-    ///TEST
-    private ArrayList<Integer> conflicts = new ArrayList<>();
+    private List<Integer> groupSelectedAircraft = new ArrayList<>();;
 
 	private Home home;
 
@@ -583,13 +580,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         handler.post(new Runnable() {
             @Override
             public void run() {
-                try {
-                    missionBlocks = mServiceClient.getMissionBlockList();
-//                    blockCount.setText(getString(R.string.block_count) + " " + String.format("%d", blocks.size()));
-//                    updateMissionBlocksSpinner();
-                } catch (RemoteException e) {
-                    // TODO: Handle exception
-                }
+//                try {
+////                    missionBlocks = mServiceClient.getMissionBlockList();
+////                    blockCount.setText(getString(R.string.block_count) + " " + String.format("%d", blocks.size()));
+////                    updateMissionBlocksSpinner();
+//                } catch (RemoteException e) {
+//                    // TODO: Handle exception
+//                }
             }
         });
     }
@@ -831,7 +828,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         );
 	}
 
-	/* Marker listener to unselect an aircraft icon*/
+	/* Marker listener to deselect an aircraft icon*/
 	@Override
     public boolean onMarkerClick(final Marker marker) {
         if(marker.getSnippet().contains("-")){                          //Waypoint marker clicked
@@ -843,11 +840,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         } else {                                                        //Aircraft marker clicked
             int acNumber = Integer.parseInt(marker.getSnippet());
 
-            //When the aircraft icon is clicked, select it or unselect it
+            //When the aircraft icon is clicked, select it or deselect it
             if(!mAircraft.get(acNumber).isSelected()) {
                 if(aircraftSelected) {
                     //Set all aircraft on not selected
-                    unselectAllAircraft();
+                    deselectAllAircraft();
                 }
                 mAircraft.get(acNumber).setIsSelected(true);
                 aircraftSelected = true;
@@ -1070,10 +1067,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     /////////////////////////CLASS METHODS/////////////////////////
 
-    private void unselectAllAircraft() {
+    public void deselectAllAircraft() {
         for(int i=1; i<mAircraft.size()+1; i++) {
             mAircraft.get(i).setIsSelected(false);
         }
+        groupSelectedAircraft.clear();
     }
 
     private boolean isOnconflictCourse(int ac1, int ac2) {
@@ -1099,33 +1097,40 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Check if a certain conflict is selected. If yes, do not draw the group label but draw single labels on the left side of the tape.
 
-        // Put the grouped red labels on the altitude tape
-        if (!conflictingAircraft.isEmpty()) {
-            for (int j = 0; j < conflictingAircraft.size(); j += 2) {
-                int ac1 = conflictingAircraft.get(j);
-                int ac2 = conflictingAircraft.get(j + 1);
-
-                double mean = (mAircraft.get(ac1).getAltitude() + mAircraft.get(ac2).getAltitude()) / 2;
-                String characters = mAircraft.get(ac1).getLabelCharacter() + " " + mAircraft.get(ac2).getLabelCharacter();
-
-                altitudeTapeFragment.drawGroupLabel(true,mean,characters,ac1,ac2);
+        //If a group is selected
+        if(!groupSelectedAircraft.isEmpty()) {
+            for(int i=0; i< groupSelectedAircraft.size(); i++) {
+                altitudeTapeFragment.drawGroupSelection(mAircraft.get(groupSelectedAircraft.get(i)).getAltitude(),mAircraft.get(groupSelectedAircraft.get(i)).getLabelCharacter());
             }
-            groupLabelsDrawn = true;
+        } else {
+            // Put the grouped red labels on the altitude tape
+            if (!conflictingAircraft.isEmpty()) {
+                for (int j = 0; j < conflictingAircraft.size(); j += 2) {
+                    int ac1 = conflictingAircraft.get(j);
+                    int ac2 = conflictingAircraft.get(j + 1);
+
+                    double mean = (mAircraft.get(ac1).getAltitude() + mAircraft.get(ac2).getAltitude()) / 2;
+                    String characters = mAircraft.get(ac1).getLabelCharacter() + " " + mAircraft.get(ac2).getLabelCharacter();
+
+                    altitudeTapeFragment.drawGroupLabel(true, mean, characters, ac1, ac2);
+                }
+                groupLabelsDrawn = true;
+            }
+
+            // Put the grouped blue labels on the altitude tape
+            if (!sameLevelAircraft.isEmpty()) {
+                for (int j = 0; j < sameLevelAircraft.size(); j += 2) {
+                    int ac1 = sameLevelAircraft.get(j);
+                    int ac2 = sameLevelAircraft.get(j + 1);
+
+                    double mean = (mAircraft.get(ac1).getAltitude() + mAircraft.get(ac2).getAltitude()) / 2;
+                    String characters = mAircraft.get(ac1).getLabelCharacter() + " " + mAircraft.get(ac2).getLabelCharacter();
+
+                    altitudeTapeFragment.drawGroupLabel(false, mean, characters, ac1, ac2);
+                }
+                groupLabelsDrawn = true;
+            }
         }
-
-        // Put the grouped blue labels on the altitude tape
-		if (!sameLevelAircraft.isEmpty()) {
-			for (int j = 0; j < sameLevelAircraft.size(); j += 2) {
-				int ac1 = sameLevelAircraft.get(j);
-				int ac2 = sameLevelAircraft.get(j + 1);
-
-				double mean = (mAircraft.get(ac1).getAltitude() + mAircraft.get(ac2).getAltitude()) / 2;
-				String characters = mAircraft.get(ac1).getLabelCharacter() + " " + mAircraft.get(ac2).getLabelCharacter();
-
-				altitudeTapeFragment.drawGroupLabel(false,mean,characters,ac1,ac2);
-			}
-            groupLabelsDrawn = true;
-		}
 
         /* Put the single labels on the altitude tape.*/
         for (int i = 1; i < mAircraft.size() + 1; i++) {
@@ -1144,12 +1149,25 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     // Method to be called by the altitudetape fragment to change selection status and update the interface
     public void setIsSelected(int aircraftNumber, boolean isSelected){
         if(isSelected) {
-            unselectAllAircraft();
+            deselectAllAircraft();
         }
 
         mAircraft.get(aircraftNumber).setIsSelected(isSelected);
+
+        groupSelectedAircraft.clear();
         updateAltitudeTape();
         aircraftMarkerUpdater();
+    }
+
+    public void setGroupSelected(int[] acNumbers) {
+        //Deselect all aircraft first
+        deselectAllAircraft();
+
+        //Set the selection status of all involved aircraft
+        for(int i = 0; i< acNumbers.length; i++) {
+            mAircraft.get(acNumbers[i]).setIsSelected(true);
+            groupSelectedAircraft.add(acNumbers[i]);
+        }
     }
 
     public void setIsLabelCreated(boolean isLabelCreated,int acNumber) {
