@@ -5,6 +5,7 @@ import com.gcs.R;
 import com.gcs.core.ConflictStatus;
 
 import android.content.ClipData;
+import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -47,6 +48,9 @@ public class AltitudeTape extends Fragment {
     private double flightCeiling;              //[m]
 	private double groundLevel;                //[m]
 
+    private static final Point smallLabelDimensions = new Point (80,70);
+    private static final int dragShadowVerticalOffset = smallLabelDimensions.y*2;
+
 	@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
         Bundle savedInstanceState) {
@@ -60,6 +64,8 @@ public class AltitudeTape extends Fragment {
 		
         // Inflate the layout for this fragment
 		rootView = inflater.inflate(R.layout.altitude_tape, container, false);
+        /* TODO programmatically draw the altitude tape */
+//        rootView.setBackground(DRAWN TAPE);
         return rootView;    
     }
 	
@@ -141,7 +147,8 @@ public class AltitudeTape extends Fragment {
 			public boolean onLongClick(View v) {
 				
 	            ClipData data = ClipData.newPlainText("", "");
-	            View.DragShadowBuilder myShadow = new DragShadowBuilder(tv);
+                myDragShadowBuilder myShadow = new myDragShadowBuilder(tv);
+
 	            /* TODO Offset the label that is dragged to be able to see it */
 
                 //Reference for the ondrag method to know which label is being dragged
@@ -170,7 +177,7 @@ public class AltitudeTape extends Fragment {
                         break;
                     case DragEvent.ACTION_DROP:
                         //Send the drop location to the method that implements the command
-            	        setTargetAltitude(labelList.get(draggedLabel), event.getY());
+            	        setTargetAltitude(labelList.get(draggedLabel), event.getY()-dragShadowVerticalOffset);
                         break;
                     default:
                         break;
@@ -178,6 +185,19 @@ public class AltitudeTape extends Fragment {
             return true;
             }
         };
+    }
+
+    public static class myDragShadowBuilder extends View.DragShadowBuilder {
+        public myDragShadowBuilder(View view) {
+            super(view);
+        }
+
+        @Override
+        public void onProvideShadowMetrics(Point shadowSize, Point touchPoint) {
+            super.onProvideShadowMetrics(shadowSize, touchPoint);
+            //Offset the dragshadow for better visibility
+            touchPoint.set(smallLabelDimensions.x / 2, dragShadowVerticalOffset);
+        }
     }
 
     //Method to draw single labels on the altitude tape
@@ -207,7 +227,7 @@ public class AltitudeTape extends Fragment {
                 }
             }
 
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 70);
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(smallLabelDimensions.x,smallLabelDimensions.y);
             params.topMargin = altitudeToLabelLocation(altitude);
             int textGravity;
 
@@ -264,7 +284,7 @@ public class AltitudeTape extends Fragment {
                 backgroundImg = LargeBlueLabel;
             }
 
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 70);
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(smallLabelDimensions.x,smallLabelDimensions.y);
             params.topMargin = altitudeToLabelLocation(altitude);
             params.gravity = Gravity.RIGHT;
 
@@ -293,9 +313,7 @@ public class AltitudeTape extends Fragment {
 
     public void drawGroupSelection(double altitude, String labelCharacter) {
 
-        ////maybe: int acNumber
-
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 70);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(smallLabelDimensions.x,smallLabelDimensions.y);
         params.gravity = Gravity.LEFT;
         params.topMargin = altitudeToLabelLocation(altitude);
 
@@ -309,7 +327,6 @@ public class AltitudeTape extends Fragment {
             groupselectionLabel.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
             groupselectionLabel.setId(labelId);
             groupselectionLabel.setBackgroundResource(yellowLabel);
-            //Onclicklistener??
             framelayout.addView(groupselectionLabel, params);
             groupSelectionIdList.put(labelCharacter,labelId);
         } else {
@@ -340,7 +357,7 @@ public class AltitudeTape extends Fragment {
 	public void setTargetLabel(double targetAltitude, int targetLabelId) {
 		
 		/* TODO make a better indicating icon/bug for the target altitude */
-		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 70);
+		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(smallLabelDimensions.x,smallLabelDimensions.y);
         params.topMargin = altitudeToLabelLocation(targetAltitude);
         params.gravity = Gravity.RIGHT;
 
@@ -390,7 +407,7 @@ public class AltitudeTape extends Fragment {
 
 	//Set the target altitude to the service
 	private void setTargetAltitude(int aircraftNumber,float dropLocation) {
-		
+
 		double dropAltitude = labelLocationToAltitude(dropLocation);
 
 		//If the label is dropped outside the altitude tape, set the target altitude at the bounds.
