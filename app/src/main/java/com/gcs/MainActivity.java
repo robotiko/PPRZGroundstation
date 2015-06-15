@@ -116,15 +116,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //TEMPORARY DUMMY AIRCRAFT
         mAircraft.put(2, new Aircraft(getApplicationContext()));
-        mAircraft.get(2).setLlaHdg(519925740, 43775620, 10, (short) 180);
+        mAircraft.get(2).setLlaHdg(519925740, 43775620, 0, (short) 180);
         mAircraft.get(2).setAltitude(10);
         mAircraft.get(2).setBatteryState(10, 1, 1);
         mAircraft.get(2).setDistanceHome(homeLocation);
 		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
 
 		mAircraft.put(3, new Aircraft(getApplicationContext()));
-		mAircraft.get(3).setLlaHdg(519910540, 43794130, 17, (short) 300);
-		mAircraft.get(3).setAltitude(17);
+		mAircraft.get(3).setLlaHdg(519910540, 43794130, 0, (short) 300);
+		mAircraft.get(3).setAltitude(10.4);
 		mAircraft.get(3).setBatteryState(10, 1, 1);
 		mAircraft.get(3).setDistanceHome(homeLocation);
 		mAircraft.get(3).setRollPitchYaw(0,0,300);
@@ -459,7 +459,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					Altitude mAltitude = getAttribute("ALTITUDE");
-                    mAircraft.get(1).setAltitude(mAltitude.getAltitude());
+//                    mAircraft.get(1).setAltitude(mAltitude.getAltitude());
+                    mAircraft.get(1).setAltitude(3);
+//					mAircraft.get(1).setAGL(mAltitude.getAGL());
                     mAircraft.get(1).setTargetAltitude(mAltitude.getTargetAltitude());
 
 //					telemetryFragment.setText(String.valueOf(mAltitude.getAltitude()));
@@ -753,14 +755,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	/////////////////////MISSION BUTTONS/////////////////////
 	
 	public void onLandRequest(View v) {
+        /* TODO Try to execute one of the landing blocks. Check if landing is executed and update the button that is displayed.*/
+
+        //Notify the mission button fragment that the land button is clicked
 		missionButtons.onLandRequest(v);
 	}
 	
 	public void onTakeOffRequest(View v) {
+        /* TODO Try to execute the take-off block(s). Check if take-off is executed and update the button that is displayed.*/
+
+        //Notify the mission button fragment that the take-off button is clicked
 		missionButtons.onTakeOffRequest(v);
 	}
 	
 	public void onGoHomeRequest(View v) {
+        /* TODO Try to execute one of the go-home/landing blocks. Check if the drone is going home and update the button that is displayed.*/
+
+        //Notify the mission button fragment that the go home button is clicked
 		missionButtons.onGoHomeRequest(v);
 	}
 
@@ -1084,14 +1095,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             altitudeTapeFragment.deleteTargetLabel(mAircraft.get(1).getTargetLabelId());
         }
 
-		/* Put the single labels on the altitude tape.*/
-        for (int i = 1; i < mAircraft.size() + 1; i++) {
-            if (sameLevelAircraft.contains(i) || conflictingAircraft.contains(i)) {
-                altitudeTapeFragment.setLabel(mAircraft.get(i).getAltitude(), mAircraft.get(i).getAltLabelId(), mAircraft.get(i).getLabelCharacter(), mAircraft.get(i).isSelected(), mAircraft.get(i).isLabelCreated(), i, View.GONE);
-            } else {
-                altitudeTapeFragment.setLabel(mAircraft.get(i).getAltitude(), mAircraft.get(i).getAltLabelId(), mAircraft.get(i).getLabelCharacter(), mAircraft.get(i).isSelected(), mAircraft.get(i).isLabelCreated(), i, View.VISIBLE);
-            }
-        }
+        boolean groupLabelsDrawn = false;
+
+        //Check if a certain conflict is selected. If yes, do not draw the group label but draw single labels on the left side of the tape.
 
         // Put the grouped red labels on the altitude tape
         if (!conflictingAircraft.isEmpty()) {
@@ -1102,14 +1108,37 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 double mean = (mAircraft.get(ac1).getAltitude() + mAircraft.get(ac2).getAltitude()) / 2;
                 String characters = mAircraft.get(ac1).getLabelCharacter() + " " + mAircraft.get(ac2).getLabelCharacter();
 
-                altitudeTapeFragment.drawGroupLabel(true,mean,characters, ac1, ac2);
+                altitudeTapeFragment.drawGroupLabel(true,mean,characters,ac1,ac2);
             }
+            groupLabelsDrawn = true;
         }
 
         // Put the grouped blue labels on the altitude tape
-//        for(int k=0; k<sameLevelAircraft.size(); k+=2) {
-//            altitudeTapeFragment.drawGroupLabel(false);
-//        }
+		if (!sameLevelAircraft.isEmpty()) {
+			for (int j = 0; j < sameLevelAircraft.size(); j += 2) {
+				int ac1 = sameLevelAircraft.get(j);
+				int ac2 = sameLevelAircraft.get(j + 1);
+
+				double mean = (mAircraft.get(ac1).getAltitude() + mAircraft.get(ac2).getAltitude()) / 2;
+				String characters = mAircraft.get(ac1).getLabelCharacter() + " " + mAircraft.get(ac2).getLabelCharacter();
+
+				altitudeTapeFragment.drawGroupLabel(false,mean,characters,ac1,ac2);
+			}
+            groupLabelsDrawn = true;
+		}
+
+        /* Put the single labels on the altitude tape.*/
+        for (int i = 1; i < mAircraft.size() + 1; i++) {
+            if (sameLevelAircraft.contains(i) || conflictingAircraft.contains(i)) {
+                altitudeTapeFragment.setLabel(mAircraft.get(i).getAltitude(), mAircraft.get(i).getAltLabelId(), mAircraft.get(i).getLabelCharacter(), mAircraft.get(i).isSelected(), mAircraft.get(i).isLabelCreated(), i, View.GONE);
+            } else {
+                altitudeTapeFragment.setLabel(mAircraft.get(i).getAltitude(), mAircraft.get(i).getAltLabelId(), mAircraft.get(i).getLabelCharacter(), mAircraft.get(i).isSelected(), mAircraft.get(i).isLabelCreated(), i, View.VISIBLE);
+            }
+        }
+
+        if(!groupLabelsDrawn) {
+            altitudeTapeFragment.removeGroupLabels();
+        }
 	}
 
     // Method to be called by the altitudetape fragment to change selection status and update the interface

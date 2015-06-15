@@ -21,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class AltitudeTape extends Fragment {
 	
@@ -28,10 +29,15 @@ public class AltitudeTape extends Fragment {
 	private View rootView;
 
     final SparseArray<Integer> labelList = new SparseArray<>();
-    private ArrayList<Integer> redGroupLabelIds = new ArrayList<>();
+    private ArrayList<Integer> aircraftInGroupList = new ArrayList<>();
+    private ConcurrentHashMap<String, Integer> stringToLabelIdList = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Integer,String> labelIdToStringList = new ConcurrentHashMap<>();
+    private String selectedGroup = null;
 
     private int draggedLabel;
-	
+
+    private boolean groupUnselected = false;
+    private boolean groupSelected = false;
 	private boolean targetCreated = false;
 	
 	/* TODO Determine altitude label location based on the height of the bar and the the dynamic vertical range of the drones (flight ceiling - ground level) */
@@ -62,7 +68,8 @@ public class AltitudeTape extends Fragment {
         altitudeTape.setOnClickListener(new View.OnClickListener() {
         	@Override
             public void onClick(View v) {
-            	Log.d("test","altitude tape clicked!!");
+                //Set the group selection to null go back to normal display of the labels
+                selectedGroup = null;
             }
         });
 
@@ -72,22 +79,38 @@ public class AltitudeTape extends Fragment {
         groundLevel    = getResources().getInteger(R.integer.groundLevel);
     }
 	
-	//OnCLickListener for the altitude labels
+	//OnCLickListener for individual altitude labels
 	View.OnClickListener onLabelClick(final View tv) {
 	    return new View.OnClickListener() {
 	        public void onClick(View v) {
+                if(groupSelected) {
+                        selectedGroup = null;
+                        groupSelected = false;
+                        groupUnselected = true;
+                }
 
                 int aircraftNumber = labelList.get(v.getId());
-                boolean isAircraftSelected = ((MainActivity)getActivity()).isAircraftIconSelected(aircraftNumber);
+                boolean isAircraftSelected = ((MainActivity) getActivity()).isAircraftIconSelected(aircraftNumber);
 
-                if(isAircraftSelected) {    //Deselect
-                    ((MainActivity)getActivity()).setIsSelected(aircraftNumber,false);
-                } else {                    //Select
-                    ((MainActivity)getActivity()).setIsSelected(aircraftNumber,true);
+                if (isAircraftSelected) {    // Deselect
+                    ((MainActivity) getActivity()).setIsSelected(aircraftNumber, false);
+                } else {                    // Select
+                    ((MainActivity) getActivity()).setIsSelected(aircraftNumber, true);
                 }
         	}
 	    };
 	}
+
+    //OnCLickListener for the group labels
+    View.OnClickListener onGroupLabelClick(final View tv) {
+        return new View.OnClickListener() {
+            public void onClick(View v) {
+                    groupSelected = true;
+                    selectedGroup = labelIdToStringList.get(v.getId());
+                    drawGroupSelection(v.getId());
+            }
+        };
+    }
 	
 	//OnLongClickListener for the altitude labels
 	View.OnLongClickListener onLabelLongClick(final View tv) {
@@ -137,110 +160,147 @@ public class AltitudeTape extends Fragment {
 
     //Method to draw single labels on the altitude tape
 	public void setLabel(double altitude, int labelId, String labelCharacter, boolean isAircraftIconSelected, boolean labelCreated, int acNumber, int visibility){
-        removeGroupLabels();
+        if(!aircraftInGroupList.contains(acNumber)) {
+            if (labelList.get(labelId) == null) {
+                labelList.put(labelId, acNumber);
+            }
 
-        if(labelList.get(labelId) == null) {
-            labelList.put(labelId,acNumber);
-        }
+            int backgroundImg;
 
-        int backgroundImg;
+            if (isAircraftIconSelected) {
+                backgroundImg = R.drawable.altitude_label_small_yellow_flipped;
 
-        if(isAircraftIconSelected) {
-            backgroundImg = R.drawable.altitude_label_small_yellow_flipped;
+            } else {
+                ConflictStatus conflictStatus = ((MainActivity) getActivity()).getConflictStatus(acNumber);
 
-        } else {
-            ConflictStatus conflictStatus = ((MainActivity) getActivity()).getConflictStatus(acNumber);
+                switch (conflictStatus) {
+                    case BLUE:
+                        backgroundImg = R.drawable.altitude_label_small_blue;
+                        break;
+                    case GRAY:
+                        backgroundImg = R.drawable.altitude_label_small_gray;
+                        break;
+                    case RED:
+                        backgroundImg = R.drawable.altitude_label_small_red;
+                        break;
+                    default:
+                        backgroundImg = R.drawable.altitude_label_small_blue;
+                }
+            }
 
-            switch (conflictStatus) {
-                case BLUE:
-                    backgroundImg =  R.drawable.altitude_label_small_blue;
-                    break;
-                case GRAY:
-                    backgroundImg =  R.drawable.altitude_label_small_gray;
-                    break;
-                case RED:
-                    backgroundImg =  R.drawable.altitude_label_small_red;
-                    break;
-                default:
-                    backgroundImg =  R.drawable.altitude_label_small_blue;
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 70);
+            params.topMargin = altitudeToLabelLocation(altitude);
+            int textGravity;
+
+            //Set alignment of the label based on the selection status
+            if (!((MainActivity) getActivity()).isAircraftIconSelected(acNumber)) {
+                params.gravity = Gravity.RIGHT;
+                textGravity = Gravity.CENTER;
+            } else {
+                params.gravity = Gravity.LEFT;
+                textGravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
+            }
+
+            TextView label;
+            if (!labelCreated) {
+                label = new TextView(getActivity());
+                label.setId(labelId);
+                label.setBackgroundResource(backgroundImg);
+                label.setVisibility(visibility);
+                label.setMinWidth(20);
+                label.setText("   " + labelCharacter);
+                label.setTypeface(null, Typeface.BOLD);
+                label.setGravity(textGravity);
+                label.setOnClickListener(onLabelClick(label));
+                label.setOnLongClickListener(onLabelLongClick(label));
+                rootView.setOnDragListener(labelDragListener(label));
+                framelayout.addView(label, params);
+
+                ((MainActivity) getActivity()).setIsLabelCreated(true, acNumber);
+            } else {
+                label = (TextView) getView().findViewById(labelId);
+                label.setBackgroundResource(backgroundImg);
+                label.setVisibility(visibility);
+                label.setGravity(textGravity);
+                framelayout.updateViewLayout(label, params);
             }
         }
-
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 70);
-        params.topMargin = altitudeToLabelLocation(altitude);
-        int textGravity;
-
-        //Set alignment of the label based on the selection status
-        if(!((MainActivity)getActivity()).isAircraftIconSelected(acNumber)) {
-            params.gravity = Gravity.RIGHT;
-            textGravity = Gravity.CENTER;
-        } else {
-            params.gravity = Gravity.LEFT;
-            textGravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
-        }
-
-		TextView label;
-		if(!labelCreated){
-            label = new TextView(getActivity());
-            label.setId(labelId);
-            label.setBackgroundResource(backgroundImg);
-            label.setVisibility(visibility);
-            label.setMinWidth(20);
-            label.setText("   " + labelCharacter);
-	        label.setTypeface(null, Typeface.BOLD);
-            label.setGravity(textGravity);
-            label.setOnClickListener(onLabelClick(label));
-	        label.setOnLongClickListener(onLabelLongClick(label));
-	        rootView.setOnDragListener(labelDragListener(label));
-	        framelayout.addView(label, params);
-
-			((MainActivity)getActivity()).setIsLabelCreated(true,acNumber);
-		} else {
-			label = (TextView)  getView().findViewById(labelId);
-            label.setBackgroundResource(backgroundImg);
-            label.setVisibility(visibility);
-            label.setGravity(textGravity);
-            framelayout.updateViewLayout(label, params);
-		}
 	}
 
     //Method to draw group labels on the altitude tape
     public void drawGroupLabel(boolean inConflict, double altitude, String labelCharacters, int ac1, int ac2) {
-        removeGroupLabels();
+        /* TODO change to allow groups larger than 2 */
+//        String group = String.valueOf(ac1)+String.valueOf(ac2);
+        //Add the numbers of aircraft that are in a group to the list to avoid that they also get an individual label
+        aircraftInGroupList.add(ac1);
+        aircraftInGroupList.add(ac2);
 
-        int backgroundImg;
-        if(inConflict) {
-            backgroundImg =  R.drawable.altitude_label_large_red;
-        } else {
-            backgroundImg =  R.drawable.altitude_label_large_blue;
+        groupUnselected = false;
+
+        if(selectedGroup == null || !selectedGroup.equals(labelCharacters)) {
+            int backgroundImg;
+            if (inConflict) {
+                backgroundImg = R.drawable.altitude_label_large_red;
+            } else {
+                backgroundImg = R.drawable.altitude_label_large_blue;
+            }
+
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 70);
+            params.topMargin = altitudeToLabelLocation(altitude);
+            params.gravity = Gravity.RIGHT;
+//        textGravity = Gravity.CENTER;
+
+            TextView groupLabel;
+            if (!stringToLabelIdList.containsKey(labelCharacters)) {
+                int labelId = TextView.generateViewId();
+                groupLabel = new TextView(getActivity());
+                groupLabel.setText("   " + labelCharacters);
+                groupLabel.setTypeface(null, Typeface.BOLD);
+                groupLabel.setGravity(Gravity.CENTER);
+                groupLabel.setId(labelId);
+                groupLabel.setBackgroundResource(backgroundImg);
+                groupLabel.setOnClickListener(onGroupLabelClick(groupLabel));
+                framelayout.addView(groupLabel,params);
+                stringToLabelIdList.put(labelCharacters,labelId);
+                labelIdToStringList.put(labelId,labelCharacters);
+            } else {
+                groupLabel = (TextView) getView().findViewById(stringToLabelIdList.get(labelCharacters));
+                groupLabel.setBackgroundResource(backgroundImg);
+                groupLabel.setGravity(Gravity.CENTER);
+                groupLabel.setVisibility(View.VISIBLE);
+                framelayout.updateViewLayout(groupLabel, params);
+            }
+        }
+    }
+
+    private void drawGroupSelection(int groupViewId) {
+        //Hide group label from view
+        TextView groupLabel = (TextView) getView().findViewById(groupViewId);
+        groupLabel.setVisibility(View.GONE);
+
+        //Obtain references to involved aircraft
+        String[] acCharacters = labelIdToStringList.get(groupViewId).split(" ");
+        for(int i = 0; i< acCharacters.length; i++) {
+//            Log.d("test",String.valueOf(Character.getNumericValue(acCharacters[i].charAt(0))-9));
         }
 
-//        String pair = String.valueOf(ac1)+String.valueOf(ac2);
-        Log.d("test",labelCharacters);
-
+        ///////////////////////////////////////
+        int backgroundImg = R.drawable.altitude_label_small_yellow_flipped;
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(80, 70);
-        params.topMargin = altitudeToLabelLocation(altitude);
-
-        TextView redGroupLabel;
-        redGroupLabel = new TextView(getActivity());
-        redGroupLabel.setText("   " + labelCharacters);
-        redGroupLabel.setTypeface(null, Typeface.BOLD);
-        redGroupLabel.setGravity(Gravity.CENTER);
-        redGroupLabel.setId(TextView.generateViewId());
-        redGroupLabel.setBackgroundResource(backgroundImg);
-        framelayout.addView(redGroupLabel, params);
-
-        redGroupLabelIds.add(redGroupLabel.getId());
+        params.gravity = Gravity.LEFT;
+        int textGravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
     }
 
-private void removeGroupLabels() {
-    if(!redGroupLabelIds.isEmpty()) {
-        for(int i = 0; i < redGroupLabelIds.size(); i++) {
-            Log.d("test", String.valueOf(redGroupLabelIds.get(i)));
-            framelayout.removeView(getView().findViewById(redGroupLabelIds.get(i)));
+    //Method called from mainactivity if no group labels are drawn. Then if there are still labelId's in the list, remove them from the view and list.
+    public void removeGroupLabels() {
+        if(!stringToLabelIdList.isEmpty() && groupUnselected) {
+            for (String key : stringToLabelIdList.keySet()) {
+                framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
+            }
+            stringToLabelIdList.clear();
+            labelIdToStringList.clear();
         }
     }
-}
 
     //Method to draw the target altitude on the altitude tape
 	public void setTargetLabel(double targetAltitude, int targetLabelId) {
