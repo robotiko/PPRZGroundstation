@@ -1096,11 +1096,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         boolean groupLabelsDrawn = false;
 
         //Check if a certain conflict is selected. If yes, do not draw the group label but draw single labels on the left side of the tape.
-
         //If a group is selected
         if(!groupSelectedAircraft.isEmpty()) {
             for(int i=0; i< groupSelectedAircraft.size(); i++) {
-                altitudeTapeFragment.drawGroupSelection(mAircraft.get(groupSelectedAircraft.get(i)).getAltitude(),mAircraft.get(groupSelectedAircraft.get(i)).getLabelCharacter());
+                altitudeTapeFragment.drawGroupSelection(mAircraft.get(groupSelectedAircraft.get(i)).getAltitude(),mAircraft.get(groupSelectedAircraft.get(i)).getLabelCharacter(),i,groupSelectedAircraft.size());
             }
         } else {
             // Put the grouped red labels on the altitude tape

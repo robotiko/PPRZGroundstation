@@ -14,7 +14,6 @@ import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.DragShadowBuilder;
 import android.view.DragEvent;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -148,8 +147,6 @@ public class AltitudeTape extends Fragment {
 				
 	            ClipData data = ClipData.newPlainText("", "");
                 myDragShadowBuilder myShadow = new myDragShadowBuilder(tv);
-
-	            /* TODO Offset the label that is dragged to be able to see it */
 
                 //Reference for the ondrag method to know which label is being dragged
                 draggedLabel = v.getId();
@@ -311,27 +308,34 @@ public class AltitudeTape extends Fragment {
         }
     }
 
-    public void drawGroupSelection(double altitude, String labelCharacter) {
+    public void drawGroupSelection(double altitude, String labelCharacter, int i, int numberOfLabels) {
 
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(smallLabelDimensions.x,smallLabelDimensions.y);
         params.gravity = Gravity.LEFT;
         params.topMargin = altitudeToLabelLocation(altitude);
 
-        TextView groupselectionLabel;
+        //Add a margin to the right of a label if it will overlap with another label
+        if(i==0) {
+            params.leftMargin = 75 + (numberOfLabels-2)*smallLabelDimensions.x;
+        } else {
+            params.rightMargin = 75 + (smallLabelDimensions.x*i);
+        }
+
+        TextView groupSelectionLabel;
 
         if (!groupSelectionIdList.containsKey(labelCharacter)) {
             int labelId = TextView.generateViewId();
-            groupselectionLabel = new TextView(getActivity());
-            groupselectionLabel.setText("   " + labelCharacter);
-            groupselectionLabel.setTypeface(null, Typeface.BOLD);
-            groupselectionLabel.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
-            groupselectionLabel.setId(labelId);
-            groupselectionLabel.setBackgroundResource(yellowLabel);
-            framelayout.addView(groupselectionLabel, params);
+            groupSelectionLabel = new TextView(getActivity());
+            groupSelectionLabel.setText("   " + labelCharacter);
+            groupSelectionLabel.setTypeface(null, Typeface.BOLD);
+            groupSelectionLabel.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+            groupSelectionLabel.setId(labelId);
+            groupSelectionLabel.setBackgroundResource(yellowLabel);
+            framelayout.addView(groupSelectionLabel, params);
             groupSelectionIdList.put(labelCharacter,labelId);
         } else {
-            groupselectionLabel = (TextView) getView().findViewById(groupSelectionIdList.get(labelCharacter));
-            framelayout.updateViewLayout(groupselectionLabel, params);
+            groupSelectionLabel = (TextView) getView().findViewById(groupSelectionIdList.get(labelCharacter));
+            framelayout.updateViewLayout(groupSelectionLabel, params);
         }
     }
 
