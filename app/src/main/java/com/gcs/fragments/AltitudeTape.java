@@ -33,6 +33,8 @@ public class AltitudeTape extends Fragment {
     private ConcurrentHashMap<String, Integer> stringToLabelIdList = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Integer,String> labelIdToStringList = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Integer> groupSelectionIdList = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Integer, Integer> groupSelectLabelList = new ConcurrentHashMap<>();
+
     private String selectedGroup = null;
 
     private int draggedLabel;
@@ -83,6 +85,8 @@ public class AltitudeTape extends Fragment {
                 selectedGroup = null;
                 //Remove selected group labels from tape
                 removeGroupSelectedAircraft();
+                //Clear the list holding the id's of the group selection labels
+                groupSelectLabelList.clear();
                 //Deselect all aircraft
                 ((MainActivity) getActivity()).deselectAllAircraft();
             }
@@ -102,6 +106,7 @@ public class AltitudeTape extends Fragment {
                     selectedGroup = null;
                     groupSelected = false;
                     groupDeselected = true;
+                    groupSelectLabelList.clear();
                     removeGroupSelectedAircraft();
                 }
 
@@ -170,11 +175,15 @@ public class AltitudeTape extends Fragment {
                 switch (event.getAction()) {
                     case DragEvent.ACTION_DRAG_STARTED:
                         break;
-                    case DragEvent.ACTION_DRAG_LOCATION :
+                    case DragEvent.ACTION_DRAG_LOCATION:
                         break;
                     case DragEvent.ACTION_DROP:
                         //Send the drop location to the method that implements the command
-            	        setTargetAltitude(labelList.get(draggedLabel), event.getY()-dragShadowVerticalOffset);
+                        if (groupSelectLabelList.containsKey(draggedLabel)) {   //Group selection label
+                            setTargetAltitude(groupSelectLabelList.get(draggedLabel), event.getY() - dragShadowVerticalOffset);
+                        } else{                                                 //Normal label
+                            setTargetAltitude(labelList.get(draggedLabel), event.getY() - dragShadowVerticalOffset);
+                        }
                         break;
                     default:
                         break;
@@ -264,19 +273,21 @@ public class AltitudeTape extends Fragment {
 	}
 
     //Method to draw group labels on the altitude tape
-    public void drawGroupLabel(boolean inConflict, double altitude, String labelCharacters, int ac1, int ac2) {
+//    public void drawGroupLabel(boolean inConflict, double altitude, String labelCharacters, int ac1, int ac2) {
+    public void drawGroupLabel(boolean inConflict, double altitude, String labelCharacters, int[] ac) {
+
         /* TODO change to allow groups larger than 2 */
-//        String group = String.valueOf(ac1)+String.valueOf(ac2);
         //Add the numbers of aircraft that are in a group to the list to avoid that they also get an individual label
-        aircraftInGroupList.add(ac1);
-        aircraftInGroupList.add(ac2);
+        for(int i=0; i<ac.length; i++) {
+            aircraftInGroupList.add(ac[i]);
+        }
 
         groupDeselected = false;
 
         if(selectedGroup == null || !selectedGroup.equals(labelCharacters)) {
             int backgroundImg;
             if (inConflict) {
-                backgroundImg  = LargeRedLabel;
+                backgroundImg = LargeRedLabel;
             } else {
                 backgroundImg = LargeBlueLabel;
             }
@@ -308,7 +319,7 @@ public class AltitudeTape extends Fragment {
         }
     }
 
-    public void drawGroupSelection(double altitude, String labelCharacter, int i, int numberOfLabels) {
+    public void drawGroupSelection(double altitude, String labelCharacter, int i, int numberOfLabels, int acNumber) {
 
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(smallLabelDimensions.x,smallLabelDimensions.y);
         params.gravity = Gravity.LEFT;
@@ -316,9 +327,10 @@ public class AltitudeTape extends Fragment {
 
         //Add a margin to the right of a label if it will overlap with another label
         if(i==0) {
-            params.leftMargin = 75 + (numberOfLabels-2)*smallLabelDimensions.x;
+            params.leftMargin = 75 + (numberOfLabels-1)*smallLabelDimensions.x;
         } else {
             params.rightMargin = 75 + (smallLabelDimensions.x*i);
+            params.leftMargin = (numberOfLabels-i)*smallLabelDimensions.x;
         }
 
         TextView groupSelectionLabel;
@@ -331,8 +343,11 @@ public class AltitudeTape extends Fragment {
             groupSelectionLabel.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
             groupSelectionLabel.setId(labelId);
             groupSelectionLabel.setBackgroundResource(yellowLabel);
+            groupSelectionLabel.setOnLongClickListener(onLabelLongClick(groupSelectionLabel));
+            rootView.setOnDragListener(labelDragListener(groupSelectionLabel));
             framelayout.addView(groupSelectionLabel, params);
             groupSelectionIdList.put(labelCharacter,labelId);
+            groupSelectLabelList.put(labelId, acNumber);
         } else {
             groupSelectionLabel = (TextView) getView().findViewById(groupSelectionIdList.get(labelCharacter));
             framelayout.updateViewLayout(groupSelectionLabel, params);
