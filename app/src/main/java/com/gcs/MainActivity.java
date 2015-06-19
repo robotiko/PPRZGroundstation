@@ -50,6 +50,8 @@ import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -67,6 +69,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	private Handler handler, interfaceUpdateHandler;
 	private int mInterval = 900; // seconds * 1000
+    private final int blockUpdateDelay = 500;
 	
 	IMavLinkServiceClient mServiceClient;
 	MissionButtonFragment missionButtons;
@@ -94,7 +97,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private float verticalSeparationStandard;
 
-    private MenuItem menuBlocksSpinner = null;
+    //Declaration of items needed for missionblocks
+    private MenuItem menuBlockSpinner = null;
+    Spinner blockSpinner;
+    private List<String> missionBlocks;
 	  
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -167,10 +173,28 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 
-        menuBlocksSpinner = menu.findItem(R.id.menu_blocks_spinner);
-        Spinner blocksSpinner = (Spinner) MenuItemCompat.getActionView(menuBlocksSpinner);
+        //Set up the spinner in the action bar for the mission block which can be loaded from the service
+        menuBlockSpinner = menu.findItem(R.id.menu_block_spinner);
+        blockSpinner = (Spinner) MenuItemCompat.getActionView(menuBlockSpinner);
+        blockSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            //Define what should happen when an item in the spinner is selected
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                try {
+                    mServiceClient.onBlockSelected(position);
+                } catch (RemoteException e) {
+                    Log.e(TAG,"Error while sending mission block spinner selection to the service");
+                }
+            }
+
+            //Define what should happen if no item is selected in the spinner
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+
 //        blocksSpinner.setAdapter(adapter);
-//        s.setOnItemSelectedListener(onItemSelectedListener);
 
 		return true;
 	}
@@ -180,10 +204,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
-		}
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                return true;
+            case R.id.menu_request_block_button:
+                //Try to request mission blocks if connected to the service
+                if (isConnected) {
+                    try {
+                        mServiceClient.requestMissionBlockList();
+                    } catch (RemoteException e) {
+                        Log.e(TAG,"Error while requesting mission blocks");
+                    }
+                }
+                return true;
+        }
 		return super.onOptionsItemSelected(item);
 	}
 	
@@ -507,7 +541,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
                 case "CURRENT_BLOCK_UPDATED": {
-//                    updateMissionBlocksSpinnerSelection();
+                    updateMissionBlocksSpinnerSelection();
                     break;
                 }
 
@@ -707,17 +741,38 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         handler.post(new Runnable() {
             @Override
             public void run() {
-//                try {
-////                    missionBlocks = mServiceClient.getMissionBlockList();
-////                    blockCount.setText(getString(R.string.block_count) + " " + String.format("%d", blocks.size()));
-////                    updateMissionBlocksSpinner();
-//                } catch (RemoteException e) {
-//                    // TODO: Handle exception
-//                }
+                try {
+                    Log.d("BLOCKS","Updated");
+                    missionBlocks = mServiceClient.getMissionBlockList();
+                    updateMissionBlocksSpinner();
+                } catch (RemoteException e) {
+                    Log.e(TAG,"Error while updating mission blocks");
+                }
             }
         });
     }
 
+    private void updateMissionBlocksSpinner() {
+        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, missionBlocks);
+        spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        blockSpinner.setAdapter(spinnerArrayAdapter);
+    }
+
+    private void updateMissionBlocksSpinnerSelection() {
+        if (missionBlocks.size() > 0) {
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Log.d(TAG, "Block: " + mServiceClient.getCurrentBlock());
+                        blockSpinner.setSelection(mServiceClient.getCurrentBlock());
+                    } catch (RemoteException e) {
+                        Log.e(TAG,"Error while trying to update the mission block selection in the spinner");
+                    }
+                }
+            }, blockUpdateDelay);
+        }
+    }
 
 	////////OTHER COMMUNICATION FUNCTIONS
 	
@@ -758,12 +813,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	        	Log.e(TAG, "Error while connecting to service", e);
 	        }
         }
-        
-        /* TODO: Update the text of the connect button */
-        
     }
-	
-	/* TODO solve bugs with the connect button */
+
     public void onButtonRequest(View view) {
     	if (!isConnected)
     		connectToDroneClient();
@@ -774,7 +825,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 				Log.e(TAG, "Error while disconnecting", e);
 			}
     }
-    
+
     /**
      * This runnable object is created such that the update is performed
      * by the UI handler. This is a design requirement posed by the Android SDK
@@ -815,7 +866,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 attribute = carrier.getParcelable(type);
             }
         }
-
         return attribute == null ? this.<T>getAttributeDefaultValue(type) : attribute;
     }
 	

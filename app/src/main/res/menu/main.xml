@@ -9,9 +9,17 @@
         android:title="@string/action_settings"/>
 
     <item
-        android:id="@+id/menu_blocks_spinner"
+        android:id="@+id/menu_request_block_button"
+        android:showAsAction="always"
+        android:orderInCategory="2"
+        android:title="Blocks" />
+        <!-- android:actionViewClass="android.widget.Button" /> -->
+
+    <item
+        android:id="@+id/menu_block_spinner"
         android:showAsAction="always"
         android:orderInCategory="1"
+        android:title="block_spinner"
         android:actionViewClass="android.widget.Spinner" />
 
 </menu>
