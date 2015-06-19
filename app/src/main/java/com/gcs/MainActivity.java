@@ -44,12 +44,14 @@ import android.os.IBinder;
 import android.os.Parcelable;
 import android.os.RemoteException;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.view.MenuItemCompat;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -92,7 +94,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private float verticalSeparationStandard;
 
-	/* Find memory leaks: https://developer.android.com/tools/debugging/debugging-memory.html */
+    private MenuItem menuBlocksSpinner = null;
 	  
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -118,26 +120,26 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         home.setHomeLocation(homeLocation);
 
         //TEMPORARY DUMMY AIRCRAFT
-        mAircraft.put(2, new Aircraft(getApplicationContext()));
-        mAircraft.get(2).setLlaHdg(519925740, 43775620, 0, (short) 180);
-        mAircraft.get(2).setAltitude(10);
-        mAircraft.get(2).setBatteryState(10, 45, 1);
-        mAircraft.get(2).setDistanceHome(homeLocation);
-		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
-
-		mAircraft.put(3, new Aircraft(getApplicationContext()));
-		mAircraft.get(3).setLlaHdg(519910540, 43794130, 0, (short) 300);
-		mAircraft.get(3).setAltitude(10.3);
-		mAircraft.get(3).setBatteryState(10, 1, 1);
-		mAircraft.get(3).setDistanceHome(homeLocation);
-		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
-
-        mAircraft.put(4, new Aircraft(getApplicationContext()));
-        mAircraft.get(4).setLlaHdg(519920900, 43796160, 0, (short) 270);
-        mAircraft.get(4).setAltitude(9.9);
-        mAircraft.get(4).setBatteryState(10, 90, 1);
-        mAircraft.get(4).setDistanceHome(homeLocation);
-        mAircraft.get(4).setRollPitchYaw(0, 0, 270);
+//        mAircraft.put(2, new Aircraft(getApplicationContext()));
+//        mAircraft.get(2).setLlaHdg(519925740, 43775620, 0, (short) 180);
+//        mAircraft.get(2).setAltitude(10);
+//        mAircraft.get(2).setBatteryState(10, 45, 1);
+//        mAircraft.get(2).setDistanceHome(homeLocation);
+//		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
+//
+//		mAircraft.put(3, new Aircraft(getApplicationContext()));
+//		mAircraft.get(3).setLlaHdg(519910540, 43794130, 0, (short) 300);
+//		mAircraft.get(3).setAltitude(10.3);
+//		mAircraft.get(3).setBatteryState(10, 1, 1);
+//		mAircraft.get(3).setDistanceHome(homeLocation);
+//		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
+//
+//        mAircraft.put(4, new Aircraft(getApplicationContext()));
+//        mAircraft.get(4).setLlaHdg(519920900, 43796160, 0, (short) 270);
+//        mAircraft.get(4).setAltitude(9.9);
+//        mAircraft.get(4).setBatteryState(10, 90, 1);
+//        mAircraft.get(4).setDistanceHome(homeLocation);
+//        mAircraft.get(4).setRollPitchYaw(0, 0, 270);
 
 
 		// Create a handle to the telemetry fragment
@@ -164,6 +166,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
+
+        menuBlocksSpinner = menu.findItem(R.id.menu_blocks_spinner);
+        Spinner blocksSpinner = (Spinner) MenuItemCompat.getActionView(menuBlocksSpinner);
+//        blocksSpinner.setAdapter(adapter);
+//        s.setOnItemSelectedListener(onItemSelectedListener);
+
 		return true;
 	}
 
@@ -288,16 +296,32 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     for(int d=0; d<groupList.size(); d++) {
                         set = set + String.valueOf(groupList.get(d));
                     }
-                    //Check if the conflict group already exists in the list, if not add it
+
+                    //Check if the conflict group already exists in the list, if not add it (this code creates groups for all seperate conflict groups, the result is a huge load of labels in some cases)
                     if(!conflictGroupList.contains(set)) {
                         conflictGroupList.add(set);
                     }
+
+//                    if(conflictGroupList.isEmpty()) {
+//                        conflictGroupList.add(set);
+//                    } else {
+//                        Boolean inGroup = false;
+//                        for(int i=0; i<conflictGroupList.size(); i++) {
+//                            if(conflictGroupList.get(i).contains(set)) {
+//                                inGroup = true;
+//                                break;
+//                            }
+//                        }
+//                        if(!inGroup) {
+//                            conflictGroupList.add(set);
+//                        }
+//                    }
+//                    Log.d("test",String.valueOf(conflictGroupList.size()));
+
                     //Clear the temporary list
                     groupList.clear();
                 }
             }
-            /* TODO Clear the conflictgrouplist when it was used */
-//            conflictGroupList.clear();
 
             //Set the color of the aircraft that have the "blue" conflict status
             if(!sameLevelAircraft.isEmpty()) {
@@ -325,9 +349,37 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         set = set + String.valueOf(groupList.get(d));
                     }
                     //Check if the conflict group already exists in the list, if not add it
-                    if(!sameLevelGroupList.contains(set)) {
+//                    if(!sameLevelGroupList.contains(set)) {
+//                        sameLevelGroupList.add(set);
+//                    }
+
+                    ///////////////////////////////////////////////////////
+                    if(sameLevelGroupList.isEmpty()) {
                         sameLevelGroupList.add(set);
+                    } else {
+                        Boolean inGroup = false;
+                        mainLoop:   //Label for breaking out of two nested loops
+                        for(int i=0; i<sameLevelGroupList.size(); i++) {
+                            for(int j=0; j<set.length(); j++) {
+                                if(sameLevelGroupList.get(i).contains(Character.toString(set.charAt(j)))) {
+                                    set.replace(Character.toString(set.charAt(j)), "");
+//                                    Log.d("AAP",set);
+//                                    inGroup = true;
+//                                    break mainLoop;
+                                }
+                            }
+                        }
+
+                        if(inGroup) { //If on of the aircraft in the set is already present in another group, add the missing on to this group
+
+                        } else {
+                            sameLevelGroupList.add(set);
+                        }
                     }
+                    for(int i=0; i< sameLevelGroupList.size(); i++) {
+                        Log.d("test", sameLevelGroupList.get(i));
+                    }
+
                     //Clear the temporary list
                     groupList.clear();
                 }
@@ -506,7 +558,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					Attitude mAttitude = getAttribute("ATTITUDE");
-                    mAircraft.get(1).setRollPitchYaw(mAttitude.getRoll(), mAttitude.getPitch(), Math.toDegrees(mAttitude.getYaw()));
+                    mAircraft.get(1).setRollPitchYaw(Math.toDegrees(mAttitude.getRoll()), Math.toDegrees(mAttitude.getPitch()), Math.toDegrees(mAttitude.getYaw()));
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the attitude", t);
 				}
@@ -523,15 +575,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					Altitude mAltitude = getAttribute("ALTITUDE");
-//                    mAircraft.get(1).setAltitude(mAltitude.getAltitude());
-                    mAircraft.get(1).setAltitude(3);
-//					mAircraft.get(1).setAGL(mAltitude.getAGL());
-                    mAircraft.get(1).setTargetAltitude(mAltitude.getTargetAltitude());
+                    //Note that in paparazzi the z-axis is defined pointing downwards, so a minus sign is applied to all incoming altitude values
+                    mAircraft.get(1).setAltitude(-mAltitude.getAltitude());
+//                    mAircraft.get(1).setAltitude(3);
+//					mAircraft.get(1).setAGL(-mAltitude.getAGL());
+                    mAircraft.get(1).setTargetAltitude(-mAltitude.getTargetAltitude());
 
-                    telemetryFragment.setText(String.format("%.2f", mAltitude.getAltitude()));
+                    telemetryFragment.setText(String.format("%.1f", -mAltitude.getAltitude()));
 					
 					/* Set isAltitudeUpdated to be true at first update of altitude */
 					if(!isAltitudeUpdated) isAltitudeUpdated = true;
+
+//                    Log.d("DATATESTtarget",String.valueOf(mAircraft.get(1).getTargetAltitude()));
 
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the altitude", t);
@@ -587,8 +642,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					Position mPosition = getAttribute("POSITION");
                     mAircraft.get(1).setSatVisible(mPosition.getSatVisible());
                     //TODO Change heading to int when this is changed in the service
-                    mAircraft.get(1).setLlaHdg(mPosition.getLat(), mPosition.getLon(), mPosition.getAlt(), (short) mPosition.getHdg());
+                    mAircraft.get(1).setLlaHdg(519907790, 43774220, mPosition.getAlt(), (short) (mPosition.getHdg()/100));
+//                    mAircraft.get(1).setLlaHdg(mPosition.getLat(), mPosition.getLon(), mPosition.getAlt(), (short) (mPosition.getHdg()/100));
                     mAircraft.get(1).setDistanceHome(home.getHomeLocation());
+//                    Log.d("DATATESTlat",String.valueOf(mPosition.getLat()));
+//                    Log.d("DATATESTlng",String.valueOf(mPosition.getLon()));
+//                    Log.d("DATATESTalt",String.valueOf(mPosition.getAlt()/1000));
+//                    Log.d("DATATESTalt",String.valueOf(mAircraft.get(1).getAlt()));
+
                 } catch (Throwable t) {
 					Log.e(TAG, "Error while updating position", t);
 				}
@@ -668,7 +729,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         
         /* TODO: Fetch server port */
         
-        final int serverPort = 8888; 
+        final int serverPort = 5000;
         
         Bundle extraParams = new Bundle();
 
@@ -1142,7 +1203,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private boolean isOnconflictCourse(int ac1, int ac2) {
         /* TODO make algorithm to check conflict courses (extrapolation) */
-        boolean isInconflictcourse = true;
+        boolean isInconflictcourse = false;
         return isInconflictcourse;
     }
 
@@ -1180,7 +1241,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         characters = characters + mAircraft.get(conflict[h]).getLabelCharacter() + " ";
                     }
                     characters = characters.substring(0,conflict.length+2);
-                    Log.d("testL",characters);
                     double meanAlt = altSum/conflict.length;
                     altitudeTapeFragment.drawGroupLabel(true, meanAlt, characters, conflict);
                 }
@@ -1200,40 +1260,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         characters = characters + mAircraft.get(conflict[b]).getLabelCharacter() + " ";
                     }
                     characters = characters.substring(0,conflict.length+2);
-                    Log.d("testL",characters);
                     double meanAlt = altSum/conflict.length;
                     altitudeTapeFragment.drawGroupLabel(false, meanAlt, characters, conflict);
                 }
                 sameLevelGroupList.clear();
                 groupLabelsDrawn = true;
             }
-
-
-            ////////////////////////////
-            // Put the grouped blue labels on the altitude tape
-//            if (!sameLevelAircraft.isEmpty()) {
-//                for (int j = 0; j < sameLevelAircraft.size(); j += 2) {
-//                    int ac1 = sameLevelAircraft.get(j);
-//                    int ac2 = sameLevelAircraft.get(j + 1);
-//
-//                    double mean = (mAircraft.get(ac1).getAltitude() + mAircraft.get(ac2).getAltitude()) / 2;
-//                    String characters = mAircraft.get(ac1).getLabelCharacter() + " " + mAircraft.get(ac2).getLabelCharacter();
-//
-//                    altitudeTapeFragment.drawGroupLabel(false, mean, characters, ac1, ac2);
-//                }
-//                groupLabelsDrawn = true;
-//            }
         }
 
+        int visibility;
         /* Put the single labels on the altitude tape.*/
         for (int i = 1; i < mAircraft.size() + 1; i++) {
             if (sameLevelAircraft.contains(i) || conflictingAircraft.contains(i)) {
-                altitudeTapeFragment.setLabel(mAircraft.get(i).getAltitude(), mAircraft.get(i).getAltLabelId(), mAircraft.get(i).getLabelCharacter(), mAircraft.get(i).isSelected(), mAircraft.get(i).isLabelCreated(), i, View.GONE);
+                visibility = View.GONE;
             } else {
-                altitudeTapeFragment.setLabel(mAircraft.get(i).getAltitude(), mAircraft.get(i).getAltLabelId(), mAircraft.get(i).getLabelCharacter(), mAircraft.get(i).isSelected(), mAircraft.get(i).isLabelCreated(), i, View.VISIBLE);
+                visibility = View.VISIBLE;
             }
+            altitudeTapeFragment.setLabel(mAircraft.get(i).getAltitude(), mAircraft.get(i).getAltLabelId(), mAircraft.get(i).getLabelCharacter(), mAircraft.get(i).isSelected(), mAircraft.get(i).isLabelCreated(), i, visibility);
         }
-
         if(!groupLabelsDrawn) {
             altitudeTapeFragment.removeGroupLabels();
         }

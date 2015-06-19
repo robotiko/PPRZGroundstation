@@ -174,7 +174,7 @@ public class Aircraft {
     }
 
     public int getBattCurrent() {
-        return mBattery.getBattVolt();
+        return mBattery.getBattCurrent();
     }
 
     public double getBattDischarge() {

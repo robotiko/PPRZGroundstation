@@ -2,8 +2,8 @@
 <resources>
 
     <!-- Airspace parameters -->
-    <integer name="flightCeiling">20</integer>              <!-- meters -->
-    <integer name="groundLevel">0</integer>                 <!-- meters -->
+    <integer name="flightCeiling">100</integer>            <!-- meters -->
+    <integer name="groundLevel">0</integer>                <!-- meters -->
     <integer name="verticalSeparationStandard">5</integer> <!-- tenths of meters -->
 
     <!-- Communication signal parameters -->
