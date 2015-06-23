@@ -5,17 +5,24 @@ import com.gcs.R;
 import com.gcs.core.ConflictStatus;
 
 import android.content.ClipData;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.util.SparseArray;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.DragEvent;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -43,13 +50,12 @@ public class AltitudeTape extends Fragment {
     TextView label;
 
     private boolean groupDeselected = false, groupSelected = false, targetCreated = false;
-	
-	/* TODO Determine altitude label location based on the height of the bar and the the dynamic vertical range of the drones (flight ceiling - ground level) */
-	private final int groundLevelTape   = 900; //0 meter
-	private final int flightCeilingTape = 35;  //20 m
 
-    private double flightCeiling;              //[m]
-	private double groundLevel;                //[m]
+    private int groundLevelTape, flightCeilingTape;
+//    private final int groundLevelTape   = 890; //0 meter
+//    private final int flightCeilingTape = 0;  //20 m
+
+    private double flightCeiling, groundLevel, MSA; //[m]
 
     private static final Point smallLabelDimensions = new Point (80,70);
     private static final int dragShadowVerticalOffset = smallLabelDimensions.y*2;
@@ -68,8 +74,7 @@ public class AltitudeTape extends Fragment {
 		
         // Inflate the layout for this fragment
 		rootView = inflater.inflate(R.layout.altitude_tape, container, false);
-        /* TODO programmatically draw the altitude tape */
-//        rootView.setBackground(DRAWN TAPE); //Set a custom drawable as background for the altitude tape
+
         return rootView;    
     }
 	
@@ -77,12 +82,62 @@ public class AltitudeTape extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        //Handle to the altitude tape view for on-click listener on it
+        //Load airspace data from resources (Settings are done there: numerical.xml)
+        flightCeiling = getResources().getInteger(R.integer.flightCeiling);
+        groundLevel   = getResources().getInteger(R.integer.groundLevel);
+        MSA           = getResources().getInteger(R.integer.MSA);
+
+        //Handle to the altitude tape view
         ImageView altitudeTape = (ImageView) getView().findViewById(R.id.altitudeTapeView);
+
+        ////////////////Programmatically draw the altitude tape/////////////////
+        WindowManager wm = (WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+
+        int outerHeight = (int)(size.y*0.6);
+        int outerWidth  = (int)(size.x*0.04);
+        int vertOffset  = (int)(outerHeight/27.4);
+        int horOffset   = (int)(0.2*outerWidth);
+
+        int MSAheight = (int)((1-(float)MSA/(flightCeiling-groundLevel))*outerHeight);
+
+        Bitmap bitmap = Bitmap.createBitmap(100,outerHeight, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        Paint paint = new Paint();
+
+        //Blue fill
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(getResources().getColor(R.color.blueTape));
+        canvas.drawRect(horOffset,outerHeight-vertOffset,outerWidth-horOffset,vertOffset,paint);
+        //Fill brown
+        paint.setColor(getResources().getColor(R.color.brownTape));
+        canvas.drawRect(horOffset,outerHeight-vertOffset,outerWidth-horOffset,MSAheight,paint);
+        //Frame
+        paint.setColor(Color.BLACK);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(8);
+        canvas.drawRect(horOffset,outerHeight-vertOffset,outerWidth-horOffset,vertOffset,paint);
+        //Text
+        Paint textPaint = new Paint();
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextSize(20);
+        textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        canvas.drawText("MSA", outerWidth/2, MSAheight, textPaint);
+
+        BitmapDrawable drawable = new BitmapDrawable(getResources(), bitmap);
+        altitudeTape.setBackground(drawable);
+        /////////////////////////////////
+
+        //Set the location of the bounds of the tape to be able to determine label locations
+        flightCeilingTape = 0;
+        groundLevelTape   = outerHeight-(2*vertOffset);
 
         //OnCLickListener on the altitude tape (used for deselection of all labels)
         altitudeTape.setOnClickListener(new View.OnClickListener() {
-        	@Override
+            @Override
             public void onClick(View v) {
                 //Set the group selection to null, go back to normal display of the labels
                 selectedGroup = null;
@@ -97,10 +152,6 @@ public class AltitudeTape extends Fragment {
 
         //Create a handle to the (frame)layout of the altitude tape to be able to place labels on it
         framelayout = (FrameLayout) rootView.findViewById(R.id.altitudeTapeFragment);
-
-        //Load airspace data from resources (Settings are done there: numerical.xml)
-        flightCeiling  = getResources().getInteger(R.integer.flightCeiling);
-        groundLevel    = getResources().getInteger(R.integer.groundLevel);
     }
 	
 	//OnCLickListener for individual labels
@@ -256,7 +307,6 @@ public class AltitudeTape extends Fragment {
             textGravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
         }
 
-//        TextView label;
         //Creat a label if it is the first time it will be drawn on the tape, else only update it
         if (!labelCreated) {
             label = new TextView(getActivity());
@@ -379,7 +429,7 @@ public class AltitudeTape extends Fragment {
             for (String key : stringToLabelIdList.keySet()) {
                 framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
             }
-            Log.d("TAPE","CLEAR");
+
             stringToLabelIdList.clear();
             labelIdToStringList.clear();
             aircraftInGroupList.clear();
@@ -450,7 +500,6 @@ public class AltitudeTape extends Fragment {
 			dropAltitude = flightCeiling;
 		}
 
-        Log.d("DROP",String.valueOf(aircraftNumber));
 		/* TODO Set the target altitude to the service once this function is available */
 //		setTargetLabel(dropAltitude, 10); //Temporary setfunction to show a label
 	}

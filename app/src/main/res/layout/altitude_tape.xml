@@ -10,7 +10,6 @@
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content"
 	    android:id="@+id/altitudeTapeView"
-        android:src="@drawable/altitude_tape"
 	    android:gravity="top"
         android:layout_alignParentRight="true"
         android:layout_marginRight="15dp"
@@ -21,3 +20,5 @@
 	    android:contentDescription="@string/altitude_tape"/>
 
 </FrameLayout>
+
+<!-- android:src="@drawable/altitude_tape" -->

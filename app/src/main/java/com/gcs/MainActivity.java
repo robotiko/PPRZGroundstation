@@ -126,26 +126,26 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         home.setHomeLocation(homeLocation);
 
         //TEMPORARY DUMMY AIRCRAFT
-//        mAircraft.put(2, new Aircraft(getApplicationContext()));
-//        mAircraft.get(2).setLlaHdg(519925740, 43775620, 0, (short) 180);
-//        mAircraft.get(2).setAltitude(10);
-//        mAircraft.get(2).setBatteryState(10, 45, 1);
-//        mAircraft.get(2).setDistanceHome(homeLocation);
-//		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
-//
-//		mAircraft.put(3, new Aircraft(getApplicationContext()));
-//		mAircraft.get(3).setLlaHdg(519910540, 43794130, 0, (short) 300);
-//		mAircraft.get(3).setAltitude(10.3);
-//		mAircraft.get(3).setBatteryState(10, 1, 1);
-//		mAircraft.get(3).setDistanceHome(homeLocation);
-//		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
-//
-//        mAircraft.put(4, new Aircraft(getApplicationContext()));
-//        mAircraft.get(4).setLlaHdg(519920900, 43796160, 0, (short) 270);
-//        mAircraft.get(4).setAltitude(9.9);
-//        mAircraft.get(4).setBatteryState(10, 90, 1);
-//        mAircraft.get(4).setDistanceHome(homeLocation);
-//        mAircraft.get(4).setRollPitchYaw(0, 0, 270);
+        mAircraft.put(2, new Aircraft(getApplicationContext()));
+        mAircraft.get(2).setLlaHdg(519925740, 43775620, 0, (short) 180);
+        mAircraft.get(2).setAltitude(10);
+        mAircraft.get(2).setBatteryState(10, 45, 1);
+        mAircraft.get(2).setDistanceHome(homeLocation);
+		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
+
+		mAircraft.put(3, new Aircraft(getApplicationContext()));
+		mAircraft.get(3).setLlaHdg(519910540, 43794130, 0, (short) 300);
+		mAircraft.get(3).setAltitude(10.3);
+		mAircraft.get(3).setBatteryState(10, 1, 1);
+		mAircraft.get(3).setDistanceHome(homeLocation);
+		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
+
+        mAircraft.put(4, new Aircraft(getApplicationContext()));
+        mAircraft.get(4).setLlaHdg(519920900, 43796160, 0, (short) 270);
+        mAircraft.get(4).setAltitude(9.9);
+        mAircraft.get(4).setBatteryState(10, 90, 1);
+        mAircraft.get(4).setDistanceHome(homeLocation);
+        mAircraft.get(4).setRollPitchYaw(0, 0, 270);
 
 
 		// Create a handle to the telemetry fragment
@@ -229,9 +229,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         Intent intent = new Intent();
         intent.setComponent(componentName);
         if (!bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)) {
-
-            // TODO: Handle service not binding problems
-
             Log.e(TAG, "The service could not be bound");
         } else {
             Log.d(TAG, "Service was bound");
@@ -656,7 +653,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					Battery mBattery = getAttribute("BATTERY");
-                    mAircraft.get(1).setBatteryState(mBattery.getBattVolt(), mBattery.getBattLevel(), mBattery.getBattCurrent());
+                    if(mBattery.getBattVolt()>=11000) {
+                        mAircraft.get(1).setBatteryState(mBattery.getBattVolt(), 100, mBattery.getBattCurrent());
+                    } else if(mBattery.getBattVolt()>=4000) {
+                        mAircraft.get(1).setBatteryState(mBattery.getBattVolt(), 40, mBattery.getBattCurrent());
+                    } else {
+                        mAircraft.get(1).setBatteryState(mBattery.getBattVolt(), 10, mBattery.getBattCurrent());
+                    }
+
+//                    mAircraft.get(1).setBatteryState(mBattery.getBattVolt(), mBattery.getBattLevel(), mBattery.getBattCurrent());
                     batteryFragment.setText(String.valueOf(mBattery.getBattVolt()));
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the battery information", t);
@@ -679,9 +684,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     mAircraft.get(1).setLlaHdg(519907790, 43774220, mPosition.getAlt(), (short) (mPosition.getHdg()/100));
 //                    mAircraft.get(1).setLlaHdg(mPosition.getLat(), mPosition.getLon(), mPosition.getAlt(), (short) (mPosition.getHdg()/100));
                     mAircraft.get(1).setDistanceHome(home.getHomeLocation());
-//                    Log.d("DATATESTlat",String.valueOf(mPosition.getLat()));
-//                    Log.d("DATATESTlng",String.valueOf(mPosition.getLon()));
-//                    Log.d("DATATESTalt",String.valueOf(mPosition.getAlt()/1000));
+                    Log.d("DATATESTlat",String.valueOf(mPosition.getLat()));
+                    Log.d("DATATESTlng",String.valueOf(mPosition.getLon()));
+                    Log.d("DATATESTalt",String.valueOf(mPosition.getAlt()/1000));
 //                    Log.d("DATATESTalt",String.valueOf(mAircraft.get(1).getAlt()));
 
                 } catch (Throwable t) {
@@ -930,23 +935,26 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	public void onLandRequest(View v) {
         /* TODO Try to execute one of the landing blocks. Check if landing is executed and update the button that is displayed.*/
-
-        //Notify the mission button fragment that the land button is clicked
-		missionButtons.onLandRequest(v);
+//        if(isConnected && !missionBlocks.isEmpty()) {
+            //Notify the mission button fragment that the land button is clicked
+            missionButtons.onLandRequest(v);
+//        }
 	}
 	
 	public void onTakeOffRequest(View v) {
         /* TODO Try to execute the take-off block(s). Check if take-off is executed and update the button that is displayed.*/
-
-        //Notify the mission button fragment that the take-off button is clicked
-		missionButtons.onTakeOffRequest(v);
+//        if(isConnected && !missionBlocks.isEmpty()) {
+            //Notify the mission button fragment that the take-off button is clicked
+            missionButtons.onTakeOffRequest(v);
+//        }
 	}
 	
 	public void onGoHomeRequest(View v) {
         /* TODO Try to execute one of the go-home/landing blocks. Check if the drone is going home and update the button that is displayed.*/
-
-        //Notify the mission button fragment that the go home button is clicked
-		missionButtons.onGoHomeRequest(v);
+//        if(isConnected && !missionBlocks.isEmpty()) {
+            //Notify the mission button fragment that the go home button is clicked
+            missionButtons.onGoHomeRequest(v);
+//        }
 	}
 
     public void onWaypointRequest(View v) {
@@ -1012,6 +1020,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             String[] numbers = marker.getSnippet().split("-");
             int acNumber = Integer.parseInt(numbers[0]);
             int wpNumber = Integer.parseInt(numbers[1]);
+
+            /* TODO implement code that commands a selected aircraft to execute the block that corresponds to the clicked waypoint */
         } else if(marker.getSnippet().equals("HOME")) {                 //Home marker clicked
             //Do nothing yet
         } else {                                                        //Aircraft marker clicked
@@ -1193,6 +1203,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
                 ///* FLIGHT PATH *///
+
+                /* TODO Distinguish pattern- and relay waypoints using color and draw circles around the waypoints to show the flightpath of the aircraft
+
                 // If the flight path has been drawn before, remove it to be updated
                 if (mAircraft.get(aircraftNumber).flightPath != null) {
                     mAircraft.get(aircraftNumber).flightPath.remove();
@@ -1203,6 +1216,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         .addAll(mAircraft.get(aircraftNumber).getWpLatLngList())
                         .width(4)
                         .color(Color.WHITE));
+                */
             }
         });
     }

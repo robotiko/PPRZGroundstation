@@ -12,5 +12,9 @@
     <item name="gray" type="color">#666666</item>
 
     <item name="blue" type="color">#0099CC</item>
+
+    <item name="blueTape" type="color">#003EFF</item>
+
+    <item name="brownTape" type="color">#5C3317</item>
  
 </resources> 
