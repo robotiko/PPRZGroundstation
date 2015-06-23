@@ -38,6 +38,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -95,7 +96,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 	private Home home;
 
-    private float verticalSeparationStandard;
+    private float verticalSeparationStandard, horizontalSeparationStandard;
 
     //Declaration of items needed for missionblocks
     private MenuItem menuBlockSpinner = null;
@@ -113,6 +114,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		connectButton = (Button) findViewById(R.id.connectButton);
 		isConnected = false;
         verticalSeparationStandard = getResources().getInteger(R.integer.verticalSeparationStandard)/10f;
+        horizontalSeparationStandard = getResources().getInteger(R.integer.horizontalSeparationStandard)/10f;
 		
 		// Instantiate aircraft object
         mAircraft.put(1, new Aircraft(getApplicationContext()));
@@ -142,7 +144,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         mAircraft.put(4, new Aircraft(getApplicationContext()));
         mAircraft.get(4).setLlaHdg(519920900, 43796160, 0, (short) 270);
-        mAircraft.get(4).setAltitude(9.9);
+        mAircraft.get(4).setAltitude(9.7);
         mAircraft.get(4).setBatteryState(10, 90, 1);
         mAircraft.get(4).setDistanceHome(homeLocation);
         mAircraft.get(4).setRollPitchYaw(0, 0, 270);
@@ -389,20 +391,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         sameLevelGroupList.add(set);
                     } else {
                         Boolean inGroup = false;
+                        int i;
                         mainLoop:   //Label for breaking out of two nested loops
-                        for(int i=0; i<sameLevelGroupList.size(); i++) {
+                        for(i=0; i<sameLevelGroupList.size(); i++) {
                             for(int j=0; j<set.length(); j++) {
                                 if(sameLevelGroupList.get(i).contains(Character.toString(set.charAt(j)))) {
-                                    set.replace(Character.toString(set.charAt(j)), "");
-//                                    Log.d("AAP",set);
-//                                    inGroup = true;
-//                                    break mainLoop;
+//                                    Log.d("AAP1",set);
+//                                    set.replace(Character.toString(set.charAt(j)), "");
+//                                    Log.d("AAP2",set);
+//                                    Log.d("aapje",sameLevelGroupList.get(i));
+                                    inGroup = true;
+                                    break mainLoop;
                                 }
                             }
                         }
 
-                        if(inGroup) { //If on of the aircraft in the set is already present in another group, add the missing on to this group
-
+                        if(inGroup) { //If one of the aircraft in the set is already present in another group, add the missing one to this group
+//                            Log.d("AAP",sameLevelGroupList.get(i));
                         } else {
                             sameLevelGroupList.add(set);
                         }
@@ -684,9 +689,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     mAircraft.get(1).setLlaHdg(519907790, 43774220, mPosition.getAlt(), (short) (mPosition.getHdg()/100));
 //                    mAircraft.get(1).setLlaHdg(mPosition.getLat(), mPosition.getLon(), mPosition.getAlt(), (short) (mPosition.getHdg()/100));
                     mAircraft.get(1).setDistanceHome(home.getHomeLocation());
-                    Log.d("DATATESTlat",String.valueOf(mPosition.getLat()));
-                    Log.d("DATATESTlng",String.valueOf(mPosition.getLon()));
-                    Log.d("DATATESTalt",String.valueOf(mPosition.getAlt()/1000));
+//                    Log.d("DATATESTlat",String.valueOf(mPosition.getLat()));
+//                    Log.d("DATATESTlng",String.valueOf(mPosition.getLon()));
+//                    Log.d("DATATESTalt",String.valueOf(mPosition.getAlt()/1000));
 //                    Log.d("DATATESTalt",String.valueOf(mAircraft.get(1).getAlt()));
 
                 } catch (Throwable t) {
@@ -939,6 +944,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Notify the mission button fragment that the land button is clicked
             missionButtons.onLandRequest(v);
 //        }
+
+        //Temporary
+        mAircraft.get(3).setAltitude(mAircraft.get(3).getAltitude()-0.1);
 	}
 	
 	public void onTakeOffRequest(View v) {
@@ -947,6 +955,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Notify the mission button fragment that the take-off button is clicked
             missionButtons.onTakeOffRequest(v);
 //        }
+
+        //Temporary
+        mAircraft.get(3).setAltitude(mAircraft.get(3).getAltitude()+0.1);
 	}
 	
 	public void onGoHomeRequest(View v) {
@@ -1266,8 +1277,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private boolean isOnconflictCourse(int ac1, int ac2) {
-        /* TODO make algorithm to check conflict courses (extrapolation) */
+        /* TODO make more extensive algorithm to check conflict courses (extrapolation)?? */
+
+        //Calculate the distance between the two aircraft
+        float[] distance = new float[1];
+        Location.distanceBetween(mAircraft.get(ac1).getLat(), mAircraft.get(ac1).getLon(), mAircraft.get(ac2).getLat(), mAircraft.get(ac2).getLon(), distance);
+
+        //If the distance between the aircraft is larger than the horizontal separation standard, return false, else true
         boolean isInconflictcourse = false;
+        if(distance[0] <= horizontalSeparationStandard) { isInconflictcourse = true; };
+
         return isInconflictcourse;
     }
 
