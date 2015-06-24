@@ -343,7 +343,7 @@ public class Aircraft {
     public int getCommunicationSignal(){
 
         double boundaryLevel = 0.01;
-        int maxRange         = context.getResources().getInteger(R.integer.maxRange);
+        int maxRange         = context.getResources().getInteger(R.integer.commMaxRange);
 
         double scalingFactor = (1f/maxRange)*(Math.pow((1/boundaryLevel),(1f/4))-1);
         int signalStrength = (int) (1/Math.pow(scalingFactor*distanceHome+1,4)*100);
@@ -425,11 +425,11 @@ public class Aircraft {
         commHorLocation     = context.getResources().getInteger(R.integer.CommHorLocation);
         commScaling			= context.getResources().getInteger(R.integer.CommScaling);
 
-        //Get the battery icon (full,half,low)
-        halfBat = context.getResources().getInteger(R.integer.HalfBatteryLevel);
-        lowBat  = context.getResources().getInteger(R.integer.LowBatteryLevel);
+        //Get the battery icon levels
+        halfBat = context.getResources().getInteger(R.integer.HalfBatteryVoltage);
+        lowBat  = context.getResources().getInteger(R.integer.LowBatteryVoltage);
 
-        //Get the communication icon (full,mid,low,empty)
+        //Get the communication icon levels
         halfComm = context.getResources().getInteger(R.integer.HalfCommunicationSignal);
         lowComm  = context.getResources().getInteger(R.integer.LowBatteryLevel);
         NoComm   = context.getResources().getInteger(R.integer.NoCommunicationSignal);
@@ -526,10 +526,10 @@ public class Aircraft {
 
         /* TODO set the integer values to the correct orders to comply with the provided battery values */
         //Determine which battery icon to draw
-        if(mBattery.getBattLevel() > halfBat) { //high battery level
+        if(mBattery.getBattVolt()  > halfBat) { //high battery level
             batteryIcon = batteryGreen;
         }
-        else if (halfBat >= mBattery.getBattLevel() && mBattery.getBattLevel() > lowBat) { //middle battery level
+        else if (halfBat >= mBattery.getBattVolt() && mBattery.getBattVolt()  > lowBat) { //middle battery level
             batteryIcon = batteryYellow;
         }
         else { //low battery level

@@ -2,19 +2,22 @@
 <resources>
 
     <!-- Airspace parameters -->
-    <integer name="flightCeiling">50</integer>               <!-- meters -->
+    <integer name="flightCeiling">50</integer>                <!-- meters -->
     <integer name="groundLevel">0</integer>                   <!-- meters -->
     <integer name="MSA">10</integer>                          <!-- meters (minimum safe altitude)-->
     <integer name="verticalSeparationStandard">5</integer>    <!-- tenths of meters -->
     <integer name="horizontalSeparationStandard">50</integer> <!-- tenths of meters -->
 
     <!-- Communication signal parameters -->
-    <integer name="maxRange">1000</integer>                 <!-- meters -->
+    <integer name="commMaxRange">500</integer>                <!-- meters -->
+    <integer name="commRelayRange">350</integer>              <!-- meters -->
 
     <!-- ICON DRAWING -->
     <!-- Battery values -->
     <integer name="HalfBatteryLevel">50</integer>           <!-- percentage -->
     <integer name="LowBatteryLevel">20</integer>            <!-- percentage -->
+    <integer name="HalfBatteryVoltage">11100</integer>      <!-- milliVolt -->
+    <integer name="LowBatteryVoltage">9300</integer>        <!-- milliVolt -->
     
     <!-- Communication values -->
     <integer name="HalfCommunicationSignal">60</integer>    <!-- percentage -->

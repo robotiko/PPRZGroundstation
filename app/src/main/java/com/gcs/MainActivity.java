@@ -12,6 +12,10 @@ import com.aidllib.core.model.Battery;
 import com.aidllib.core.model.Position;
 import com.gcs.core.ConflictStatus;
 import com.gcs.core.Home;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.sharedlib.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
@@ -76,7 +80,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	MissionButtonFragment missionButtons;
 	
 	private Button connectButton;
-	private boolean isConnected;
+	private boolean isConnected = false;
 	private boolean isAltitudeUpdated = false;
     private boolean aircraftSelected = false;
 
@@ -95,6 +99,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private List<Integer> groupSelectedAircraft = new ArrayList<>();;
 
 	private Home home;
+    private Circle homeCommCircle, relayCommCircle;
+    private int commMaxRange, commRelayRange;
+    private boolean showComm = false;
+    private int relayUAV = 2; //Set to 0 if none serves as relay
 
     private float verticalSeparationStandard, horizontalSeparationStandard;
 
@@ -112,9 +120,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		interfaceUpdateHandler = new Handler();
 		
 		connectButton = (Button) findViewById(R.id.connectButton);
-		isConnected = false;
         verticalSeparationStandard = getResources().getInteger(R.integer.verticalSeparationStandard)/10f;
         horizontalSeparationStandard = getResources().getInteger(R.integer.horizontalSeparationStandard)/10f;
+        commMaxRange = getResources().getInteger(R.integer.commMaxRange);
+        commRelayRange = getResources().getInteger(R.integer.commRelayRange);
 		
 		// Instantiate aircraft object
         mAircraft.put(1, new Aircraft(getApplicationContext()));
@@ -122,7 +131,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Instantiate home object
 		home = new Home();
 
-                /* TODO remove this when service provides the home location */
+        /* TODO remove this when service provides the home location */
         // TEMPORARY SETTING OF HOME LOCATION
         LatLng homeLocation = new LatLng(51.990826, 4.378248);
         home.setHomeLocation(homeLocation);
@@ -131,24 +140,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mAircraft.put(2, new Aircraft(getApplicationContext()));
         mAircraft.get(2).setLlaHdg(519925740, 43775620, 0, (short) 180);
         mAircraft.get(2).setAltitude(10);
-        mAircraft.get(2).setBatteryState(10, 45, 1);
+        mAircraft.get(2).setBatteryState(10000, 45, 1);
         mAircraft.get(2).setDistanceHome(homeLocation);
 		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
 
 		mAircraft.put(3, new Aircraft(getApplicationContext()));
 		mAircraft.get(3).setLlaHdg(519910540, 43794130, 0, (short) 300);
 		mAircraft.get(3).setAltitude(10.3);
-		mAircraft.get(3).setBatteryState(10, 1, 1);
+		mAircraft.get(3).setBatteryState(9000, 1, 1);
 		mAircraft.get(3).setDistanceHome(homeLocation);
 		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
 
         mAircraft.put(4, new Aircraft(getApplicationContext()));
         mAircraft.get(4).setLlaHdg(519920900, 43796160, 0, (short) 270);
         mAircraft.get(4).setAltitude(9.7);
-        mAircraft.get(4).setBatteryState(10, 90, 1);
+        mAircraft.get(4).setBatteryState(12000, 90, 1);
         mAircraft.get(4).setDistanceHome(homeLocation);
         mAircraft.get(4).setRollPitchYaw(0, 0, 270);
-
 
 		// Create a handle to the telemetry fragment
 		telemetryFragment = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);
@@ -219,6 +227,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 }
                 return true;
+            case R.id.show_comm_range:
+                showComm = !showComm;
+                drawCommunicationRange(relayUAV);
+                return true;
         }
 		return super.onOptionsItemSelected(item);
 	}
@@ -254,6 +266,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	Runnable interfaceUpdater = new Runnable() {
 	    @Override 
 	    public void run() {
+
+            //Draw the communication range on the map
+//            drawCommunicationRange(relayUAV);
 
             //check for altitude and course conflicts
             for(int i = 1; i < mAircraft.size()+1; i++) {
@@ -1022,6 +1037,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 						.snippet("HOME")
                         .draggable(false)
         );
+        drawROI();
 	}
 
 	/* Marker listener to deselect an aircraft icon*/
@@ -1160,14 +1176,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
                                 TextView infoAlt = (TextView) v.findViewById(R.id.info_alt);
                                 TextView infoMode = (TextView) v.findViewById(R.id.info_mode);
-                                TextView infoSats = (TextView) v.findViewById(R.id.info_sats);
+                                TextView infoBattery = (TextView) v.findViewById(R.id.info_battery);
 
                                 //Setting the values in the information window
                                 infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
                                 infoDistHome.setText("Distance Home: " + String.format("%.1f", mAircraft.get(acNumber).getDistanceHome()) + "m");
                                 infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(acNumber).getAltitude()) + "m");
                                 infoMode.setText("Mode: " + "MODE HERE!");
-                                infoSats.setText("#Sats: " + "#SATS HERE!");
+                                infoBattery.setText("Battery voltage: " + String.valueOf(mAircraft.get(acNumber).getBattVolt()) + "mV");
 
                                 return v;
                             }
@@ -1228,6 +1244,91 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         .width(4)
                         .color(Color.WHITE));
                 */
+            }
+        });
+    }
+
+    /* Draw the area in which communication is possible */
+    private void drawCommunicationRange(final int relayAc) {
+
+        //Only call the map if something needs to be drawn or if something needs to be removed from the map
+        if(showComm) {
+            //Call GoogleMaps
+            mapFragment.getMapAsync(new OnMapReadyCallback() {
+                @Override
+                public void onMapReady(GoogleMap map) {
+
+                    if (homeCommCircle != null) {
+                        homeCommCircle.remove();
+                    }
+                    if (relayCommCircle != null) {
+                        relayCommCircle.remove();
+                    }
+
+                    if (showComm) {
+                        //Add the home communication range circle to the map
+                        CircleOptions homeCircleOptions = new CircleOptions()
+                                .center(home.getHomeLocation())
+                                .strokeWidth(5)
+                                .strokeColor(0x5500ff00)
+                                .radius(commMaxRange); // In meters
+
+                        // Get back the mutable Circle
+                        homeCommCircle = map.addCircle(homeCircleOptions);
+
+                        //If a relay UAV is active
+                        if (relayAc != 0) {
+
+                            // Draw the relay commincation range circle
+                            CircleOptions relayCircleOptions = new CircleOptions()
+                                    .center(mAircraft.get(relayAc).getLatLng())
+                                    .strokeWidth(5)
+                                    .strokeColor(0x5500ff00)
+                                    .radius(commRelayRange); // In meters
+
+                            // Get back the mutable Circle
+                            relayCommCircle = map.addCircle(relayCircleOptions);
+                        }
+                    }
+                }
+            });
+        } else {
+            mapFragment.getMapAsync(new OnMapReadyCallback() {
+                @Override
+                public void onMapReady(GoogleMap map) {
+
+                    if (homeCommCircle != null) {
+                        homeCommCircle.remove();
+                    }
+                    if (relayCommCircle != null) {
+                        relayCommCircle.remove();
+                    }
+                }
+            });
+        }
+    }
+
+    ///////* Indicate the region of interest on the map *///////
+    private void drawROI() {
+
+        //Call GoogleMaps
+        mapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap map) {
+
+                // Instantiates a new Polyline object and adds points to define a rectangle
+                PolygonOptions rectOptions = new PolygonOptions()
+                        .fillColor(0x400099CC)
+                        .strokeColor(0x400099CC)
+                        .add(new LatLng(51.995262, 4.371907))
+                        .add(new LatLng(51.995906, 4.374330))
+                        .add(new LatLng(51.994248, 4.375434))
+                        .add(new LatLng(51.993647, 4.373003))
+                        .add(new LatLng(51.995262, 4.371907));
+
+                // Get back the mutable Polyline
+                Polygon polygon = map.addPolygon(rectOptions);
+
             }
         });
     }
