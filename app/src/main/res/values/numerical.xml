@@ -3,7 +3,7 @@
 
     <!-- Airspace parameters -->
     <integer name="flightCeiling">50</integer>                <!-- meters -->
-    <integer name="groundLevel">0</integer>                   <!-- meters -->
+    <integer name="groundLevel">-3</integer>                  <!-- meters -->
     <integer name="MSA">10</integer>                          <!-- meters (minimum safe altitude)-->
     <integer name="verticalSeparationStandard">5</integer>    <!-- tenths of meters -->
     <integer name="horizontalSeparationStandard">50</integer> <!-- tenths of meters -->

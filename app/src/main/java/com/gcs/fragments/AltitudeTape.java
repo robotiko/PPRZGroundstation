@@ -295,7 +295,7 @@ public class AltitudeTape extends Fragment {
 
         //Set the size of the label that will be drawn and add a topmargin to place it vertically on the tape
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(smallLabelDimensions.x,smallLabelDimensions.y);
-        params.topMargin = altitudeToLabelLocation(altitude);
+        params.topMargin = altitudeToLabelLocation(Math.max(0, altitude)); //Value cannot become negative
 
         //Set alignment of the label based on the selection status (selected ones left, unselected ones right)
         if (!((MainActivity) getActivity()).isAircraftIconSelected(acNumber)) {

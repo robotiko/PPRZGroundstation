@@ -17,6 +17,7 @@ public class MissionButtonFragment extends Fragment {
 	private View rootView;
     private Button homeButton, landButton, takeOffButton;
     private Boolean homeButtonClicked = false, landButtonClicked = false, takeOffButtonClicked = false;
+    private String landBlockName, takeoffBlockName;
 
     private enum ButtonName {
         HOME, LAND, TAKEOFF
@@ -40,6 +41,9 @@ public class MissionButtonFragment extends Fragment {
         homeButton    = (Button) getView().findViewById(R.id.goHomeButton);
         landButton    = (Button) getView().findViewById(R.id.landButton);
         takeOffButton = (Button) getView().findViewById(R.id.takeOffButton);
+
+        landBlockName    = getResources().getString(R.string.land_block);
+        takeoffBlockName = getResources().getString(R.string.take_off_button);
     }
 	
 	/* TODO implement actions for clicks on the mission buttons */
@@ -84,6 +88,25 @@ public class MissionButtonFragment extends Fragment {
 	public void onWaypointRequest(View v) {
 
         Log.d("COMMAND", "Update waypoints");
+    }
+
+    public void updateExecutedMissionButton(String currentBlock) {
+        switch (currentBlock) {
+            case "Takeoff":
+                takeOffButton.setBackgroundResource(R.drawable.take_off_button_active);
+                homeButton.setBackgroundResource(R.drawable.home_button_inactive);
+                landButton.setBackgroundResource(R.drawable.land_button_inactive);
+                break;
+            case "land":
+                landButton.setBackgroundResource(R.drawable.land_button_active);
+                homeButton.setBackgroundResource(R.drawable.home_button_inactive);
+                takeOffButton.setBackgroundResource(R.drawable.take_off_button_inactive);
+                break;
+            case "HOME":
+                homeButton.setBackgroundResource(R.drawable.home_button_active);
+                takeOffButton.setBackgroundResource(R.drawable.take_off_button_inactive);
+                landButton.setBackgroundResource(R.drawable.land_button_inactive);
+        }
     }
 
     // Method to change button appearance (active/inactive)

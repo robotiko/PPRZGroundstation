@@ -114,7 +114,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private MenuItem menuBlockSpinner = null;
     Spinner blockSpinner;
     private List<String> missionBlocks;
-	  
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -224,6 +224,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 if (isConnected) {
                     try {
                         mServiceClient.requestMissionBlockList();
+                        Toast.makeText(getApplicationContext(), "Loading blocks", Toast.LENGTH_SHORT).show();
                     } catch (RemoteException e) {
                         Log.e(TAG,"Error while requesting mission blocks");
                     }
@@ -797,6 +798,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     try {
                         Log.d(TAG, "Block: " + mServiceClient.getCurrentBlock());
                         blockSpinner.setSelection(mServiceClient.getCurrentBlock());
+
+                        //Update the status of the mission blocks
+                        missionButtons.updateExecutedMissionButton(missionBlocks.get(mServiceClient.getCurrentBlock()));
                     } catch (RemoteException e) {
                         Log.e(TAG,"Error while trying to update the mission block selection in the spinner");
                     }
@@ -804,6 +808,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }, blockUpdateDelay);
         }
     }
+
+
 
 	////////OTHER COMMUNICATION FUNCTIONS
 	
@@ -962,13 +968,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Method to handle land button clicks
 	public void onLandRequest(View v) {
         /* TODO Try to execute one of the landing blocks. Check if landing is executed and update the button that is displayed.*/
-//        if(isConnected && !missionBlocks.isEmpty()) {
-            //Notify the mission button fragment that the land button is clicked
-            missionButtons.onLandRequest(v);
-//        }
+        if(isConnected && !missionBlocks.isEmpty()) {
+            //Select the land block and request the service to execute it
+            try {
+                mServiceClient.onBlockSelected(missionBlocks.indexOf(getResources().getString(R.string.land_block)));
+            } catch (RemoteException e) {
+                Log.e(TAG,"Error while requesting the service to execute the land block");
+            }
 
-        //Temporary
-        mAircraft.get(3).setAltitude(mAircraft.get(3).getAltitude()-0.1);
+            //Notify the mission button fragment that the land button is clicked
+//            missionButtons.onLandRequest(v);
+        }
 	}
 
     //Method to handle take-off button clicks
@@ -976,11 +986,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         /* TODO Try to execute the take-off block(s). Check if take-off is executed and update the button that is displayed.*/
 //        if(isConnected && !missionBlocks.isEmpty()) {
             //Notify the mission button fragment that the take-off button is clicked
-            missionButtons.onTakeOffRequest(v);
+//            missionButtons.onTakeOffRequest(v);
 //        }
-
-        //Temporary
-        mAircraft.get(3).setAltitude(mAircraft.get(3).getAltitude()+0.1);
 	}
 
     //Method to handle home button clicks
@@ -988,7 +995,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         /* TODO Try to execute one of the go-home/landing blocks. Check if the drone is going home and update the button that is displayed.*/
 //        if(isConnected && !missionBlocks.isEmpty()) {
             //Notify the mission button fragment that the go home button is clicked
-            missionButtons.onGoHomeRequest(v);
+//            missionButtons.onGoHomeRequest(v);
 //        }
 	}
 
@@ -1417,7 +1424,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		/* Set the location of the target label on the altitude tape and check wether to 
 		 * show the target label or not (aka is the aircraft already on target altitude?) */
         if (Math.abs(mAircraft.get(1).getTargetAltitude() - mAircraft.get(1).getAltitude()) > 0.001) {
-            altitudeTapeFragment.setTargetLabel(mAircraft.get(1).getTargetAltitude(), mAircraft.get(1).getTargetLabelId());
+//            altitudeTapeFragment.setTargetLabel(mAircraft.get(1).getTargetAltitude(), mAircraft.get(1).getTargetLabelId());
         } else {
             altitudeTapeFragment.deleteTargetLabel(mAircraft.get(1).getTargetLabelId());
         }
