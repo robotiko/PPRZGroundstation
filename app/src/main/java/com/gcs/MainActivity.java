@@ -71,40 +71,44 @@ import java.util.Set;
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, OnMarkerClickListener, OnInfoWindowClickListener, OnMarkerDragListener {
 	
 	private static final String TAG = MainActivity.class.getSimpleName();
-	
+
+    //Declaration of handlers and definition of time steps
 	private Handler handler, interfaceUpdateHandler;
-	private int mInterval = 900; // seconds * 1000
-    private final int blockUpdateDelay = 500;
-	
+	private final int mInterval        = 900;   // milliseconds
+    private final int blockUpdateDelay = 500;   // milliseconds
+
+    //Declaration of the service client
 	IMavLinkServiceClient mServiceClient;
-	MissionButtonFragment missionButtons;
 	
 	private Button connectButton;
-	private boolean isConnected = false;
+    //Declaration of booleans
+	private boolean isConnected       = false;
 	private boolean isAltitudeUpdated = false;
-    private boolean aircraftSelected = false;
+    private boolean aircraftSelected  = false;
+    private boolean showCommRange     = false;
 
-	private TelemetryFragment telemetryFragment;
-	private BatteryFragment batteryFragment;
-	private AltitudeTape altitudeTapeFragment;
-    private SupportMapFragment mapFragment;
+    //Declaration of the fragments
+	private TelemetryFragment     telemetryFragment;
+	private BatteryFragment       batteryFragment;
+	private AltitudeTape          altitudeTapeFragment;
+    private SupportMapFragment    mapFragment;
+    private MissionButtonFragment missionButtons;
 
-    final SparseArray<Aircraft> mAircraft = new SparseArray<>();
-    private List<Polyline> mConnectingLines  = new ArrayList<>();
-    private ArrayList<Integer> conflictingAircraft = new ArrayList<>();
-    private ArrayList<Integer> sameLevelAircraft = new ArrayList<>();
-    private ArrayList<Integer> groupList = new ArrayList<>();
-    private ArrayList<String> conflictGroupList = new ArrayList<>();
-    private ArrayList<String> sameLevelGroupList = new ArrayList<>();
-    private List<Integer> groupSelectedAircraft = new ArrayList<>();;
+    //Declaration of the lists/arrays that are used
+    private SparseArray<Aircraft> mAircraft           = new SparseArray<>();
+    private List<Polyline>      mConnectingLines      = new ArrayList<>();
+    private ArrayList<Integer>  conflictingAircraft   = new ArrayList<>();
+    private ArrayList<Integer>  sameLevelAircraft     = new ArrayList<>();
+    private ArrayList<Integer>  groupList             = new ArrayList<>();
+    private ArrayList<String>   conflictGroupList     = new ArrayList<>();
+    private ArrayList<String>   sameLevelGroupList    = new ArrayList<>();
+    private List<Integer>       groupSelectedAircraft = new ArrayList<>();;
 
 	private Home home;
     private Circle homeCommCircle, relayCommCircle;
-    private int commMaxRange, commRelayRange;
-    private boolean showComm = false;
-    private int relayUAV = 2; //Set to 0 if none serves as relay
-
     private float verticalSeparationStandard, horizontalSeparationStandard;
+    private int commMaxRange, commRelayRange, singleLabelVisibility;
+    private int relayUAV = 0;                       //Set to 0 if none serves as relay (yet)
 
     //Declaration of items needed for missionblocks
     private MenuItem menuBlockSpinner = null;
@@ -115,28 +119,33 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
-		handler = new Handler();
-		interfaceUpdateHandler = new Handler();
-		
+
+        //Instantiate the handlers
+		handler = new Handler();                    //Handler for updating parameters from service
+		interfaceUpdateHandler = new Handler();     //Handler for updating the user interface
+
+        //Create a handle to the connect button
 		connectButton = (Button) findViewById(R.id.connectButton);
-        verticalSeparationStandard = getResources().getInteger(R.integer.verticalSeparationStandard)/10f;
-        horizontalSeparationStandard = getResources().getInteger(R.integer.horizontalSeparationStandard)/10f;
-        commMaxRange = getResources().getInteger(R.integer.commMaxRange);
-        commRelayRange = getResources().getInteger(R.integer.commRelayRange);
-		
+
+        //Obtain values from resources
+        verticalSeparationStandard = getResources().getInteger(R.integer.verticalSeparationStandard)/10f; //(Divided by 10 to convert to meters)
+        horizontalSeparationStandard = getResources().getInteger(R.integer.horizontalSeparationStandard)/10f;                          //(Divided by 10 to convert to meters)
+        commMaxRange = getResources().getInteger(R.integer.commMaxRange);                                             //meters
+        commRelayRange = getResources().getInteger(R.integer.commRelayRange);                                           //meters
+
+        /* TODO Move the aircraft instantiation to a more suitable location once the service provides data of multiple aircraft (first Heartbeat?)*/
 		// Instantiate aircraft object
         mAircraft.put(1, new Aircraft(getApplicationContext()));
 
 		// Instantiate home object
 		home = new Home();
 
-        /* TODO remove this when service provides the home location */
+        /* TODO Move this to a better place when service provides the home location */
         // TEMPORARY SETTING OF HOME LOCATION
         LatLng homeLocation = new LatLng(51.990826, 4.378248);
         home.setHomeLocation(homeLocation);
 
-        //TEMPORARY DUMMY AIRCRAFT
+        //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
         mAircraft.put(2, new Aircraft(getApplicationContext()));
         mAircraft.get(2).setLlaHdg(519925740, 43775620, 0, (short) 180);
         mAircraft.get(2).setAltitude(10);
@@ -158,17 +167,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mAircraft.get(4).setDistanceHome(homeLocation);
         mAircraft.get(4).setRollPitchYaw(0, 0, 270);
 
-		// Create a handle to the telemetry fragment
-		telemetryFragment = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);
-		
-		// Create a handle to the battery fragment
-		batteryFragment = (BatteryFragment) getSupportFragmentManager().findFragmentById(R.id.batteryFragment);
-		
-		// Create a handle to the altitudeTape fragment
-		altitudeTapeFragment = (AltitudeTape) getSupportFragmentManager().findFragmentById(R.id.altitudeTapeFragment);
-		
-		// Create a handle to the MissionButton fragment
-		missionButtons = (MissionButtonFragment) getSupportFragmentManager().findFragmentById(R.id.missionButtonFragment);
+		//Create a handles to the fragments
+		telemetryFragment = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);      //Telemetry fragment
+		batteryFragment = (BatteryFragment) getSupportFragmentManager().findFragmentById(R.id.batteryFragment);            //Battery fragment
+		altitudeTapeFragment = (AltitudeTape) getSupportFragmentManager().findFragmentById(R.id.altitudeTapeFragment);     //AltitudeTape fragment
+		missionButtons = (MissionButtonFragment) getSupportFragmentManager().findFragmentById(R.id.missionButtonFragment); //MissionButton fragment
 		
 		// Get the map and register for the ready callback
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -178,15 +181,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		interfaceUpdater.run();	/* TODO check if there is a better moment to start this handler (on first heartbeat?) */
 	}
 
+    //Menu instantiation
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 
-        //Set up the spinner in the action bar for the mission block which can be loaded from the service
+        //Set up the spinner in the action bar for the mission block which can be loaded from the service and create a handle
         menuBlockSpinner = menu.findItem(R.id.menu_block_spinner);
         blockSpinner = (Spinner) MenuItemCompat.getActionView(menuBlockSpinner);
+
+        //Listener on item selection in the spinner
         blockSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
             //Define what should happen when an item in the spinner is selected
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -200,20 +207,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Define what should happen if no item is selected in the spinner
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
+                //Do nothing
             }
         });
-
-
-//        blocksSpinner.setAdapter(adapter);
-
-		return true;
+        return true;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
+		// Handle action bar item clicks here.
         switch (item.getItemId()) {
             case R.id.action_settings:
                 return true;
@@ -228,7 +230,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
                 return true;
             case R.id.show_comm_range:
-                showComm = !showComm;
+                //Show/hide the communication range on screen
+                showCommRange = !showCommRange;
+                /* TODO move this to the interface updater for continous up-to-date information?? */
                 drawCommunicationRange(relayUAV);
                 return true;
         }
@@ -451,8 +455,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Draw the connecting lines on the map that indicate conflicts
             drawConnectingLines();
 
-            Log.d(TAG,"Updating the interface");
-
             //Restart this updater after the set interval
 	    	interfaceUpdateHandler.postDelayed(interfaceUpdater, mInterval);
 	    }
@@ -486,7 +488,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         	Log.i(TAG, "Service connection lost.");
         }
     };
-    
+
+    //Listener to the service for information updates
     private IEventListener.Stub listener = new IEventListener.Stub() {
     	@Override
 		public void onConnectionFailed() {
@@ -497,7 +500,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         public void onEvent(String type) {
     		switch(type) {
     			case "CONNECTED": {
-    				Log.d(TAG, "Connected!");
     				isConnected = true;
     				updateConnectButton();
 	    			break;
@@ -509,7 +511,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		}
 	    			
 	    		case "DISCONNECTED": {
-	    			Log.d(TAG, "Disconnected!");
 	    			isConnected = false;
 	    			updateConnectButton();	    			
 	    			break;
@@ -521,7 +522,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    		}
 	    		
 	    		case "ALTITUDE_SPEED_UPDATED": {
-//                    isConnected = true;
 	    			updateAltitude();
 	    			updateSpeed();
 	    			break;
@@ -567,18 +567,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     		}
     	}
     };
-
-    //Method to request the service to send (updated) waypoints
-    public void requestWps() {
-        if (isConnected) {
-            try {
-                mServiceClient.requestWpList();
-                Log.d("message","Requesting waypoints");
-            } catch (RemoteException e) {
-                Log.e(TAG, "Error while requesting waypoints");
-            }
-        }
-    }
     
     ////////UPDATE METHODS FOR AIRCRAFT DATA
 
@@ -591,6 +579,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void run() {
                 try {
                     Heartbeat mHeartbeat = getAttribute("HEARTBEAT");
+                    /* TODO HEARTBEAT use dynamic aicraft number once available in service */
                     mAircraft.get(1).setHeartbeat(mHeartbeat.getSysId(), mHeartbeat.getCompId());
                 } catch (Throwable t){
 
@@ -609,6 +598,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					Attitude mAttitude = getAttribute("ATTITUDE");
+                    /* TODO ATTITUDE use dynamic aicraft number once available in service */
                     mAircraft.get(1).setRollPitchYaw(Math.toDegrees(mAttitude.getRoll()), Math.toDegrees(mAttitude.getPitch()), Math.toDegrees(mAttitude.getYaw()));
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the attitude", t);
@@ -626,18 +616,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					Altitude mAltitude = getAttribute("ALTITUDE");
+                    /* TODO ALTITUDE use dynamic aicraft number once available in service */
                     //Note that in paparazzi the z-axis is defined pointing downwards, so a minus sign is applied to all incoming altitude values
                     mAircraft.get(1).setAltitude(-mAltitude.getAltitude());
-//                    mAircraft.get(1).setAltitude(3);
-//					mAircraft.get(1).setAGL(-mAltitude.getAGL());
                     mAircraft.get(1).setTargetAltitude(-mAltitude.getTargetAltitude());
+//					mAircraft.get(1).setAGL(-mAltitude.getAGL());
 
                     telemetryFragment.setText(String.format("%.1f", -mAltitude.getAltitude()));
 					
-					/* Set isAltitudeUpdated to be true at first update of altitude */
+					/* Set isAltitudeUpdated to true at first update of altitude (used for altitude tape updates) */
 					if(!isAltitudeUpdated) isAltitudeUpdated = true;
-
-//                    Log.d("DATATESTtarget",String.valueOf(mAircraft.get(1).getTargetAltitude()));
 
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the altitude", t);
@@ -655,6 +643,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					Speed mSpeed = getAttribute("SPEED");
+                    /* TODO SPEED use dynamic aicraft number once available in service */
                     mAircraft.get(1).setGroundAndAirSpeeds(mSpeed.getGroundSpeed(), mSpeed.getAirspeed(), mSpeed.getTargetSpeed());
                     mAircraft.get(1).setTargetSpeed(mSpeed.getTargetSpeed());
 				} catch (Throwable t) {
@@ -673,15 +662,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					Battery mBattery = getAttribute("BATTERY");
-                    if(mBattery.getBattVolt()>=11000) {
-                        mAircraft.get(1).setBatteryState(mBattery.getBattVolt(), 100, mBattery.getBattCurrent());
-                    } else if(mBattery.getBattVolt()>=4000) {
-                        mAircraft.get(1).setBatteryState(mBattery.getBattVolt(), 40, mBattery.getBattCurrent());
-                    } else {
-                        mAircraft.get(1).setBatteryState(mBattery.getBattVolt(), 10, mBattery.getBattCurrent());
-                    }
+                    /* TODO BATTERY use dynamic aicraft number once available in service */
+                    /* TODO remove battery level from the aicraft class??*/
+                    mAircraft.get(1).setBatteryState(mBattery.getBattVolt(), -1, mBattery.getBattCurrent());
 
-//                    mAircraft.get(1).setBatteryState(mBattery.getBattVolt(), mBattery.getBattLevel(), mBattery.getBattCurrent());
+                    /* TODO remove the battery text view when done debugging */
+                    //Set the battery text view
                     batteryFragment.setText(String.valueOf(mBattery.getBattVolt()));
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the battery information", t);
@@ -699,6 +685,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
 					Position mPosition = getAttribute("POSITION");
+                    /* TODO POSITION use dynamic aicraft number once available in service */
                     mAircraft.get(1).setSatVisible(mPosition.getSatVisible());
                     //TODO Change heading to int when this is changed in the service
                     mAircraft.get(1).setLlaHdg(519907790, 43774220, mPosition.getAlt(), (short) (mPosition.getHdg()/100));
@@ -707,7 +694,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //                    Log.d("DATATESTlat",String.valueOf(mPosition.getLat()));
 //                    Log.d("DATATESTlng",String.valueOf(mPosition.getLon()));
 //                    Log.d("DATATESTalt",String.valueOf(mPosition.getAlt()/1000));
-//                    Log.d("DATATESTalt",String.valueOf(mAircraft.get(1).getAlt()));
 
                 } catch (Throwable t) {
 					Log.e(TAG, "Error while updating position", t);
@@ -724,6 +710,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			@Override
 			public void run() {
 				try {
+                    /* TODO STATE use dynamic aicraft number once available in service */
 					State mState = getAttribute("STATE");
                     mAircraft.get(1).setIsFlying(mState.isFlying());
                     mAircraft.get(1).setArmed(mState.isArmed());
@@ -742,17 +729,25 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			@Override
 			public void run() {
 				try {
+                    //Get a list of waypoint objects from the service
 					List<Waypoint> waypoints = mServiceClient.getWpList();
 
+                     /* TODO WAYPOINTS use dynamic aicraft number once available in service */
+                    //Clear the waypoint list if the aircraft already has waypoint data
                     if(mAircraft.get(1).getNumberOfWaypoints()>0) {
                         mAircraft.get(1).clearWpList();
                     }
 
+                    //Loop over the newly received waypoint list to add them individually to the list of the corresponding aircraft
                     for (int i = 0; i < waypoints.size(); i++) {
                         /* TODO add the dynamic setting of the waypoint sequence number, targetSys and targetComp  */
                         mAircraft.get(1).addWaypoint(waypoints.get(i).getLat(), waypoints.get(i).getLon(), waypoints.get(i).getAlt(), (short) i, (byte) 0, (byte) 0);
                     }
+
+                    //Call the method that shows the waypoints on the map
                     waypointUpdater(1);
+
+                    /* TODO show the waypoint updated message toaster after the waypoints of all aircraft are handled */
                     Toast.makeText(getApplicationContext(), "Waypoints updated.", Toast.LENGTH_SHORT).show();
 
 				} catch (Throwable t) {
@@ -762,13 +757,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		});
 	}
 
+    /**
+     * This runnable object is created to update mission blocks
+     */
     private void updateMissionBlocks() {
         handler.post(new Runnable() {
             @Override
             public void run() {
                 try {
+                    /* TODO BLOCKS use dynamic aicraft number once available in service */
                     Log.d("BLOCKS","Updated");
+                    //Store the mission block list
                     missionBlocks = mServiceClient.getMissionBlockList();
+
+                    //Update the dropdown menu with the block names
                     updateMissionBlocksSpinner();
                 } catch (RemoteException e) {
                     Log.e(TAG,"Error while updating mission blocks");
@@ -777,12 +779,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+    //Method to update the mission block dropdown menu
     private void updateMissionBlocksSpinner() {
+        //Create an array adapter with the mission block names
         ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, missionBlocks);
         spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        //Apply the array adapter to the block spinner to update the blocks in the dropdown menu
         blockSpinner.setAdapter(spinnerArrayAdapter);
     }
 
+    //Method to update the selected block in the dropdown menu to the active one
     private void updateMissionBlocksSpinnerSelection() {
         if (missionBlocks.size() > 0) {
             handler.postDelayed(new Runnable() {
@@ -839,7 +845,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	        }
         }
     }
-
+    //Connect to the service on button click if no connection was established yet
     public void onButtonRequest(View view) {
     	if (!isConnected)
     		connectToDroneClient();
@@ -952,7 +958,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	 }
 	
 	/////////////////////MISSION BUTTONS/////////////////////
-	
+
+    //Method to handle land button clicks
 	public void onLandRequest(View v) {
         /* TODO Try to execute one of the landing blocks. Check if landing is executed and update the button that is displayed.*/
 //        if(isConnected && !missionBlocks.isEmpty()) {
@@ -963,7 +970,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Temporary
         mAircraft.get(3).setAltitude(mAircraft.get(3).getAltitude()-0.1);
 	}
-	
+
+    //Method to handle take-off button clicks
 	public void onTakeOffRequest(View v) {
         /* TODO Try to execute the take-off block(s). Check if take-off is executed and update the button that is displayed.*/
 //        if(isConnected && !missionBlocks.isEmpty()) {
@@ -974,7 +982,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Temporary
         mAircraft.get(3).setAltitude(mAircraft.get(3).getAltitude()+0.1);
 	}
-	
+
+    //Method to handle home button clicks
 	public void onGoHomeRequest(View v) {
         /* TODO Try to execute one of the go-home/landing blocks. Check if the drone is going home and update the button that is displayed.*/
 //        if(isConnected && !missionBlocks.isEmpty()) {
@@ -983,14 +992,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //        }
 	}
 
+    //Method to handle waypoint request button clicks
     public void onWaypointRequest(View v) {
         missionButtons.onWaypointRequest(v);
-        requestWps();
+
+        //Request the service to send (updated) waypoints if connected
+        if (isConnected) {
+            try {
+                mServiceClient.requestWpList();
+            } catch (RemoteException e) {
+                Log.e(TAG, "Error while requesting waypoints");
+            }
+        }
     }
 
 	/////////////////////////MAPS/////////////////////////
 	
-	/* First time the map is ready, set options */
+	/* First time the map is ready: Initial settings. */
 	@Override
 	public void onMapReady(GoogleMap map) {
 				
@@ -1018,15 +1036,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		//Show my location button
 		map.getUiSettings().setMyLocationButtonEnabled(true);
 		
-		//Enable clicklistener on markers
-		map.setOnMarkerClickListener(this);
+		//Enable marker/infowindow listeners
+		map.setOnMarkerClickListener(this);     //Click listener on markers
+        map.setOnMarkerDragListener(this);      //Drag listener on markers
+        map.setOnInfoWindowClickListener(this); //Click listener on infowindows
 
-        //Enable drag listener on markers
-        map.setOnMarkerDragListener(this);
-
-        //Enable clicklistener on infowindows
-        map.setOnInfoWindowClickListener(this);
-
+        /* TODO move home marker drawing to a better place once the service send home information */
 		//Draw home marker on map
         home.homeMarker = map.addMarker(new MarkerOptions()
                         .position(home.getHomeLocation())
@@ -1037,10 +1052,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 						.snippet("HOME")
                         .draggable(false)
         );
+
+        //Draw the Region Of Interest on the map (Used for test scenario)
         drawROI();
 	}
 
-	/* Marker listener to deselect an aircraft icon*/
+	/* Marker listener for (de)selecttion aircraft icons, waypoint marker actions and home marker selection */
 	@Override
     public boolean onMarkerClick(final Marker marker) {
         if(marker.getSnippet().contains("-")){                          //Waypoint marker clicked
@@ -1050,7 +1067,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             /* TODO implement code that commands a selected aircraft to execute the block that corresponds to the clicked waypoint */
         } else if(marker.getSnippet().equals("HOME")) {                 //Home marker clicked
-            //Do nothing yet
+            //Do nothing (yet)
         } else {                                                        //Aircraft marker clicked
             int acNumber = Integer.parseInt(marker.getSnippet());
 
@@ -1062,10 +1079,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
                 mAircraft.get(acNumber).setIsSelected(true);
                 aircraftSelected = true;
-                Log.d("infowindow","markerclick-ON");
             } else {
                 mAircraft.get(acNumber).setIsSelected(false);
-                Log.d("infowindow","markerclick-OFF");
+                aircraftSelected = false;
             }
             //Update the map
             aircraftMarkerUpdater();
@@ -1073,48 +1089,50 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		return true;
 	}
 
-    /* Marker drag listener for moving waypoint */
-
+    /* Marker drag listener action implementations (mainly for moving waypoints) */
     @Override
     public void onMarkerDragStart(Marker marker) {
-
+        //Do nothing
     }
 
     @Override
     public void onMarkerDrag(Marker marker) {
-
+        //Do nothing
     }
 
-    //Drag method for waypoints
+    //Action implementation on end of marker (waypoint) drag
     @Override
     public void onMarkerDragEnd(Marker marker) {
+        //Get the marker snippet to extract the aircraft- and waypoint number
         String[] numbers = marker.getSnippet().split("-");
         int acNumber = Integer.parseInt(numbers[0]);
         int wpNumber = Integer.parseInt(numbers[1]);
-        LatLng pos = marker.getPosition();
+        //Get the drop location
+        LatLng newPosition = marker.getPosition();
 
         /* TODO implement waypoint location change setfunction for the service */
-        mAircraft.get(acNumber).setWpLatLon((float) pos.latitude, (float) pos.longitude, wpNumber);
+        mAircraft.get(acNumber).setWpLatLon((float) newPosition.latitude, (float) newPosition.longitude, wpNumber);
+        /* TODO see if the service automatically sends the updated waypoint information or if this must be requested. In any way, remove the call to the map updater here once this is solved. */
+        //Update the waypoints on the map
         waypointUpdater(acNumber);
     }
 
-    /* Info window click listener to hide it*/
+    //Info window click listener to hide it
     @Override
     public void onInfoWindowClick(final Marker marker) {
+        //Get the aircraft number that corresponds with the infowindow
         int clickedAircraft = Integer.parseInt(marker.getSnippet());
 
-        //If the infowindow marker is clicked, remove it
-        if(marker.equals(mAircraft.get(clickedAircraft).infoWindow)) {
-            mAircraft.get(clickedAircraft).setIsSelected(false);
-            Log.d("infowindow", "windowclick-OFF");
-        }
+        //Set selection status to false
+        mAircraft.get(clickedAircraft).setIsSelected(false);
+        aircraftSelected = false;
     }
 
 	/* Update the objects that are displayed on the map */
 	public void aircraftMarkerUpdater(){
 
-        // Loop over the aircraft to generate their markers
-        for(int acNumber = 1; acNumber<mAircraft.size()+1;acNumber++) {
+        // Loop over all aircraft to generate their markers
+        for(int acNumber=1; acNumber<mAircraft.size()+1; acNumber++) {
             //Determine the color of the aircraft icon based on selection status
             if(mAircraft.get(acNumber).isSelected()) {
                 mAircraft.get(acNumber).setCircleColor(getResources().getColor(R.color.yellow));
@@ -1131,119 +1149,121 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapReady(GoogleMap map) {
 
-                for(int aircraftNumber = 1; aircraftNumber<mAircraft.size()+1;aircraftNumber++) {
-                    ///////* Marker for display of aircraft icon on map *///////
+            //Loop over all aircraft
+            for(int aircraftNumber=1; aircraftNumber<mAircraft.size()+1; aircraftNumber++) {
 
-                    //Clear marker from map (if it exists)
-                    if (mAircraft.get(aircraftNumber).acMarker != null) {
-                        mAircraft.get(aircraftNumber).acMarker.remove();
-                    }
+                //Clear marker from map (if it exists)
+                if (mAircraft.get(aircraftNumber).acMarker != null) {
+                    mAircraft.get(aircraftNumber).acMarker.remove();
+                }
 
-                    //Add marker to map
-                    mAircraft.get(aircraftNumber).acMarker = map.addMarker(new MarkerOptions()
-                                    .position(mAircraft.get(aircraftNumber).getLatLng())
-                                    .anchor((float) 0.5, (float) 0.5)
-                                    .icon(BitmapDescriptorFactory.fromBitmap(mAircraft.get(aircraftNumber).getIcon()))
-                                    .flat(true)
-                                    .title(" " + mAircraft.get(aircraftNumber).getLabelCharacter())
-                                    .snippet(String.valueOf(aircraftNumber))
-                                    .infoWindowAnchor(0.5f, mAircraft.get(aircraftNumber).getIconBoundOffset())
-                                    .draggable(false)
-                    );
+                //Add marker to map with the following settings and save it in the aircraft object
+                mAircraft.get(aircraftNumber).acMarker = map.addMarker(new MarkerOptions()
+                                .position(mAircraft.get(aircraftNumber).getLatLng())
+                                .anchor((float) 0.5, (float) 0.5)
+                                .icon(BitmapDescriptorFactory.fromBitmap(mAircraft.get(aircraftNumber).getIcon()))
+                                .title(" " + mAircraft.get(aircraftNumber).getLabelCharacter())
+                                .snippet(String.valueOf(aircraftNumber))
+                                .infoWindowAnchor(0.5f, mAircraft.get(aircraftNumber).getIconBoundOffset())
+                                .flat(true)
+                                .draggable(false)
+                );
 
-                    //Show either the label or the detailed information window of the aicraft based on selection status
-                    if (mAircraft.get(aircraftNumber).isSelected()) {
-                        //Make aircraft number final to use in inner class
-                        final int acNumber = aircraftNumber;
+                //Either show the label or the detailed information window of the aircraft based on selection status
+                if (mAircraft.get(aircraftNumber).isSelected()) {
+                    //Make aircraft number final to use in inner class
+                    final int acNumber = aircraftNumber;
 
-                        map.setInfoWindowAdapter(new InfoWindowAdapter() {
+                    //Adapt the information window
+                    map.setInfoWindowAdapter(new InfoWindowAdapter() {
 
-                            // Use default InfoWindow frame
-                            @Override
-                            public View getInfoWindow(Marker marker) {
-                                return (null);
-                            }
+                        // Use default InfoWindow frame
+                        @Override
+                        public View getInfoWindow(Marker marker) {
+                            return (null);
+                        }
 
-                            // Defines the contents of the InfoWindow
-                            @Override
-                            public View getInfoContents(Marker marker) {
+                        // Defines the contents of the InfoWindow
+                        @Override
+                        public View getInfoContents(Marker marker) {
 
-                                View v = getLayoutInflater().inflate(R.layout.info_window_detail, null);
+                            View v = getLayoutInflater().inflate(R.layout.info_window_detail, null);
 
                             /* TODO add content to the detailed infowindow */
 
-                                TextView infoAirtime = (TextView) v.findViewById(R.id.info_airtime);
-                                TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
-                                TextView infoAlt = (TextView) v.findViewById(R.id.info_alt);
-                                TextView infoMode = (TextView) v.findViewById(R.id.info_mode);
-                                TextView infoBattery = (TextView) v.findViewById(R.id.info_battery);
+                            //Get handles to the textviews
+                            TextView infoAirtime  = (TextView) v.findViewById(R.id.info_airtime);
+                            TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
+                            TextView infoAlt      = (TextView) v.findViewById(R.id.info_alt);
+                            TextView infoMode     = (TextView) v.findViewById(R.id.info_mode);
+                            TextView infoBattery  = (TextView) v.findViewById(R.id.info_battery);
 
-                                //Setting the values in the information window
-                                infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
-                                infoDistHome.setText("Distance Home: " + String.format("%.1f", mAircraft.get(acNumber).getDistanceHome()) + "m");
-                                infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(acNumber).getAltitude()) + "m");
-                                infoMode.setText("Mode: " + "MODE HERE!");
-                                infoBattery.setText("Battery voltage: " + String.valueOf(mAircraft.get(acNumber).getBattVolt()) + "mV");
+                            //Set the values in the information windows
+                            infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
+                            infoDistHome.setText("Distance Home: " + String.format("%.1f", mAircraft.get(acNumber).getDistanceHome()) + "m");
+                            infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(acNumber).getAltitude()) + "m");
+                            infoMode.setText("Mode: " + "MODE HERE!");
+                            infoBattery.setText("Battery voltage: " + String.valueOf(mAircraft.get(acNumber).getBattVolt()) + "mV");
 
-                                return v;
-                            }
-                        });
-                        mAircraft.get(aircraftNumber).acMarker.showInfoWindow();
-                    }
+                            return v;
+                        }
+                    });
+                    //Set the marker to show the information window
+                    mAircraft.get(aircraftNumber).acMarker.showInfoWindow();
                 }
+            }
             }
         });
 	}
 
     /* Update the waypoint markers that are displayed on the map */
-    private void waypointUpdater(int acNumber) {
-
-        final int aircraftNumber = acNumber;
+    private void waypointUpdater(final int acNumber) {
 
         //Call GoogleMaps
         mapFragment.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap map) {
 
-                //If the wps are already initiated, remove them from the map and clear the list that holds them
-                if (!mAircraft.get(aircraftNumber).wpMarkers.isEmpty()) {
-                    //Remove markers from map
-                    for (int i = 0; i < mAircraft.get(1).getNumberOfWaypoints(); i++) {
-                        mAircraft.get(aircraftNumber).wpMarkers.get(i).remove();
-                    }
-
-                    //Clear the marker list
-                    mAircraft.get(aircraftNumber).wpMarkers.clear();
-                }
-
-                //(Re)generate waypoint markers
+            //If the waypoints are already initiated, remove them from the map and clear the list that holds them
+            if (!mAircraft.get(acNumber).wpMarkers.isEmpty()) {
+                //Remove markers from map
                 for (int i = 0; i < mAircraft.get(1).getNumberOfWaypoints(); i++) {
-
-                    //Add waypoint marker to map
-                    Marker wpMarker = map.addMarker(new MarkerOptions()
-                                    .position(mAircraft.get(aircraftNumber).getWpLatLng(i))
-                                    .flat(true)
-                                    .snippet(String.valueOf(aircraftNumber) + "-" + String.valueOf(mAircraft.get(aircraftNumber).getWpSeq(i)))
-                                    .draggable(true)
-                    );
-                    mAircraft.get(aircraftNumber).wpMarkers.add(wpMarker);
+                    mAircraft.get(acNumber).wpMarkers.get(i).remove();
                 }
 
-                ///* FLIGHT PATH *///
+                //Clear the marker list (not the marker data)
+                mAircraft.get(acNumber).wpMarkers.clear();
+            }
 
-                /* TODO Distinguish pattern- and relay waypoints using color and draw circles around the waypoints to show the flightpath of the aircraft
+            //(Re)generate waypoint markers
+            for (int i=0; i<mAircraft.get(1).getNumberOfWaypoints(); i++) {
 
-                // If the flight path has been drawn before, remove it to be updated
-                if (mAircraft.get(aircraftNumber).flightPath != null) {
-                    mAircraft.get(aircraftNumber).flightPath.remove();
-                }
+                //Add waypoint marker to map
+                Marker wpMarker = map.addMarker(new MarkerOptions()
+                                .position(mAircraft.get(acNumber).getWpLatLng(i))
+                                .flat(true)
+                                .snippet(String.valueOf(acNumber) + "-" + String.valueOf(mAircraft.get(acNumber).getWpSeq(i)))
+                                .draggable(true)
+                );
+                //Add the newly generated waypoint marker to the list to keep reference to it
+                mAircraft.get(acNumber).wpMarkers.add(wpMarker);
+            }
 
-                // Draw the flight path with the specified characteristics
-                mAircraft.get(aircraftNumber).flightPath = map.addPolyline(new PolylineOptions()
-                        .addAll(mAircraft.get(aircraftNumber).getWpLatLngList())
-                        .width(4)
-                        .color(Color.WHITE));
-                */
+            ///* FLIGHT PATH (lines between waypoints) *///
+
+            /* TODO Distinguish pattern- and relay waypoints using color and draw circles around the waypoints to show the flightpath of the aircraft
+
+            // If the flight path has been drawn before, remove it to be updated
+            if (mAircraft.get(aircraftNumber).flightPath != null) {
+                mAircraft.get(aircraftNumber).flightPath.remove();
+            }
+
+            // Draw the flight path with the specified characteristics
+            mAircraft.get(aircraftNumber).flightPath = map.addPolyline(new PolylineOptions()
+                    .addAll(mAircraft.get(aircraftNumber).getWpLatLngList())
+                    .width(4)
+                    .color(Color.WHITE));
+            */
             }
         });
     }
@@ -1252,54 +1272,57 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private void drawCommunicationRange(final int relayAc) {
 
         //Only call the map if something needs to be drawn or if something needs to be removed from the map
-        if(showComm) {
+        if(showCommRange) {
             //Call GoogleMaps
             mapFragment.getMapAsync(new OnMapReadyCallback() {
                 @Override
                 public void onMapReady(GoogleMap map) {
 
+                    //Remove the communication range circle around home if it was drawn before
                     if (homeCommCircle != null) {
                         homeCommCircle.remove();
                     }
+                    //Remove the communication range circle around the relay aircraft if it was drawn before
                     if (relayCommCircle != null) {
                         relayCommCircle.remove();
                     }
 
-                    if (showComm) {
-                        //Add the home communication range circle to the map
-                        CircleOptions homeCircleOptions = new CircleOptions()
-                                .center(home.getHomeLocation())
+                    //Add the home communication range circle to the map
+                    CircleOptions homeCircleOptions = new CircleOptions()
+                            .center(home.getHomeLocation())
+                            .strokeWidth(5)
+                            .strokeColor(0x5500ff00)
+                            .radius(commMaxRange); // In meters
+
+                    // Get back the mutable Circle
+                    homeCommCircle = map.addCircle(homeCircleOptions);
+
+                    //If a relay UAV is active
+                    if (relayAc != 0) {
+
+                        // Draw the relay commincation range circle
+                        CircleOptions relayCircleOptions = new CircleOptions()
+                                .center(mAircraft.get(relayAc).getLatLng())
                                 .strokeWidth(5)
                                 .strokeColor(0x5500ff00)
-                                .radius(commMaxRange); // In meters
+                                .radius(commRelayRange); // In meters
 
                         // Get back the mutable Circle
-                        homeCommCircle = map.addCircle(homeCircleOptions);
-
-                        //If a relay UAV is active
-                        if (relayAc != 0) {
-
-                            // Draw the relay commincation range circle
-                            CircleOptions relayCircleOptions = new CircleOptions()
-                                    .center(mAircraft.get(relayAc).getLatLng())
-                                    .strokeWidth(5)
-                                    .strokeColor(0x5500ff00)
-                                    .radius(commRelayRange); // In meters
-
-                            // Get back the mutable Circle
-                            relayCommCircle = map.addCircle(relayCircleOptions);
-                        }
+                        relayCommCircle = map.addCircle(relayCircleOptions);
                     }
                 }
             });
+        //If no communication ranges need to be drawn, remove them
         } else {
             mapFragment.getMapAsync(new OnMapReadyCallback() {
                 @Override
                 public void onMapReady(GoogleMap map) {
 
+                    //Remove the communication range circle around home if it was drawn before
                     if (homeCommCircle != null) {
                         homeCommCircle.remove();
                     }
+                    //Remove the communication range circle around the relay aircraft if it was drawn before
                     if (relayCommCircle != null) {
                         relayCommCircle.remove();
                     }
@@ -1308,7 +1331,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    ///////* Indicate the region of interest on the map *///////
+    ///////* Indicate a region of interest on the map *///////
     private void drawROI() {
 
         //Call GoogleMaps
@@ -1328,7 +1351,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // Get back the mutable Polyline
                 Polygon polygon = map.addPolygon(rectOptions);
-
             }
         });
     }
@@ -1341,42 +1363,37 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapReady(GoogleMap map) {
 
-                //If lines have been drawn before, remove them from the map
-                if (!mConnectingLines.isEmpty()) {
-                    for (int i = 0; i < mConnectingLines.size(); i++) {
-                        mConnectingLines.get(i).remove();
-                    }
-					mConnectingLines.clear();
+            //If lines have been drawn before, remove them from the map and clear the list with references to them
+            if (!mConnectingLines.isEmpty()) {
+                for (int i = 0; i < mConnectingLines.size(); i++) {
+                    mConnectingLines.get(i).remove();
                 }
+                mConnectingLines.clear();
+            }
 
-                if(conflictingAircraft != null) {
-                    for (int i = 0; i < conflictingAircraft.size(); i += 2) {
+            //If conflicts exist, draw the conflict lines
+            if(conflictingAircraft != null) {
+                for (int i = 0; i < conflictingAircraft.size(); i += 2) {
 
-                        //Draw a connecting line on the map
-                        Polyline connectingLine = map.addPolyline(new PolylineOptions()
-                                .add(mAircraft.get(conflictingAircraft.get(i)).getLatLng(), mAircraft.get(conflictingAircraft.get(i+1)).getLatLng())
-                                .width(6)
-                                .color(Color.RED));
+                    //Draw a connecting line on the map with the following settings
+                    Polyline connectingLine = map.addPolyline(new PolylineOptions()
+                            .add(mAircraft.get(conflictingAircraft.get(i)).getLatLng(), mAircraft.get(conflictingAircraft.get(i+1)).getLatLng())
+                            .width(6)
+                            .color(Color.RED));
 
-                        //Save polyline object in a list to have a reference to it
-                        mConnectingLines.add(connectingLine);
-                    }
-                    //Clear all points for which the lines were drawn
-                    conflictingAircraft.clear();
+                    //Save polyline object in a list to have a reference to it
+                    mConnectingLines.add(connectingLine);
                 }
+                //Clear all points for which the lines were drawn
+                conflictingAircraft.clear();
+            }
             }
         });
     }
 
     /////////////////////////CLASS METHODS/////////////////////////
 
-    public void deselectAllAircraft() {
-        for(int i=1; i<mAircraft.size()+1; i++) {
-            mAircraft.get(i).setIsSelected(false);
-        }
-        groupSelectedAircraft.clear();
-    }
-
+    //Method to determine if a couple of aircraft needs to get conflict status
     private boolean isOnconflictCourse(int ac1, int ac2) {
         /* TODO make more extensive algorithm to check conflict courses (extrapolation)?? */
 
@@ -1393,6 +1410,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 	/////////////////////////ALTITUDE TAPE/////////////////////////
 
+    //Method to update the labels on the altitude tape
 	public void updateAltitudeTape() {
 
         /* TODO move the targetalttiude indication to the for loop */
@@ -1404,6 +1422,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             altitudeTapeFragment.deleteTargetLabel(mAircraft.get(1).getTargetLabelId());
         }
 
+        //Boolean to check if group labels are drawn and if they need to be removed from the tape
         boolean groupLabelsDrawn = false;
 
         //Check if a certain conflict is selected. If yes, do not draw the group label but draw single labels on the left side of the tape.
@@ -1425,7 +1444,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         characters = characters + mAircraft.get(conflict[h]).getLabelCharacter() + " ";
                     }
                     characters = characters.substring(0,conflict.length+2);
+                    //Calculate the mean altitude of the aircraft that are in the group
                     double meanAlt = altSum/conflict.length;
+                    //Draw the group label on the tape
                     altitudeTapeFragment.drawGroupLabel(true, meanAlt, characters, conflict);
                 }
                 conflictGroupList.clear();
@@ -1444,7 +1465,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         characters = characters + mAircraft.get(conflict[b]).getLabelCharacter() + " ";
                     }
                     characters = characters.substring(0,conflict.length+2);
+                    //Calculate the mean altitude of the aircraft that are in the group
                     double meanAlt = altSum/conflict.length;
+                    //Draw the group label on the tape
                     altitudeTapeFragment.drawGroupLabel(false, meanAlt, characters, conflict);
                 }
                 sameLevelGroupList.clear();
@@ -1452,34 +1475,51 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
 
-        int visibility;
         /* Put the single labels on the altitude tape.*/
         for (int i = 1; i < mAircraft.size() + 1; i++) {
+            //Check if the aircraft is in a group, if yes don show the individual label
             if (sameLevelAircraft.contains(i) || conflictingAircraft.contains(i)) {
-                visibility = View.GONE;
+                singleLabelVisibility = View.GONE;
             } else {
-                visibility = View.VISIBLE;
+                singleLabelVisibility = View.VISIBLE;
             }
-            altitudeTapeFragment.setLabel(mAircraft.get(i).getAltitude(), mAircraft.get(i).getAltLabelId(), mAircraft.get(i).getLabelCharacter(), mAircraft.get(i).isSelected(), mAircraft.get(i).isLabelCreated(), i, visibility);
+            //Set the individual label on the tape
+            altitudeTapeFragment.setLabel(mAircraft.get(i).getAltitude(), mAircraft.get(i).getAltLabelId(), mAircraft.get(i).getLabelCharacter(), mAircraft.get(i).isSelected(), mAircraft.get(i).isLabelCreated(), i, singleLabelVisibility);
         }
+
+        //If no group labels were drawn in this iteration, remove any existing ones because ther are no groups anymore
         if(!groupLabelsDrawn) {
             altitudeTapeFragment.removeGroupLabels();
         }
 	}
 
-    // Method to be called by the altitudetape fragment to change selection status and update the interface
+    //Method to be called by the altitude tape fragment to change selection status and update the interface
     public void setIsSelected(int aircraftNumber, boolean isSelected){
+        //If the aircraft will be set to selected, deselect all aircraft first
         if(isSelected) {
             deselectAllAircraft();
         }
 
+        //Set the aircraft selection status
         mAircraft.get(aircraftNumber).setIsSelected(isSelected);
 
+        //Clear the group selection
         groupSelectedAircraft.clear();
+        //Update the altitude tape to show the new selection setting
         updateAltitudeTape();
+        //Update the aircraft markers to display the new selection
         aircraftMarkerUpdater();
     }
 
+    //Method to make sure that none of the aircraft is selected
+    public void deselectAllAircraft() {
+        for(int i=1; i<mAircraft.size()+1; i++) {
+            mAircraft.get(i).setIsSelected(false);
+        }
+        groupSelectedAircraft.clear();
+    }
+
+    //Set a group of aircraft to selected status
     public void setGroupSelected(int[] acNumbers) {
         //Deselect all aircraft first
         deselectAllAircraft();
@@ -1491,14 +1531,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    //Method to register that a label is drawn on the tape to be sure not a new is created
     public void setIsLabelCreated(boolean isLabelCreated,int acNumber) {
         mAircraft.get(acNumber).setIsLabelCreated(isLabelCreated);
     }
 
+    //Method for the altitude tape to check if an aircraft is selected
     public boolean isAircraftIconSelected(int aircraftNumber) {
         return mAircraft.get(aircraftNumber).isSelected();
     }
 
+    //Method for the altitude tape to check the conflict status of an aircraft
     public ConflictStatus getConflictStatus(int acNumber){
         return mAircraft.get(acNumber).getConflictStatus();
     }

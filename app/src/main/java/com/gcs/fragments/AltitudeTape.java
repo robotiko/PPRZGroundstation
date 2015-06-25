@@ -31,32 +31,32 @@ import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AltitudeTape extends Fragment {
-	
-	private FrameLayout framelayout;
-	private View rootView;
 
-    final SparseArray<Integer> labelList = new SparseArray<>();
-    private ArrayList<Integer> aircraftInGroupList = new ArrayList<>();
-    private ConcurrentHashMap<String, Integer> stringToLabelIdList = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<Integer,String> labelIdToStringList = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<String, Integer> groupSelectionIdList = new ConcurrentHashMap<>();
+    //Declaration of layouts and views
+	private FrameLayout framelayout;
+	private View rootView, targetLabel;
+    private TextView label, groupLabel, groupSelectionLabel;
+
+    //Declaration of lists and arrays
+    private SparseArray<Integer>                labelList            = new SparseArray<>();
+    private ArrayList<Integer>                  aircraftInGroupList  = new ArrayList<>();
+    private ConcurrentHashMap<String, Integer>  stringToLabelIdList  = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Integer,String>   labelIdToStringList  = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Integer>  groupSelectionIdList = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Integer, Integer> groupSelectLabelList = new ConcurrentHashMap<>();
 
+    //Declaration of variables
     private String selectedGroup = null;
+    private boolean groupSelected = false, targetCreated = false;
+    private double flightCeiling, groundLevel, MSA; //[m]
+    private int draggedLabel, textGravity, backgroundImg, yellowLabel, blueLabel, grayLabel, redLabel, LargeBlueLabel, LargeRedLabel
+             ,groundLevelTape, flightCeilingTape;
 
-    private int draggedLabel, textGravity;
-    private int backgroundImg, yellowLabel, blueLabel, grayLabel, redLabel, LargeBlueLabel, LargeRedLabel;
-
-    TextView label;
-
-    private boolean groupDeselected = false, groupSelected = false, targetCreated = false;
-
-    private int groundLevelTape, flightCeilingTape;
+//    //Hardcode the altitude tape endpoints
 //    private final int groundLevelTape   = 890; //0 meter
 //    private final int flightCeilingTape = 0;  //20 m
 
-    private double flightCeiling, groundLevel, MSA; //[m]
-
+    //Define the size of the labels and the dragshadow offset
     private static final Point smallLabelDimensions = new Point (80,70);
     private static final int dragShadowVerticalOffset = smallLabelDimensions.y*2;
 
@@ -162,7 +162,6 @@ public class AltitudeTape extends Fragment {
                 if(groupSelected) {
                     selectedGroup = null;
                     groupSelected = false;
-                    groupDeselected = true;
                     groupSelectLabelList.clear();
                     removeGroupSelectedAircraft();
                 }
@@ -307,7 +306,7 @@ public class AltitudeTape extends Fragment {
             textGravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
         }
 
-        //Creat a label if it is the first time it will be drawn on the tape, else only update it
+        //Create a label if it is the first time it will be drawn on the tape, else only update it
         if (!labelCreated) {
             label = new TextView(getActivity());
             label.setId(labelId);
@@ -343,21 +342,21 @@ public class AltitudeTape extends Fragment {
             }
         }
 
-        groupDeselected = false;
-
+        //If no group is selected or it does not involve the a group that was already drawn
         if(selectedGroup == null || !selectedGroup.equals(labelCharacters)) {
-//            int backgroundImg;
+            //Use a red label for conflict groups, else a blue one
             if (inConflict) {
                 backgroundImg = LargeRedLabel;
             } else {
                 backgroundImg = LargeBlueLabel;
             }
 
+            //Set the parameters of the label (size, vertical location on the tape and its horizontal location)
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(smallLabelDimensions.x,smallLabelDimensions.y);
             params.topMargin = altitudeToLabelLocation(altitude);
             params.gravity = Gravity.RIGHT;
 
-            TextView groupLabel;
+            //Create a label if it is the first time it will be drawn on the tape, else only update it
             if (!stringToLabelIdList.containsKey(labelCharacters)) {
                 int labelId = TextView.generateViewId();
                 groupLabel = new TextView(getActivity());
@@ -380,11 +379,13 @@ public class AltitudeTape extends Fragment {
         }
     }
 
+    //Method to draw individual labels of aircraft that are in a group selection
     public void drawGroupSelection(double altitude, String labelCharacter, int i, int numberOfLabels, int acNumber) {
 
+        //Set the parameters of the label (size, vertical location on the tape and its horizontal location)
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(smallLabelDimensions.x,smallLabelDimensions.y);
-        params.gravity = Gravity.LEFT;
         params.topMargin = altitudeToLabelLocation(altitude);
+        params.gravity = Gravity.LEFT;
 
         //Add a margin to the right of a label if it will overlap with another label
         if(i==0) {
@@ -394,8 +395,7 @@ public class AltitudeTape extends Fragment {
             params.leftMargin = (numberOfLabels-i)*smallLabelDimensions.x;
         }
 
-        TextView groupSelectionLabel;
-
+        //Create a label if it is the first time it will be drawn on the tape, else only update it
         if (!groupSelectionIdList.containsKey(labelCharacter)) {
             int labelId = TextView.generateViewId();
             groupSelectionLabel = new TextView(getActivity());
@@ -415,6 +415,7 @@ public class AltitudeTape extends Fragment {
         }
     }
 
+    //Method to remove the labels of a group selection
     private void removeGroupSelectedAircraft() {
         for (String key : groupSelectionIdList.keySet()) {
             framelayout.removeView(getView().findViewById(groupSelectionIdList.get(key)));
@@ -424,12 +425,12 @@ public class AltitudeTape extends Fragment {
 
     //Method called from mainactivity if no group labels are drawn. Then if there are still labelId's in the list, remove them from the view and list.
     public void removeGroupLabels() {
-//        if(!stringToLabelIdList.isEmpty() && groupDeselected) {
         if(!stringToLabelIdList.isEmpty()) {
             for (String key : stringToLabelIdList.keySet()) {
                 framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
             }
 
+            //Clear the lists that contain information about aircraft groups
             stringToLabelIdList.clear();
             labelIdToStringList.clear();
             aircraftInGroupList.clear();
@@ -440,37 +441,39 @@ public class AltitudeTape extends Fragment {
 	public void setTargetLabel(double targetAltitude, int targetLabelId) {
 
 		/* TODO make a better indicating icon/bug for the target altitude */
+        //Set the parameters of the label (size, vertical location on the tape and its horizontal location)
 		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(smallLabelDimensions.x,smallLabelDimensions.y);
         params.topMargin = altitudeToLabelLocation(targetAltitude);
         params.gravity = Gravity.RIGHT;
 
-		View target;
+        //Create a label if it is the first time it will be drawn on the tape, else only update it
 		if(!targetCreated) {
-			target = new View(getActivity());
-			target.setBackgroundResource(R.drawable.altitude_label_small_red);
-            target.setId(targetLabelId);
-            target.setVisibility(View.VISIBLE);
-            framelayout.addView(target,params);
+            targetLabel = new View(getActivity());
+            targetLabel.setBackgroundResource(R.drawable.altitude_label_small_red);
+            targetLabel.setId(targetLabelId);
+            targetLabel.setVisibility(View.VISIBLE);
+            framelayout.addView(targetLabel,params);
 			targetCreated = true;
 		} else {
-			target = getView().findViewById(targetLabelId);
-			target.setVisibility(View.VISIBLE);
-            framelayout.updateViewLayout(target,params);
+            targetLabel = getView().findViewById(targetLabelId);
+            targetLabel.setVisibility(View.VISIBLE);
+            framelayout.updateViewLayout(targetLabel,params);
 		}
 	}
 	
 	//Method to remove the target label from the altitude tape
 	public void deleteTargetLabel(int targetLabelId) {
-		View targetLabel = getView().findViewById(targetLabelId);
+		targetLabel = getView().findViewById(targetLabelId);
 
 		if(targetLabel!=null) {
-			targetLabel.setVisibility(View.GONE);
+            framelayout.removeView(targetLabel);
 		}
 	}
 	
 	//Convert altitude to a label location on the tape
 	private int altitudeToLabelLocation(double altitude) {
-		
+
+        //Calculate the label location based on the length of the bar and the vertical flight range airspace
 		int lengthBar = groundLevelTape - flightCeilingTape;
 		double verticalRange = flightCeiling - groundLevel;
 		int labelLocation = (int) (groundLevelTape-((altitude/verticalRange)*lengthBar));
@@ -480,7 +483,8 @@ public class AltitudeTape extends Fragment {
 	
 	//Convert label location on the tape to an altitude 
 	private double labelLocationToAltitude(float labelLocation) {
-		
+
+        //Calculate the aircraft altitude based on length of the bar, label location and the vertical flight range airspace
 		int lengthBar = groundLevelTape - flightCeilingTape;
 		double verticalRange = flightCeiling - groundLevel;
 		double altitude = verticalRange*((double) groundLevelTape-labelLocation)/lengthBar;
@@ -491,6 +495,7 @@ public class AltitudeTape extends Fragment {
 	//Set the target altitude to the service
 	private void setTargetAltitude(int aircraftNumber,float dropLocation) {
 
+        //The altitude to which the user commands the aircraft to go to
 		double dropAltitude = labelLocationToAltitude(dropLocation);
 
 		//If the label is dropped outside the altitude tape, set the target altitude at the bounds.

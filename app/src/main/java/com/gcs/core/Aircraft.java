@@ -29,15 +29,17 @@ import com.sharedlib.model.Position;
 public class Aircraft {
 	
 	private Context context;
-    private static int aircraftCount = 0;
     private final String labelCharacter;
+    private static int aircraftCount = 0;
 
+    //Constructor in which the total aircraft count is updated and the label character is determined
 	public Aircraft(Context context){
 	    this.context = context;
         aircraftCount++;
         labelCharacter = String.valueOf((char) (64 + aircraftCount));
 	}
 
+    //Instatntiation of class attributes
 	private Heartbeat	   mHeartbeat = new Heartbeat();
 	private Attitude       mAttitude  = new Attitude();
 	private Altitude       mAltitude  = new Altitude();
@@ -524,7 +526,6 @@ public class Aircraft {
 
 ////////////////////////////////////////////////
 
-        /* TODO set the integer values to the correct orders to comply with the provided battery values */
         //Determine which battery icon to draw
         if(mBattery.getBattVolt()  > halfBat) { //high battery level
             batteryIcon = batteryGreen;
@@ -609,10 +610,12 @@ public class Aircraft {
         AC_Icon = baseIcon;
     }
 
+    //Get and set methods for the icon
     public Bitmap getIcon(){
         return AC_Icon;
     }
 
+    //Method that provides information about the bound offset of the icon (used for information window positioning because the marker is a square bitmap that is rotated)
     public float getIconBoundOffset() { return ((AC_Icon.getHeight()-resolution)/2.0f)/AC_Icon.getHeight(); }
 
     public void setCircleColor(int color) {
