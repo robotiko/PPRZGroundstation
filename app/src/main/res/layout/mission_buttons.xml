@@ -53,9 +53,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClick="onWaypointRequest"
+            android:background="@drawable/wp_button_blackwhite"
             android:layout_alignParentLeft="true"
             android:layout_marginLeft="5dp"
-            android:text="@string/waypoint_button" />
+            android:text="@string/waypoint_button"
+            android:textSize="10sp"
+            android:lineSpacingMultiplier="0.9"
+            android:gravity="bottom|center_horizontal"/>
 
     </RelativeLayout>
 </LinearLayout>

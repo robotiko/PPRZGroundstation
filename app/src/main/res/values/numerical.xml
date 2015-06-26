@@ -30,10 +30,10 @@
     
     <integer name="BatteryVertLocation">75</integer>        <!-- percent of radius from center -->
     <integer name="BatteryHorLocation">20</integer>         <!-- percent of radius from center -->
-    <integer name="BatteryScaling">90</integer>	            <!-- percent of the original image -->
+    <integer name="BatteryScaling">30</integer>	            <!-- percent of the original image -->
     
     <integer name="CommVertLocation">75</integer>	        <!-- percent of radius from center -->
     <integer name="CommHorLocation">20</integer>	        <!-- percent of radiusfrom center  -->
-    <integer name="CommScaling">95</integer>	            <!-- percent of the original image -->
+    <integer name="CommScaling">35</integer>	            <!-- percent of the original image -->
     
 </resources>

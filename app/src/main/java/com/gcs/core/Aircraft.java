@@ -576,7 +576,6 @@ public class Aircraft {
         int batHalfHeight = (batteryScaling/2)*batteryIcon.getIntrinsicHeight()/100;
         //(int left, int top, int right, int bottom)
         batteryIcon.setBounds(center+batHor-batHalfWidth, center-batVert-batHalfHeight, center+batHor+batHalfWidth, center-batVert+batHalfHeight);
-        batteryIcon.draw(iconCanvas);
 
         //Add communication icon to the base icon
         int commVert = (resolution/2)*commVertLocation/100;
@@ -585,6 +584,15 @@ public class Aircraft {
         int commHalfHeight = (commScaling/2)*communicationIcon.getIntrinsicHeight()/100;
         //(int left, int top, int right, int bottom)
         communicationIcon.setBounds(center - commHor - commHalfWidth, center - commVert - commHalfHeight, center - commHor + commHalfWidth, center - commVert + commHalfHeight);
+
+        //Icon background
+        circlePaint.setColor(Color.WHITE);
+        iconCanvas.drawRect(center-commHor-commHalfWidth, center-batVert-batHalfHeight, center+batHor+batHalfWidth, center-batVert+batHalfHeight, circlePaint);
+        iconCanvas.drawCircle(center+batHor+batHalfWidth, center-batVert, batHalfHeight, circlePaint);
+        iconCanvas.drawCircle(center-commHor-commHalfWidth, center-batVert, batHalfHeight, circlePaint);
+
+        //Draw the icons to the canvas
+        batteryIcon.draw(iconCanvas);
         communicationIcon.draw(iconCanvas);
 
 ////////////////////////////////////////////////

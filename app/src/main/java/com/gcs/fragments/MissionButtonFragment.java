@@ -15,7 +15,7 @@ public class MissionButtonFragment extends Fragment {
     private static final String TAG = MissionButtonFragment.class.getName();
 	
 	private View rootView;
-    private Button homeButton, landButton, takeOffButton;
+    private Button homeButton, landButton, takeOffButton, waypointButton;
     private Boolean homeButtonClicked = false, landButtonClicked = false, takeOffButtonClicked = false;
     private String landBlockName, takeoffBlockName;
 
@@ -38,9 +38,10 @@ public class MissionButtonFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         // Create handles for the buttons
-        homeButton    = (Button) getView().findViewById(R.id.goHomeButton);
-        landButton    = (Button) getView().findViewById(R.id.landButton);
-        takeOffButton = (Button) getView().findViewById(R.id.takeOffButton);
+        homeButton     = (Button) getView().findViewById(R.id.goHomeButton);
+        landButton     = (Button) getView().findViewById(R.id.landButton);
+        takeOffButton  = (Button) getView().findViewById(R.id.takeOffButton);
+        waypointButton = (Button) getView().findViewById(R.id.waypointButton);
 
         landBlockName    = getResources().getString(R.string.land_block);
         takeoffBlockName = getResources().getString(R.string.take_off_button);
@@ -88,6 +89,10 @@ public class MissionButtonFragment extends Fragment {
 	public void onWaypointRequest(View v) {
 
         Log.d("COMMAND", "Update waypoints");
+    }
+
+    public void updateWaypointButton() {
+        waypointButton.setBackgroundResource(R.drawable.wp_button_green);
     }
 
     public void updateExecutedMissionButton(String currentBlock) {

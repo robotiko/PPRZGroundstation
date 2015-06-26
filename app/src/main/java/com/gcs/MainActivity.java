@@ -760,6 +760,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     /* TODO show the waypoint updated message toaster after the waypoints of all aircraft are handled */
                     Toast.makeText(getApplicationContext(), "Waypoints updated.", Toast.LENGTH_SHORT).show();
+                    missionButtons.updateWaypointButton();
 
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating waypoints", t);
