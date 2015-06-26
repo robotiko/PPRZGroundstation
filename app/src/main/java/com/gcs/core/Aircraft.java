@@ -49,8 +49,9 @@ public class Aircraft {
 	private Position       mPosition  = new Position();
 	private List<Waypoint> waypoints  = new ArrayList<>();
 
-    public Marker acMarker, infoWindow;
+    public Marker acMarker;
     public List<Marker> wpMarkers  = new ArrayList<>();
+    public List<String> missionBlocks;
 	public Polyline flightPath;
 	
 	private final int AltitudeLabelId   = TextView.generateViewId();
@@ -58,6 +59,7 @@ public class Aircraft {
 	private boolean isSelected          = false;
     private boolean isLabelCreated      = false;
     private float distanceHome          = 0f;
+    private String currentBlock;
 
     //////////// HEARTBEAT ////////////
     public byte getSysid() {
@@ -391,6 +393,14 @@ public class Aircraft {
     public int getAircraftCount() {
         return aircraftCount;
     }
+
+    public void setCurrentBlock(int currentSelection) {
+        if(!missionBlocks.isEmpty()) {
+            currentBlock = missionBlocks.get(currentSelection);
+        }
+    }
+
+    public String getCurrentBlock() {return currentBlock; }
 
     //////////////////////////////////////////////////////
     ////////////////////// ICON //////////////////////////

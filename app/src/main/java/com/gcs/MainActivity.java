@@ -110,10 +110,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private int commMaxRange, commRelayRange, singleLabelVisibility;
     private int relayUAV = 0;                       //Set to 0 if none serves as relay (yet)
 
-    //Declaration of items needed for missionblocks
+    //Declaration of items needed for mission blocks display
     private MenuItem menuBlockSpinner = null;
     Spinner blockSpinner;
-    private List<String> missionBlocks;
+    TextView blocksTextView;
+    Menu menu;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -187,6 +188,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 
+        //Textview test
+        MenuItem menuItem = menu.findItem(R.id.mission_block_load_status);
+        blocksTextView = (TextView) menuItem.getActionView();
+        blocksTextView.setText(getResources().getString(R.string.no_blocks_loaded) + "  ");
+
+        blocksTextView.setTextColor(Color.RED);
+
         //Set up the spinner in the action bar for the mission block which can be loaded from the service and create a handle
         menuBlockSpinner = menu.findItem(R.id.menu_block_spinner);
         blockSpinner = (Spinner) MenuItemCompat.getActionView(menuBlockSpinner);
@@ -210,6 +218,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 //Do nothing
             }
         });
+
+        this.menu = menu;
         return true;
 	}
 
@@ -559,7 +569,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
                 case "CURRENT_BLOCK_UPDATED": {
-                    updateMissionBlocksSpinnerSelection();
+                    updateMissionBlocksSelection();
                     break;
                 }
 
@@ -766,10 +776,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void run() {
                 try {
-                    /* TODO BLOCKS use dynamic aicraft number once available in service */
+                    /* TODO BLOCKS use dynamic aircraft number once available in service */
                     Log.d("BLOCKS","Updated");
                     //Store the mission block list
-                    missionBlocks = mServiceClient.getMissionBlockList();
+                    mAircraft.get(1).missionBlocks = mServiceClient.getMissionBlockList();
+
+                    //Update the block status indicattion in the action bar
+                    blocksTextView.setText(getResources().getString(R.string.blocks_loaded) + "  ");
+                    blocksTextView.setTextColor(Color.GREEN);
 
                     //Update the dropdown menu with the block names
                     updateMissionBlocksSpinner();
@@ -783,24 +797,29 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Method to update the mission block dropdown menu
     private void updateMissionBlocksSpinner() {
         //Create an array adapter with the mission block names
-        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, missionBlocks);
+        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mAircraft.get(1).missionBlocks);
         spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         //Apply the array adapter to the block spinner to update the blocks in the dropdown menu
         blockSpinner.setAdapter(spinnerArrayAdapter);
     }
 
     //Method to update the selected block in the dropdown menu to the active one
-    private void updateMissionBlocksSpinnerSelection() {
-        if (missionBlocks.size() > 0) {
+    private void updateMissionBlocksSelection() {
+        if (mAircraft.get(1).missionBlocks.size() > 0) {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     try {
+                        /* TODO BLOCKS use dynamic aircraft number once available in service */
+                        //Update the Mission block spinner selection
                         Log.d(TAG, "Block: " + mServiceClient.getCurrentBlock());
                         blockSpinner.setSelection(mServiceClient.getCurrentBlock());
 
-                        //Update the status of the mission blocks
-                        missionButtons.updateExecutedMissionButton(missionBlocks.get(mServiceClient.getCurrentBlock()));
+                        //Set current block to aircraft
+                        mAircraft.get(1).setCurrentBlock(mServiceClient.getCurrentBlock());
+
+                        //Update the status of the mission buttons
+                        missionButtons.updateExecutedMissionButton(mAircraft.get(1).missionBlocks.get(mServiceClient.getCurrentBlock()));
                     } catch (RemoteException e) {
                         Log.e(TAG,"Error while trying to update the mission block selection in the spinner");
                     }
@@ -968,10 +987,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Method to handle land button clicks
 	public void onLandRequest(View v) {
         /* TODO Try to execute one of the landing blocks. Check if landing is executed and update the button that is displayed.*/
-        if(isConnected && !missionBlocks.isEmpty()) {
+        if(isConnected && !mAircraft.get(1).missionBlocks.isEmpty()) {
             //Select the land block and request the service to execute it
             try {
-                mServiceClient.onBlockSelected(missionBlocks.indexOf(getResources().getString(R.string.land_block)));
+                mServiceClient.onBlockSelected(mAircraft.get(1).missionBlocks.indexOf(getResources().getString(R.string.land_block)));
             } catch (RemoteException e) {
                 Log.e(TAG,"Error while requesting the service to execute the land block");
             }
@@ -1209,8 +1228,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
                             infoDistHome.setText("Distance Home: " + String.format("%.1f", mAircraft.get(acNumber).getDistanceHome()) + "m");
                             infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(acNumber).getAltitude()) + "m");
-                            infoMode.setText("Mode: " + "MODE HERE!");
                             infoBattery.setText("Battery voltage: " + String.valueOf(mAircraft.get(acNumber).getBattVolt()) + "mV");
+                            if(mAircraft.get(acNumber).getCurrentBlock()==null) {
+                                infoMode.setText("Current block: " + getResources().getString(R.string.no_blocks_loaded));
+                            } else {
+                                infoMode.setText("Current block: " + mAircraft.get(acNumber).getCurrentBlock());
+                            }
 
                             return v;
                         }

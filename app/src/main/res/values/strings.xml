@@ -23,5 +23,8 @@
     <!-- Block names -->
     <string name="takeoff_block">Takeoff</string>
     <string name="land_block">land</string>
-    
+
+    <string name="no_blocks_loaded">No blocks loaded</string>
+    <string name="blocks_loaded">Blocks loaded</string>
+
 </resources>
