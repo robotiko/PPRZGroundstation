@@ -414,12 +414,10 @@ public class Aircraft {
 
     private int circleColor = Color.WHITE;
 
-    Paint circlePaint = new Paint();
-    Paint labelFillPaint = new Paint();
+    Paint circlePaint     = new Paint();
+    Paint labelFillPaint  = new Paint();
     Paint labelFramePaint = new Paint();
-    Paint labelTextPaint = new Paint();
-
-
+    Paint labelTextPaint  = new Paint();
 
     // Matrix for rotation of an aircraft icon
     Matrix rotationMatrix = new Matrix();
@@ -463,7 +461,7 @@ public class Aircraft {
         commEmpty = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(),R.drawable.communication_icon_empty));
 
         //Colors for labels
-        colorRED   = context.getResources().getColor(R.color.red);
+        colorRED    = context.getResources().getColor(R.color.red);
         colorBLUE   = context.getResources().getColor(R.color.blue);
         colorGRAY   = context.getResources().getColor(R.color.gray);
         colorYELLOW = context.getResources().getColor(R.color.yellow);

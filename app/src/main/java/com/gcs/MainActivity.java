@@ -109,6 +109,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private float verticalSeparationStandard, horizontalSeparationStandard;
     private int commMaxRange, commRelayRange, singleLabelVisibility;
     private int relayUAV = 0;                       //Set to 0 if none serves as relay (yet)
+    private int acCoverageRadius;
 
     //Declaration of items needed for mission blocks display
     private MenuItem menuBlockSpinner = null;
@@ -129,10 +130,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		connectButton = (Button) findViewById(R.id.connectButton);
 
         //Obtain values from resources
-        verticalSeparationStandard = getResources().getInteger(R.integer.verticalSeparationStandard)/10f; //(Divided by 10 to convert to meters)
-        horizontalSeparationStandard = getResources().getInteger(R.integer.horizontalSeparationStandard)/10f;                          //(Divided by 10 to convert to meters)
-        commMaxRange = getResources().getInteger(R.integer.commMaxRange);                                             //meters
-        commRelayRange = getResources().getInteger(R.integer.commRelayRange);                                           //meters
+        verticalSeparationStandard = getResources().getInteger(R.integer.verticalSeparationStandard)/10f;       //(Divided by 10 to convert to meters)
+        horizontalSeparationStandard = getResources().getInteger(R.integer.horizontalSeparationStandard)/10f;   //(Divided by 10 to convert to meters)
+        commMaxRange = getResources().getInteger(R.integer.commMaxRange);                                       //meters
+        commRelayRange = getResources().getInteger(R.integer.commRelayRange);                                   //meters
+        acCoverageRadius = getResources().getInteger(R.integer.acCoverageRadius);                               //meters
 
         /* TODO Move the aircraft instantiation to a more suitable location once the service provides data of multiple aircraft (first Heartbeat?)*/
 		// Instantiate aircraft object
@@ -241,6 +243,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
                 return true;
             case R.id.show_comm_range:
+                ROIcovered();
                 //Show/hide the communication range on screen
                 showCommRange = !showCommRange;
                 /* TODO move this to the interface updater for continous up-to-date information?? */
@@ -1575,5 +1578,58 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Method for the altitude tape to check the conflict status of an aircraft
     public ConflictStatus getConflictStatus(int acNumber){
         return mAircraft.get(acNumber).getConflictStatus();
+    }
+
+    /////////////////////////PERFORMANCE SCORE/////////////////////////
+    private void ROIcovered(){
+        //Region of interest parameters
+        int R = commMaxRange;
+        double AREA = R*R*Math.PI;
+        LatLng ROIcenter = home.getHomeLocation();
+
+        //Aircraft parameters
+        LatLng coveredAreaCenter1 = mAircraft.get(2).getLatLng(); //Location of the waypoint an aircraft circles around
+        LatLng coveredAreaCenter2 = mAircraft.get(4).getLatLng(); //Location of the waypoint an aircraft circles around
+
+        //Calculate the overlap between covered region by aircraft and the ROI area
+        //Calculate how much area of the circles overlaps
+        //overlap ROI and ac2
+        double overlapArea = circleOverlap(R, acCoverageRadius, ROIcenter, coveredAreaCenter1);
+        //add overlap ROI and ac2
+        overlapArea += circleOverlap(R, acCoverageRadius, ROIcenter, coveredAreaCenter2);
+        //Account for overlap of the two UAVs
+        overlapArea -= circleOverlap(acCoverageRadius, acCoverageRadius, coveredAreaCenter1, coveredAreaCenter2);
+        Log.d("OVERLAP",String.valueOf(overlapArea));
+        double perc = overlapArea/AREA;
+        Log.d("OVERLAPperc",String.valueOf(perc));
+    }
+
+    private double circleOverlap(double radius1, double radius2, LatLng c1, LatLng c2){
+        float[] distance = new float[1];
+        Location.distanceBetween(c1.latitude, c1.longitude, c2.latitude, c2.longitude, distance);
+
+        double R = radius1;
+        double r = radius2;
+
+        //Make sure R is the largest of the two circles
+        if(R < r) {
+            R = radius2;
+            r = radius1;
+        }
+
+        //Check wether the circles overlap, do not intersect or are inside each other. Then calculate accordingly
+        double overlapArea;
+        if(distance[0] > (R+r)) {                  //No overlap
+            overlapArea = 0;
+        } else if(distance[0] <= Math.abs(R-r)) {  //inside
+            overlapArea = r*r*Math.PI;
+            Log.d("OVERLAP",String.valueOf(r));
+        } else {                                //Overlap
+            double part1 = r*r*Math.acos((distance[0]*distance[0] + r*r - R*R)/(2*distance[0]*r));
+            double part2 = R*R*Math.acos((distance[0]*distance[0] + R*R - r*r)/(2*distance[0]*R));
+            double part3 = 0.5*Math.sqrt((-distance[0]+r+R)*(distance[0]+r-R)*(distance[0]-r+R)*(distance[0]+r+R));
+            overlapArea = part1 + part2 - part3;
+        }
+        return overlapArea;
     }
 }

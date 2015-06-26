@@ -12,6 +12,9 @@
     <integer name="commMaxRange">500</integer>                <!-- meters -->
     <integer name="commRelayRange">350</integer>              <!-- meters -->
 
+    <!-- Area coverage parameters -->
+    <integer name="acCoverageRadius">150</integer>                <!-- meters -->
+
     <!-- ICON DRAWING -->
     <!-- Battery values -->
     <integer name="HalfBatteryLevel">50</integer>           <!-- percentage -->
@@ -33,7 +36,7 @@
     <integer name="BatteryScaling">30</integer>	            <!-- percent of the original image -->
     
     <integer name="CommVertLocation">75</integer>	        <!-- percent of radius from center -->
-    <integer name="CommHorLocation">20</integer>	        <!-- percent of radiusfrom center  -->
-    <integer name="CommScaling">35</integer>	            <!-- percent of the original image -->
+    <integer name="CommHorLocation">18</integer>	        <!-- percent of radiusfrom center  -->
+    <integer name="CommScaling">40</integer>	            <!-- percent of the original image -->
     
 </resources>
