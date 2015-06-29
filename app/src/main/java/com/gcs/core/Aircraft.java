@@ -58,6 +58,7 @@ public class Aircraft {
 	private final int targetLabelId     = TextView.generateViewId();
 	private boolean isSelected          = false;
     private boolean isLabelCreated      = false;
+    private boolean showInfoWindow      = true;
     private float distanceHome          = 0f;
     private String currentBlock;
 
@@ -401,6 +402,10 @@ public class Aircraft {
     }
 
     public String getCurrentBlock() {return currentBlock; }
+
+    public void setShowInfoWindow(boolean showInfoWindow) {this.showInfoWindow = showInfoWindow;}
+
+    public boolean getShowInfoWindow() {return showInfoWindow;}
 
     //////////////////////////////////////////////////////
     ////////////////////// ICON //////////////////////////

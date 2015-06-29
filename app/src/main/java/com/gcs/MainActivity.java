@@ -1121,6 +1121,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	/* Marker listener for (de)selecttion aircraft icons, waypoint marker actions and home marker selection */
 	@Override
     public boolean onMarkerClick(final Marker marker) {
+        Log.d("JAAA","TEST");
         if(marker.getSnippet().contains("-") && aircraftSelected){                          //Waypoint marker clicked
             String[] numbers = marker.getSnippet().split("-");
 //            int acNumber = Integer.parseInt(numbers[0]);
@@ -1142,6 +1143,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 //Keep track of which aircraft is selected
                 selectedAc = acNumber;
                 aircraftSelected = true;
+                //Set info window show status for next map draw iteration
+                mAircraft.get(acNumber).setShowInfoWindow(true);
             } else {
                 mAircraft.get(acNumber).setIsSelected(false);
                 selectedAc = 0;
@@ -1186,12 +1189,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Info window click listener to hide it
     @Override
     public void onInfoWindowClick(final Marker marker) {
+
         //Get the aircraft number that corresponds with the infowindow
         int clickedAircraft = Integer.parseInt(marker.getSnippet());
 
-        //Set selection status to false
-        mAircraft.get(clickedAircraft).setIsSelected(false);
-        aircraftSelected = false;
+        //Hide the window immediately
+        marker.hideInfoWindow();
+        //Set info window show status for next map draw iteration
+        mAircraft.get(clickedAircraft).setShowInfoWindow(false);
     }
 
 	/* Update the objects that are displayed on the map */
@@ -1278,8 +1283,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             return v;
                         }
                     });
+
                     //Set the marker to show the information window
-                    mAircraft.get(aircraftNumber).acMarker.showInfoWindow();
+                    if(mAircraft.get(aircraftNumber).getShowInfoWindow()) {
+                        mAircraft.get(aircraftNumber).acMarker.showInfoWindow();
+                    }
                 }
             }
             }
@@ -1350,7 +1358,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     /* Draw the area in which communication is possible */
     private void drawCommunicationRange(final int relayAc) {
-
+        mAircraft.get(1).acMarker.hideInfoWindow();
         //Only call the map if something needs to be drawn or if something needs to be removed from the map
         if(showCommRange) {
             //Call GoogleMaps
