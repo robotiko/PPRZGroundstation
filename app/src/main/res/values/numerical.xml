@@ -13,7 +13,8 @@
     <integer name="commRelayRange">350</integer>              <!-- meters -->
 
     <!-- Area coverage parameters -->
-    <integer name="acCoverageRadius">150</integer>                <!-- meters -->
+    <integer name="ROIRadius">500</integer>                   <!-- meters -->
+    <integer name="acCoverageRadius">150</integer>            <!-- meters -->
 
     <!-- ICON DRAWING -->
     <!-- Battery values -->

@@ -109,7 +109,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private float verticalSeparationStandard, horizontalSeparationStandard;
     private int commMaxRange, commRelayRange, singleLabelVisibility;
     private int relayUAV = 0;                       //Set to 0 if none serves as relay (yet)
-    private int acCoverageRadius;
+    private int acCoverageRadius, ROIRadius;
+    private double coveragePercentage;
 
     //Declaration of items needed for mission blocks display
     private MenuItem menuBlockSpinner = null;
@@ -132,9 +133,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Obtain values from resources
         verticalSeparationStandard = getResources().getInteger(R.integer.verticalSeparationStandard)/10f;       //(Divided by 10 to convert to meters)
         horizontalSeparationStandard = getResources().getInteger(R.integer.horizontalSeparationStandard)/10f;   //(Divided by 10 to convert to meters)
-        commMaxRange = getResources().getInteger(R.integer.commMaxRange);                                       //meters
-        commRelayRange = getResources().getInteger(R.integer.commRelayRange);                                   //meters
+        commMaxRange = getResources().getInteger(R.integer.commMaxRange);                                         //meters
+        commRelayRange = getResources().getInteger(R.integer.commRelayRange);                                       //meters
         acCoverageRadius = getResources().getInteger(R.integer.acCoverageRadius);                               //meters
+        ROIRadius = getResources().getInteger(R.integer.ROIRadius); //meters
 
         /* TODO Move the aircraft instantiation to a more suitable location once the service provides data of multiple aircraft (first Heartbeat?)*/
 		// Instantiate aircraft object
@@ -158,13 +160,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
 		mAircraft.put(3, new Aircraft(getApplicationContext()));
 		mAircraft.get(3).setLlaHdg(519910540, 43794130, 0, (short) 300);
+//        mAircraft.get(3).setLlaHdg(519925740, 43775620, 0, (short) 180);
 		mAircraft.get(3).setAltitude(10.3);
 		mAircraft.get(3).setBatteryState(9000, 1, 1);
 		mAircraft.get(3).setDistanceHome(homeLocation);
 		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
 
         mAircraft.put(4, new Aircraft(getApplicationContext()));
-        mAircraft.get(4).setLlaHdg(519920900, 43796160, 0, (short) 270);
+//        mAircraft.get(4).setLlaHdg(519920900, 43796160, 0, (short) 270);
+        mAircraft.get(4).setLlaHdg(519880620, 43793190, 0, (short) 180);
         mAircraft.get(4).setAltitude(9.7);
         mAircraft.get(4).setBatteryState(12000, 90, 1);
         mAircraft.get(4).setDistanceHome(homeLocation);
@@ -1430,6 +1434,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Method to determine if a couple of aircraft needs to get conflict status
     private boolean isOnconflictCourse(int ac1, int ac2) {
         /* TODO make more extensive algorithm to check conflict courses (extrapolation)?? */
+        /* TODO make sure the conflict status is given for small coverage overlaps */
 
         //Calculate the distance between the two aircraft
         float[] distance = new float[1];
@@ -1583,25 +1588,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     /////////////////////////PERFORMANCE SCORE/////////////////////////
     private void ROIcovered(){
         //Region of interest parameters
-        int R = commMaxRange;
-        double AREA = R*R*Math.PI;
+        double AREA = ROIRadius*ROIRadius*Math.PI;
         LatLng ROIcenter = home.getHomeLocation();
 
-        //Aircraft parameters
-        LatLng coveredAreaCenter1 = mAircraft.get(2).getLatLng(); //Location of the waypoint an aircraft circles around
-        LatLng coveredAreaCenter2 = mAircraft.get(4).getLatLng(); //Location of the waypoint an aircraft circles around
-
         //Calculate the overlap between covered region by aircraft and the ROI area
-        //Calculate how much area of the circles overlaps
-        //overlap ROI and ac2
-        double overlapArea = circleOverlap(R, acCoverageRadius, ROIcenter, coveredAreaCenter1);
-        //add overlap ROI and ac2
-        overlapArea += circleOverlap(R, acCoverageRadius, ROIcenter, coveredAreaCenter2);
-        //Account for overlap of the two UAVs
-        overlapArea -= circleOverlap(acCoverageRadius, acCoverageRadius, coveredAreaCenter1, coveredAreaCenter2);
-        Log.d("OVERLAP",String.valueOf(overlapArea));
-        double perc = overlapArea/AREA;
-        Log.d("OVERLAPperc",String.valueOf(perc));
+        double overlapArea = 0;
+        /* TODO include all aircraft once app is further developed */
+        for(int i = 2; i<=mAircraft.size(); i++) { //Loop over all aircraft
+            //Add overlap between aircraft coverage and ROI
+            overlapArea += circleOverlap(ROIRadius, acCoverageRadius, ROIcenter, mAircraft.get(i).getLatLng());
+            for(int j = i+1; j<=mAircraft.size(); j++){
+                //Account for overlap of the two UAVs
+                overlapArea -= circleOverlap(acCoverageRadius, acCoverageRadius, mAircraft.get(i).getLatLng(), mAircraft.get(j).getLatLng());
+            }
+        }
+        //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!
+        coveragePercentage = (overlapArea/AREA)*100;
     }
 
     private double circleOverlap(double radius1, double radius2, LatLng c1, LatLng c2){
@@ -1623,7 +1625,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             overlapArea = 0;
         } else if(distance[0] <= Math.abs(R-r)) {  //inside
             overlapArea = r*r*Math.PI;
-            Log.d("OVERLAP",String.valueOf(r));
         } else {                                //Overlap
             double part1 = r*r*Math.acos((distance[0]*distance[0] + r*r - R*R)/(2*distance[0]*r));
             double part2 = R*R*Math.acos((distance[0]*distance[0] + R*R - r*r)/(2*distance[0]*R));
