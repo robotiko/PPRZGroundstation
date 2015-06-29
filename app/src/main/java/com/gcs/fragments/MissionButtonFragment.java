@@ -111,6 +111,12 @@ public class MissionButtonFragment extends Fragment {
                 homeButton.setBackgroundResource(R.drawable.home_button_active);
                 takeOffButton.setBackgroundResource(R.drawable.take_off_button_inactive);
                 landButton.setBackgroundResource(R.drawable.land_button_inactive);
+                break;
+            default:
+                landButton.setBackgroundResource(R.drawable.land_button_inactive);
+                takeOffButton.setBackgroundResource(R.drawable.take_off_button_inactive);
+                homeButton.setBackgroundResource(R.drawable.home_button_inactive);
+                break;
         }
     }
 

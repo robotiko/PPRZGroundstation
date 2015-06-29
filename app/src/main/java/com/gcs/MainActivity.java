@@ -109,6 +109,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private float verticalSeparationStandard, horizontalSeparationStandard;
     private int commMaxRange, commRelayRange, singleLabelVisibility;
     private int relayUAV = 0;                       //Set to 0 if none serves as relay (yet)
+    private int selectedAc = 0;                     //Set to 0 if none serves as relay (yet)
     private int acCoverageRadius, ROIRadius;
     private double coveragePercentage;
 
@@ -141,6 +142,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         /* TODO Move the aircraft instantiation to a more suitable location once the service provides data of multiple aircraft (first Heartbeat?)*/
 		// Instantiate aircraft object
         mAircraft.put(1, new Aircraft(getApplicationContext()));
+        //TEMPORARY
+        mAircraft.get(1).addWaypoint(51.990968f, 4.375053f, 50, (short) 0, (byte) 0, (byte) 0);
+        mAircraft.get(1).addWaypoint(51.990968f, 4.377670f, 50, (short) 1, (byte) 0, (byte) 0);
 
 		// Instantiate home object
 		home = new Home();
@@ -750,7 +754,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     //Get a list of waypoint objects from the service
 					List<Waypoint> waypoints = mServiceClient.getWpList();
 
-                     /* TODO WAYPOINTS use dynamic aicraft number once available in service */
+                     /* TODO WAYPOINTS use dynamic aircraft number once available in service */
                     //Clear the waypoint list if the aircraft already has waypoint data
                     if(mAircraft.get(1).getNumberOfWaypoints()>0) {
                         mAircraft.get(1).clearWpList();
@@ -785,7 +789,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void run() {
                 try {
                     /* TODO BLOCKS use dynamic aircraft number once available in service */
-                    Log.d("BLOCKS","Updated");
                     //Store the mission block list
                     mAircraft.get(1).missionBlocks = mServiceClient.getMissionBlockList();
 
@@ -995,34 +998,39 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Method to handle land button clicks
 	public void onLandRequest(View v) {
         /* TODO Try to execute one of the landing blocks. Check if landing is executed and update the button that is displayed.*/
-        if(isConnected && !mAircraft.get(1).missionBlocks.isEmpty()) {
+        if(isConnected && !mAircraft.get(1).missionBlocks.isEmpty() && selectedAc != 0) {
             //Select the land block and request the service to execute it
             try {
                 mServiceClient.onBlockSelected(mAircraft.get(1).missionBlocks.indexOf(getResources().getString(R.string.land_block)));
             } catch (RemoteException e) {
                 Log.e(TAG,"Error while requesting the service to execute the land block");
             }
-
-            //Notify the mission button fragment that the land button is clicked
-//            missionButtons.onLandRequest(v);
         }
 	}
 
     //Method to handle take-off button clicks
 	public void onTakeOffRequest(View v) {
         /* TODO Try to execute the take-off block(s). Check if take-off is executed and update the button that is displayed.*/
-//        if(isConnected && !missionBlocks.isEmpty()) {
-            //Notify the mission button fragment that the take-off button is clicked
-//            missionButtons.onTakeOffRequest(v);
-//        }
+        if(isConnected && mAircraft.get(1).missionBlocks!=null && selectedAc != 0) {
+            //Select the takeoff block and request the service to execute it
+            try {
+                mServiceClient.onBlockSelected(mAircraft.get(1).missionBlocks.indexOf(getResources().getString(R.string.takeoff_block)));
+            } catch (RemoteException e) {
+                Log.e(TAG,"Error while requesting the service to execute the takeoff block");
+            }
+        }
 	}
 
     //Method to handle home button clicks
 	public void onGoHomeRequest(View v) {
         /* TODO Try to execute one of the go-home/landing blocks. Check if the drone is going home and update the button that is displayed.*/
-//        if(isConnected && !missionBlocks.isEmpty()) {
-            //Notify the mission button fragment that the go home button is clicked
-//            missionButtons.onGoHomeRequest(v);
+//        if(isConnected && !mAircraft.get(1).missionBlocks.isEmpty() && selectedAc != 0) {
+            //Select the go home block and request the service to execute it
+//            try {
+//                mServiceClient.onBlockSelected(mAircraft.get(1).missionBlocks.indexOf(getResources().getString(R.string.GOHOME)));
+//            } catch (RemoteException e) {
+//                Log.e(TAG,"Error while requesting the service to execute the go home block");
+//            }
 //        }
 	}
 
@@ -1037,6 +1045,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             } catch (RemoteException e) {
                 Log.e(TAG, "Error while requesting waypoints");
             }
+        }
+    }
+
+    //Method to update the mission button appearance to selected aircraft properties
+    private void updateMissionButtons() {
+        if(selectedAc==0 || mAircraft.get(selectedAc).getCurrentBlock()==null) {
+            missionButtons.updateExecutedMissionButton("");
+        } else {
+            //Get the block name that is currently active for the selected aircraft and send this to the mission button fragment to update the buttons
+            missionButtons.updateExecutedMissionButton(mAircraft.get(selectedAc).getCurrentBlock());
         }
     }
 
@@ -1089,16 +1107,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Draw the Region Of Interest on the map (Used for test scenario)
         drawROI();
+
+        //TEMPORARY
+        waypointUpdater(1);
 	}
 
 	/* Marker listener for (de)selecttion aircraft icons, waypoint marker actions and home marker selection */
 	@Override
     public boolean onMarkerClick(final Marker marker) {
-        if(marker.getSnippet().contains("-")){                          //Waypoint marker clicked
+        if(marker.getSnippet().contains("-") && aircraftSelected){                          //Waypoint marker clicked
             String[] numbers = marker.getSnippet().split("-");
-            int acNumber = Integer.parseInt(numbers[0]);
+//            int acNumber = Integer.parseInt(numbers[0]);
             int wpNumber = Integer.parseInt(numbers[1]);
-
+            executeWaypointBlock(wpNumber);
             /* TODO implement code that commands a selected aircraft to execute the block that corresponds to the clicked waypoint */
         } else if(marker.getSnippet().equals("HOME")) {                 //Home marker clicked
             //Do nothing (yet)
@@ -1112,11 +1133,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     deselectAllAircraft();
                 }
                 mAircraft.get(acNumber).setIsSelected(true);
+                //Keep track of which aircraft is selected
+                selectedAc = acNumber;
                 aircraftSelected = true;
             } else {
                 mAircraft.get(acNumber).setIsSelected(false);
+                selectedAc = 0;
                 aircraftSelected = false;
             }
+            //Update the mission buttons
+            updateMissionButtons();
             //Update the map
             aircraftMarkerUpdater();
         }
@@ -1265,7 +1291,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //If the waypoints are already initiated, remove them from the map and clear the list that holds them
             if (!mAircraft.get(acNumber).wpMarkers.isEmpty()) {
                 //Remove markers from map
-                for (int i = 0; i < mAircraft.get(1).getNumberOfWaypoints(); i++) {
+                for (int i = 0; i < mAircraft.get(acNumber).getNumberOfWaypoints(); i++) {
                     mAircraft.get(acNumber).wpMarkers.get(i).remove();
                 }
 
@@ -1274,8 +1300,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             //(Re)generate waypoint markers
-            for (int i=0; i<mAircraft.get(1).getNumberOfWaypoints(); i++) {
-
+            for (int i=0; i<mAircraft.get(acNumber).getNumberOfWaypoints(); i++) {
                 //Add waypoint marker to map
                 Marker wpMarker = map.addMarker(new MarkerOptions()
                                 .position(mAircraft.get(acNumber).getWpLatLng(i))
@@ -1542,6 +1567,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Set the aircraft selection status
         mAircraft.get(aircraftNumber).setIsSelected(isSelected);
 
+        //Keep track of which aircraft is selected
+        if(isSelected) {
+            selectedAc = aircraftNumber;
+        } else {
+            selectedAc = 0;
+        }
+
+        //Update the mission buttons
+        updateMissionButtons();
+
         //Clear the group selection
         groupSelectedAircraft.clear();
         //Update the altitude tape to show the new selection setting
@@ -1555,6 +1590,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         for(int i=1; i<mAircraft.size()+1; i++) {
             mAircraft.get(i).setIsSelected(false);
         }
+        selectedAc = 0;
+        //Update the mission buttons
+        updateMissionButtons();
         groupSelectedAircraft.clear();
     }
 
@@ -1583,6 +1621,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Method for the altitude tape to check the conflict status of an aircraft
     public ConflictStatus getConflictStatus(int acNumber){
         return mAircraft.get(acNumber).getConflictStatus();
+    }
+
+    //////////////////////////MISSION COMMANDS/////////////////////////
+    private void executeWaypointBlock(int wpNumber){
+        //Continue only if the selected aircraft has blocks available
+        if(mAircraft.get(selectedAc).missionBlocks != null) {
+            //Determine the name of the block that belongs to the clicked waypoint and get the corresponding index number from the list
+            String blockName = "SURV" + String.valueOf(wpNumber + 1);
+            int blockIndex = mAircraft.get(selectedAc).missionBlocks.indexOf(blockName);
+
+            //Request execution of the block
+            try {
+                mServiceClient.onBlockSelected(blockIndex);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Error while sending mission block selection to the service");
+            }
+        }
     }
 
     /////////////////////////PERFORMANCE SCORE/////////////////////////
