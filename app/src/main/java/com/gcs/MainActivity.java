@@ -41,7 +41,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
@@ -1301,10 +1307,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             //(Re)generate waypoint markers
             for (int i=0; i<mAircraft.get(acNumber).getNumberOfWaypoints(); i++) {
+                //Custom wp marker with text (aircraft label + wp number)
+                Bitmap wpMarkerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wp_map).copy(Bitmap.Config.ARGB_8888, true);
+                Canvas markerCanvas = new Canvas(wpMarkerBitmap);
+                Paint markerPaint = new Paint();
+                markerPaint.setTextSize(22);
+                markerPaint.setFakeBoldText(true);
+                markerPaint.setColor(Color.BLACK);
+                markerPaint.setTextAlign(Paint.Align.CENTER);
+                markerCanvas.drawText(mAircraft.get(acNumber).getLabelCharacter()+String.valueOf(i+1),wpMarkerBitmap.getWidth()/2,wpMarkerBitmap.getHeight()/2+4,markerPaint);
+
                 //Add waypoint marker to map
                 Marker wpMarker = map.addMarker(new MarkerOptions()
                                 .position(mAircraft.get(acNumber).getWpLatLng(i))
                                 .flat(true)
+                                .icon(BitmapDescriptorFactory.fromBitmap(wpMarkerBitmap))
                                 .snippet(String.valueOf(acNumber) + "-" + String.valueOf(mAircraft.get(acNumber).getWpSeq(i)))
                                 .draggable(true)
                 );
