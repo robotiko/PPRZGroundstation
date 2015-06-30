@@ -54,6 +54,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.MenuItemCompat;
 import android.util.Log;
@@ -78,15 +79,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	
 	private static final String TAG = MainActivity.class.getSimpleName();
 
-    //Declaration of handlers and definition of time steps
+    //Declaration of handlers and definition of time and time steps
 	private Handler handler, interfaceUpdateHandler;
-	private final int mInterval        = 900;   // milliseconds
-    private final int blockUpdateDelay = 500;   // milliseconds
+	private final int mInterval        = 900;                        // milliseconds
+    private final int blockUpdateDelay = 500;                        // milliseconds
+    private final long initTime        = System.currentTimeMillis(); // milliseconds
+    private int uptime                 = 0;                          // milliseconds
 
     //Declaration of the service client
 	IMavLinkServiceClient mServiceClient;
-	
+
+    //Declaration of the connection button
 	private Button connectButton;
+
     //Declaration of booleans
 	private boolean isConnected       = false;
 	private boolean isAltitudeUpdated = false;
@@ -245,18 +250,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         switch (item.getItemId()) {
             case R.id.action_settings:
                 return true;
-            case R.id.menu_request_block_button:
-                //Try to request mission blocks if connected to the service
-                if (isConnected) {
-                    try {
-                        mServiceClient.requestMissionBlockList();
-                        Toast.makeText(getApplicationContext(), "Loading blocks", Toast.LENGTH_SHORT).show();
-                    } catch (RemoteException e) {
-                        Log.e(TAG,"Error while requesting mission blocks");
-                    }
-                }
-                return true;
             case R.id.show_comm_range:
+//                Log.d() initTime
                 ROIcovered();
                 //Show/hide the communication range on screen
                 showCommRange = !showCommRange;
@@ -298,6 +293,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	Runnable interfaceUpdater = new Runnable() {
 	    @Override 
 	    public void run() {
+
+            //Calculate the time the application has been active (milliSeconds)
+            uptime = (int)(System.currentTimeMillis() - initTime);
 
             //Draw the communication range on the map
 //            drawCommunicationRange(relayUAV);
@@ -777,7 +775,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     /* TODO show the waypoint updated message toaster after the waypoints of all aircraft are handled */
                     Toast.makeText(getApplicationContext(), "Waypoints updated.", Toast.LENGTH_SHORT).show();
-                    missionButtons.updateWaypointButton();
+                    missionButtons.updateLoadMissionButton();
 
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating waypoints", t);
@@ -804,6 +802,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     //Update the dropdown menu with the block names
                     updateMissionBlocksSpinner();
+                    Log.d("UPDATED",String.valueOf(mServiceClient.getCurrentBlock()));
                 } catch (RemoteException e) {
                     Log.e(TAG,"Error while updating mission blocks");
                 }
@@ -822,12 +821,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Method to update the selected block in the dropdown menu to the active one
     private void updateMissionBlocksSelection() {
+
         if (mAircraft.get(1).missionBlocks.size() > 0) {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         /* TODO BLOCKS use dynamic aircraft number once available in service */
+                        /* TODO make sure that the initial block selection is the actual one and not the initial block (0) of the declaration in the service */
                         //Update the Mission block spinner selection
                         Log.d(TAG, "Block: " + mServiceClient.getCurrentBlock());
                         blockSpinner.setSelection(mServiceClient.getCurrentBlock());
@@ -1003,24 +1004,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Method to handle land button clicks
 	public void onLandRequest(View v) {
-        /* TODO Try to execute one of the landing blocks. Check if landing is executed and update the button that is displayed.*/
-        if(isConnected && !mAircraft.get(1).missionBlocks.isEmpty() && selectedAc != 0) {
+        if (isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
             //Select the land block and request the service to execute it
             try {
-                mServiceClient.onBlockSelected(mAircraft.get(1).missionBlocks.indexOf(getResources().getString(R.string.land_block)));
+                mServiceClient.onBlockSelected(mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.land_block)));
             } catch (RemoteException e) {
-                Log.e(TAG,"Error while requesting the service to execute the land block");
+                Log.e(TAG, "Error while requesting the service to execute the land block");
             }
         }
 	}
 
     //Method to handle take-off button clicks
 	public void onTakeOffRequest(View v) {
-        /* TODO Try to execute the take-off block(s). Check if take-off is executed and update the button that is displayed.*/
-        if(isConnected && mAircraft.get(1).missionBlocks!=null && selectedAc != 0) {
+        if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
             //Select the takeoff block and request the service to execute it
             try {
-                mServiceClient.onBlockSelected(mAircraft.get(1).missionBlocks.indexOf(getResources().getString(R.string.takeoff_block)));
+                mServiceClient.onBlockSelected(mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.takeoff_block)));
             } catch (RemoteException e) {
                 Log.e(TAG,"Error while requesting the service to execute the takeoff block");
             }
@@ -1030,26 +1029,34 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Method to handle home button clicks
 	public void onGoHomeRequest(View v) {
         /* TODO Try to execute one of the go-home/landing blocks. Check if the drone is going home and update the button that is displayed.*/
-//        if(isConnected && !mAircraft.get(1).missionBlocks.isEmpty() && selectedAc != 0) {
+//        if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
             //Select the go home block and request the service to execute it
 //            try {
-//                mServiceClient.onBlockSelected(mAircraft.get(1).missionBlocks.indexOf(getResources().getString(R.string.GOHOME)));
+//                mServiceClient.onBlockSelected(mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.GOHOME)));
 //            } catch (RemoteException e) {
 //                Log.e(TAG,"Error while requesting the service to execute the go home block");
 //            }
 //        }
 	}
 
-    //Method to handle waypoint request button clicks
-    public void onWaypointRequest(View v) {
-        missionButtons.onWaypointRequest(v);
+    //Method to handle waypoint and block request button clicks
+    public void onLoadMissionRequest(View v) {
+        missionButtons.onLoadMissionRequest(v);
 
-        //Request the service to send (updated) waypoints if connected
         if (isConnected) {
+            //Request mission blocks if connected to the service
+            try {
+                mServiceClient.requestMissionBlockList();
+                Toast.makeText(getApplicationContext(), "Loading blocks", Toast.LENGTH_SHORT).show();
+            } catch (RemoteException e) {
+                Log.e(TAG,"Error while requesting mission blocks");
+            }
+
+            //Request the service to send (updated) waypoints if connected
             try {
                 mServiceClient.requestWpList();
             } catch (RemoteException e) {
-                Log.e(TAG, "Error while requesting waypoints");
+                Log.e(TAG, "Error while requesting waypoints and blocks");
             }
         }
     }
@@ -1121,7 +1128,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	/* Marker listener for (de)selecttion aircraft icons, waypoint marker actions and home marker selection */
 	@Override
     public boolean onMarkerClick(final Marker marker) {
-        Log.d("JAAA","TEST");
         if(marker.getSnippet().contains("-") && aircraftSelected){                          //Waypoint marker clicked
             String[] numbers = marker.getSnippet().split("-");
 //            int acNumber = Integer.parseInt(numbers[0]);
@@ -1358,7 +1364,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     /* Draw the area in which communication is possible */
     private void drawCommunicationRange(final int relayAc) {
-        mAircraft.get(1).acMarker.hideInfoWindow();
+
         //Only call the map if something needs to be drawn or if something needs to be removed from the map
         if(showCommRange) {
             //Call GoogleMaps
@@ -1503,6 +1509,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	public void updateAltitudeTape() {
 
         /* TODO move the targetalttiude indication to the for loop */
+        /* TODO make the aircraft number dynamic */
 		/* Set the location of the target label on the altitude tape and check wether to 
 		 * show the target label or not (aka is the aircraft already on target altitude?) */
         if (Math.abs(mAircraft.get(1).getTargetAltitude() - mAircraft.get(1).getAltitude()) > 0.001) {

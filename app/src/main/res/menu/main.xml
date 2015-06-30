@@ -26,11 +26,11 @@
         android:orderInCategory="11"
         android:title="block_spinner"
         android:actionViewClass="android.widget.Spinner" />
-
+<!--
     <item
         android:id="@+id/menu_request_block_button"
         android:showAsAction="always"
         android:orderInCategory="12"
         android:title="Update blocks" />
-
+-->
 </menu>

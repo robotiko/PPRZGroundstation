@@ -18,7 +18,7 @@
     <string name="land_button">Land</string>
     <string name="take_off_button">Take-Off</string>
     <string name="go_home_button">Go Home</string>
-    <string name="waypoint_button">Update\nWaypoints</string>
+    <string name="load_mission_button">Load\nMission</string>
 
     <!-- Block names -->
     <string name="takeoff_block">Takeoff</string>
