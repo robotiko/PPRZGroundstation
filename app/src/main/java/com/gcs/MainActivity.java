@@ -97,6 +97,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private boolean isAltitudeUpdated = false;
     private boolean aircraftSelected  = false;
     private boolean showCommRange     = false;
+    private boolean showCoverage      = false;
 
     //Declaration of the fragments
 	private TelemetryFragment     telemetryFragment;
@@ -126,8 +127,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Declaration of items needed for mission blocks display
     private MenuItem menuBlockSpinner = null;
-    Spinner blockSpinner;
-    TextView blocksTextView;
+    private Spinner blockSpinner;
+    private TextView blocksTextView;
     Menu menu;
 
 	@Override
@@ -154,15 +155,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Instantiate aircraft object
         mAircraft.put(1, new Aircraft(getApplicationContext()));
         //TEMPORARY
-        mAircraft.get(1).addWaypoint(51.990968f, 4.375053f, 50, (short) 0, (byte) 0, (byte) 0);
-        mAircraft.get(1).addWaypoint(51.990968f, 4.377670f, 50, (short) 1, (byte) 0, (byte) 0);
+//        mAircraft.get(1).addWaypoint(51.990968f, 4.375053f, 50, (short) 0, (byte) 0, (byte) 0);
+//        mAircraft.get(1).addWaypoint(51.990968f, 4.377670f, 50, (short) 1, (byte) 0, (byte) 0);
 
 		// Instantiate home object
 		home = new Home();
 
         /* TODO Move this to a better place when service provides the home location */
         // TEMPORARY SETTING OF HOME LOCATION
-        LatLng homeLocation = new LatLng(51.990826, 4.378248);
+//        LatLng homeLocation = new LatLng(51.990826, 4.378248);
+        LatLng homeLocation = new LatLng(43.563967, 1.481951);
         home.setHomeLocation(homeLocation);
 
         //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
@@ -209,11 +211,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 
-        //Textview test
+        //Menu textviews
         MenuItem menuItem = menu.findItem(R.id.mission_block_load_status);
         blocksTextView = (TextView) menuItem.getActionView();
         blocksTextView.setText(getResources().getString(R.string.no_blocks_loaded) + "  ");
-
         blocksTextView.setTextColor(Color.RED);
 
         //Set up the spinner in the action bar for the mission block which can be loaded from the service and create a handle
@@ -251,12 +252,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             case R.id.action_settings:
                 return true;
             case R.id.show_comm_range:
-//                Log.d() initTime
                 ROIcovered();
                 //Show/hide the communication range on screen
                 showCommRange = !showCommRange;
                 /* TODO move this to the interface updater for continous up-to-date information?? */
                 drawCommunicationRange(relayUAV);
+                return true;
+            case R.id.show_coverage:
+                showCoverage = !showCoverage;
                 return true;
         }
 		return super.onOptionsItemSelected(item);
@@ -296,6 +299,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             //Calculate the time the application has been active (milliSeconds)
             uptime = (int)(System.currentTimeMillis() - initTime);
+
+            //Draw the coverage area on the map (if the user wants it)
+            drawCoverage();
 
             //Draw the communication range on the map
 //            drawCommunicationRange(relayUAV);
@@ -714,12 +720,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     /* TODO POSITION use dynamic aicraft number once available in service */
                     mAircraft.get(1).setSatVisible(mPosition.getSatVisible());
                     //TODO Change heading to int when this is changed in the service
-                    mAircraft.get(1).setLlaHdg(519907790, 43774220, mPosition.getAlt(), (short) (mPosition.getHdg()/100));
-//                    mAircraft.get(1).setLlaHdg(mPosition.getLat(), mPosition.getLon(), mPosition.getAlt(), (short) (mPosition.getHdg()/100));
+//                    mAircraft.get(1).setLlaHdg(519907790, 43774220, mPosition.getAlt(), (short) (mPosition.getHdg()/100));
+                    mAircraft.get(1).setLlaHdg(mPosition.getLat(), mPosition.getLon(), mPosition.getAlt(), (short) (mPosition.getHdg()/100));
                     mAircraft.get(1).setDistanceHome(home.getHomeLocation());
 //                    Log.d("DATATESTlat",String.valueOf(mPosition.getLat()));
 //                    Log.d("DATATESTlng",String.valueOf(mPosition.getLon()));
-//                    Log.d("DATATESTalt",String.valueOf(mPosition.getAlt()/1000));
+//                    Log.d("DATATESTalt",String.valueOf(mPosition.getAlt()));
 
                 } catch (Throwable t) {
 					Log.e(TAG, "Error while updating position", t);
@@ -767,7 +773,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     //Loop over the newly received waypoint list to add them individually to the list of the corresponding aircraft
                     for (int i = 0; i < waypoints.size(); i++) {
                         /* TODO add the dynamic setting of the waypoint sequence number, targetSys and targetComp  */
-                        mAircraft.get(1).addWaypoint(waypoints.get(i).getLat(), waypoints.get(i).getLon(), waypoints.get(i).getAlt(), (short) i, (byte) 0, (byte) 0);
+                        mAircraft.get(1).addWaypoint(waypoints.get(i).getLat()*1e-7, waypoints.get(i).getLon()*1e-7, (float)(waypoints.get(i).getAlt()*1e-3), (short) i, (byte) 0, (byte) 0);
                     }
 
                     //Call the method that shows the waypoints on the map
@@ -858,7 +864,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         
         /* TODO: Fetch server port */
         
-        final int serverPort = 5000;
+        final int serverPort = 8888;
         
         Bundle extraParams = new Bundle();
 
@@ -1122,7 +1128,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         drawROI();
 
         //TEMPORARY
-        waypointUpdater(1);
+//        waypointUpdater(1);
 	}
 
 	/* Marker listener for (de)selecttion aircraft icons, waypoint marker actions and home marker selection */
@@ -1308,42 +1314,42 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapReady(GoogleMap map) {
 
-            //If the waypoints are already initiated, remove them from the map and clear the list that holds them
-            if (!mAircraft.get(acNumber).wpMarkers.isEmpty()) {
-                //Remove markers from map
-                for (int i = 0; i < mAircraft.get(acNumber).getNumberOfWaypoints(); i++) {
-                    mAircraft.get(acNumber).wpMarkers.get(i).remove();
+                //If the waypoints are already initiated, remove them from the map and clear the list that holds them
+                if (!mAircraft.get(acNumber).wpMarkers.isEmpty()) {
+                    //Remove markers from map
+                    for (int i = 0; i < mAircraft.get(acNumber).getNumberOfWaypoints(); i++) {
+                        mAircraft.get(acNumber).wpMarkers.get(i).remove();
+                    }
+
+                    //Clear the marker list (not the marker data)
+                    mAircraft.get(acNumber).wpMarkers.clear();
                 }
 
-                //Clear the marker list (not the marker data)
-                mAircraft.get(acNumber).wpMarkers.clear();
-            }
+                //(Re)generate waypoint markers
+                for (int i = 0; i < mAircraft.get(acNumber).getNumberOfWaypoints(); i++) {
+                    //Custom wp marker with text (aircraft label + wp number)
+                    Bitmap wpMarkerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wp_map).copy(Bitmap.Config.ARGB_8888, true);
+                    Canvas markerCanvas = new Canvas(wpMarkerBitmap);
+                    Paint markerPaint = new Paint();
+                    markerPaint.setTextSize(22);
+                    markerPaint.setFakeBoldText(true);
+                    markerPaint.setColor(Color.BLACK);
+                    markerPaint.setTextAlign(Paint.Align.CENTER);
+                    markerCanvas.drawText(mAircraft.get(acNumber).getLabelCharacter() + String.valueOf(i + 1), wpMarkerBitmap.getWidth() / 2, wpMarkerBitmap.getHeight() / 2 + 4, markerPaint);
 
-            //(Re)generate waypoint markers
-            for (int i=0; i<mAircraft.get(acNumber).getNumberOfWaypoints(); i++) {
-                //Custom wp marker with text (aircraft label + wp number)
-                Bitmap wpMarkerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wp_map).copy(Bitmap.Config.ARGB_8888, true);
-                Canvas markerCanvas = new Canvas(wpMarkerBitmap);
-                Paint markerPaint = new Paint();
-                markerPaint.setTextSize(22);
-                markerPaint.setFakeBoldText(true);
-                markerPaint.setColor(Color.BLACK);
-                markerPaint.setTextAlign(Paint.Align.CENTER);
-                markerCanvas.drawText(mAircraft.get(acNumber).getLabelCharacter()+String.valueOf(i+1),wpMarkerBitmap.getWidth()/2,wpMarkerBitmap.getHeight()/2+4,markerPaint);
+                    //Add waypoint marker to map
+                    Marker wpMarker = map.addMarker(new MarkerOptions()
+                                    .position(mAircraft.get(acNumber).getWpLatLng(i))
+                                    .flat(true)
+                                    .icon(BitmapDescriptorFactory.fromBitmap(wpMarkerBitmap))
+                                    .snippet(String.valueOf(acNumber) + "-" + String.valueOf(mAircraft.get(acNumber).getWpSeq(i)))
+                                    .draggable(true)
+                    );
+                    //Add the newly generated waypoint marker to the list to keep reference to it
+                    mAircraft.get(acNumber).wpMarkers.add(wpMarker);
+                }
 
-                //Add waypoint marker to map
-                Marker wpMarker = map.addMarker(new MarkerOptions()
-                                .position(mAircraft.get(acNumber).getWpLatLng(i))
-                                .flat(true)
-                                .icon(BitmapDescriptorFactory.fromBitmap(wpMarkerBitmap))
-                                .snippet(String.valueOf(acNumber) + "-" + String.valueOf(mAircraft.get(acNumber).getWpSeq(i)))
-                                .draggable(true)
-                );
-                //Add the newly generated waypoint marker to the list to keep reference to it
-                mAircraft.get(acNumber).wpMarkers.add(wpMarker);
-            }
-
-            ///* FLIGHT PATH (lines between waypoints) *///
+                ///* FLIGHT PATH (lines between waypoints) *///
 
             /* TODO Distinguish pattern- and relay waypoints using color and draw circles around the waypoints to show the flightpath of the aircraft
 
@@ -1388,7 +1394,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             .strokeColor(0x5500ff00)
                             .radius(commMaxRange); // In meters
 
-                    // Get back the mutable Circle
+                    // Get back the home Circle object
                     homeCommCircle = map.addCircle(homeCircleOptions);
 
                     //If a relay UAV is active
@@ -1401,7 +1407,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 .strokeColor(0x5500ff00)
                                 .radius(commRelayRange); // In meters
 
-                        // Get back the mutable Circle
+                        // Get back the relay Circle object
                         relayCommCircle = map.addCircle(relayCircleOptions);
                     }
                 }
@@ -1445,6 +1451,39 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // Get back the mutable Polyline
                 Polygon polygon = map.addPolygon(rectOptions);
+            }
+        });
+    }
+
+    ///////* Draw the area of the map that is coevred by the aircraft *///////
+    private void drawCoverage() {
+
+        //Call GoogleMaps
+        mapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap map) {
+                if(showCoverage) {
+//                acCoverageRadius
+//                    CoverageCircle
+
+//                    //Remove the coverage circle if it was drawn before
+//                    if (homeCommCircle != null) {
+//                        homeCommCircle.remove();
+//                    }
+
+
+                    // Draw the relay commincation range circle
+//                    CircleOptions relayCircleOptions = new CircleOptions()
+//                            .center(mAircraft.get(1).getCurrentSurveyLoc())
+//                            .strokeWidth(5)
+//                            .strokeColor(0x5500ff00)
+//                            .radius(commRelayRange); // In meters
+//
+//                    // Get back the relay Circle object
+//                    relayCommCircle = map.addCircle(relayCircleOptions);
+                } else {
+
+                }
             }
         });
     }
@@ -1660,7 +1699,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Continue only if the selected aircraft has blocks available
         if(mAircraft.get(selectedAc).missionBlocks != null) {
             //Determine the name of the block that belongs to the clicked waypoint and get the corresponding index number from the list
-            String blockName = "SURV" + String.valueOf(wpNumber + 1);
+            String blockName = getResources().getString(R.string.survey_block) + String.valueOf(wpNumber + 1); //"SURV"
             int blockIndex = mAircraft.get(selectedAc).missionBlocks.indexOf(blockName);
 
             //Request execution of the block
@@ -1694,9 +1733,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private double circleOverlap(double radius1, double radius2, LatLng c1, LatLng c2){
+        //Calculation of distance between two LatLng coordinates
         float[] distance = new float[1];
         Location.distanceBetween(c1.latitude, c1.longitude, c2.latitude, c2.longitude, distance);
 
+        //Define the used radii
         double R = radius1;
         double r = radius2;
 
@@ -1706,16 +1747,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             r = radius1;
         }
 
-        //Check wether the circles overlap, do not intersect or are inside each other. Then calculate accordingly
+        //Check whether the circles overlap, do not intersect or are inside each other. Then calculate accordingly
         double overlapArea;
         if(distance[0] > (R+r)) {                  //No overlap
             overlapArea = 0;
         } else if(distance[0] <= Math.abs(R-r)) {  //inside
+            //Entire area of the small circle
             overlapArea = r*r*Math.PI;
-        } else {                                //Overlap
+        } else {                                   //Overlap
             double part1 = r*r*Math.acos((distance[0]*distance[0] + r*r - R*R)/(2*distance[0]*r));
             double part2 = R*R*Math.acos((distance[0]*distance[0] + R*R - r*r)/(2*distance[0]*R));
             double part3 = 0.5*Math.sqrt((-distance[0]+r+R)*(distance[0]+r-R)*(distance[0]-r+R)*(distance[0]+r+R));
+            //Subtract the triangle areas from the cone areas to end up with the overlap area
             overlapArea = part1 + part2 - part3;
         }
         return overlapArea;

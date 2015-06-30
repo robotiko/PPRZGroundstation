@@ -1,9 +1,9 @@
 package com.gcs.core;
 
 public class Waypoint {
-	private float lat;
+	private double lat;
 	
-	private float lon;
+	private double lon;
 	
 	private float alt;
 	
@@ -13,7 +13,7 @@ public class Waypoint {
 	
 	private byte targetComp;
 	
-	public Waypoint(float lat, float lon, float alt, short seq, byte targetSys, byte targetComp) {
+	public Waypoint(double lat, double lon, float alt, short seq, byte targetSys, byte targetComp) {
 		this.lat = lat;
 		this.lon = lon;
 		this.alt = alt;
@@ -22,11 +22,11 @@ public class Waypoint {
 		this.targetComp = targetComp;
 	}
 	
-	public void setLat(float lat) {
+	public void setLat(double lat) {
 		this.lat = lat;
 	}
 	
-	public void setLon(float lon) {
+	public void setLon(double lon) {
 		this.lon = lon;
 	}
 	
@@ -46,11 +46,11 @@ public class Waypoint {
 		this.targetComp = targetComp;
 	}
 	
-	public float getLat() {
+	public double getLat() {
 		return this.lat;
 	}
 	
-	public float getLon() {
+	public double getLon() {
 		return this.lon;
 	}
 	

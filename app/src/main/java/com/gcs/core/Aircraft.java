@@ -13,9 +13,11 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
+import android.util.Log;
 import android.widget.TextView;
 
 import com.gcs.R;
+import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polyline;
@@ -52,6 +54,7 @@ public class Aircraft {
     public Marker acMarker;
     public List<Marker> wpMarkers  = new ArrayList<>();
     public List<String> missionBlocks;
+    public Circle CoverageCircle;
 	public Polyline flightPath;
 	
 	private final int AltitudeLabelId   = TextView.generateViewId();
@@ -61,6 +64,7 @@ public class Aircraft {
     private boolean showInfoWindow      = true;
     private float distanceHome          = 0f;
     private String currentBlock;
+    private LatLng currentSurveyLoc;
 
     //////////// HEARTBEAT ////////////
     public byte getSysid() {
@@ -256,24 +260,24 @@ public class Aircraft {
 	}
 
     //////////// WAYPOINTS ////////////
-    public void addWaypoint(float lat, float lon, float alt, short seq, byte targetSys, byte targetComp) {
+    public void addWaypoint(double lat, double lon, float alt, short seq, byte targetSys, byte targetComp) {
     	Waypoint wp = new Waypoint(lat, lon, alt, seq, targetSys, targetComp);
         waypoints.add(wp);
     }
     
-    public void setWpLat(float lat, int wpNumber) {
+    public void setWpLat(double lat, int wpNumber) {
     	Waypoint wp = waypoints.get(wpNumber);
     	wp.setLat(lat);
     	waypoints.set(wpNumber, wp);
 	}
     
-    public void setWpLon(float lon, int wpNumber) {
+    public void setWpLon(double lon, int wpNumber) {
     	Waypoint wp = waypoints.get(wpNumber);
         wp.setLon(lon);
     	waypoints.set(wpNumber, wp);
 	}
 
-    public void setWpLatLon(float lat, float lon, int wpNumber) {
+    public void setWpLatLon(double lat, double lon, int wpNumber) {
         setWpLat(lat, wpNumber);
         setWpLon(lon, wpNumber);
     }
@@ -302,11 +306,11 @@ public class Aircraft {
     	waypoints.set(wpNumber,wp);
 	}
 	
-	public float getWpLat(int wpNumber) {
+	public double getWpLat(int wpNumber) {
 		return waypoints.get(wpNumber).getLat();
 	}
 	
-	public float getWpLon(int wpNumber) {
+	public double getWpLon(int wpNumber) {
 		return waypoints.get(wpNumber).getLon();
 	}
 	
@@ -398,10 +402,23 @@ public class Aircraft {
     public void setCurrentBlock(int currentSelection) {
         if(!missionBlocks.isEmpty()) {
             currentBlock = missionBlocks.get(currentSelection);
+
+//            //If the block is a survey block
+//            String surveyBlockName = context.getResources().getString(R.string.survey_block);
+//            Log.d("CLICK1",surveyBlockName);
+//            Log.d("CLICK2",currentBlock);
+//            if(currentBlock.contains(surveyBlockName)) {
+//                currentSurveyLoc = getWpLatLng(missionBlocks.indexOf(currentBlock));
+//            } else {
+//                currentSurveyLoc = null;
+//            }
+//            Log.d("CLICK3",String.valueOf(currentSurveyLoc));
         }
     }
 
     public String getCurrentBlock() {return currentBlock; }
+
+    public LatLng getCurrentSurveyLoc() { return currentSurveyLoc; }
 
     public void setShowInfoWindow(boolean showInfoWindow) {this.showInfoWindow = showInfoWindow;}
 

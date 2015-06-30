@@ -15,6 +15,12 @@
         android:actionViewClass="android.widget.TextView"/>
 
     <item
+        android:id="@+id/show_coverage"
+        android:orderInCategory="9"
+        android:showAsAction="always"
+        android:title="Coverage"/>
+
+    <item
         android:id="@+id/show_comm_range"
         android:orderInCategory="10"
         android:showAsAction="always"
