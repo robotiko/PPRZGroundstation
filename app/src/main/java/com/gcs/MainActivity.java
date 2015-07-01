@@ -250,7 +250,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 //Item selection implementation
-                setIsSelected(position+1, true);
+                if(position>0) {
+                    setIsSelected(position, true);
+                }
             }
 
             //Define what should happen if no item is selected in the spinner
@@ -877,6 +879,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private void updateAircraftSpinner() {
         List<String> aircraftList = new ArrayList<>();
 
+        //Add the initial value to the spinner
+        aircraftList.add(getResources().getString(R.string.no_aircraft_selected));
+
         for(int i=1; i<=mAircraft.size(); i++) {
             aircraftList.add("Aircraft " + mAircraft.get(i).getLabelCharacter());
         }
@@ -1207,12 +1212,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 //Keep track of which aircraft is selected
                 selectedAc = acNumber;
                 aircraftSelected = true;
+                //Set the aircraft spinner to the selected aircraft
+                aircraftSpinner.setSelection(acNumber);
                 //Set info window show status for next map draw iteration
                 mAircraft.get(acNumber).setShowInfoWindow(true);
             } else {
                 mAircraft.get(acNumber).setIsSelected(false);
                 selectedAc = 0;
                 aircraftSelected = false;
+                //Set the aircraft spinner to nothing selected
+                aircraftSpinner.setSelection(0);
             }
             //Update the mission buttons
             updateMissionButtons();
@@ -1693,8 +1702,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Keep track of which aircraft is selected
         if(isSelected) {
             selectedAc = aircraftNumber;
+            aircraftSpinner.setSelection(aircraftNumber);
         } else {
             selectedAc = 0;
+            aircraftSpinner.setSelection(0);
         }
 
         //Update the mission buttons
@@ -1717,6 +1728,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Update the mission buttons
         updateMissionButtons();
         groupSelectedAircraft.clear();
+
+        //Set the aircraft spinner to nothing selected
+        aircraftSpinner.setSelection(0);
     }
 
     //Set a group of aircraft to selected status

@@ -29,4 +29,7 @@
     <string name="no_blocks_loaded">No blocks loaded</string>
     <string name="blocks_loaded">Blocks loaded</string>
 
+    <!-- Spinner values -->
+    <string name="no_aircraft_selected">No aircraft selected</string>
+
 </resources>
