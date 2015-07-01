@@ -128,7 +128,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Declaration of items needed for mission blocks display
     private MenuItem menuBlockSpinner = null;
     private Spinner blockSpinner;
-    private TextView blocksTextView;
     Menu menu;
 
 	@Override
@@ -210,12 +209,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
-
-        //Menu textviews
-        MenuItem menuItem = menu.findItem(R.id.mission_block_load_status);
-        blocksTextView = (TextView) menuItem.getActionView();
-        blocksTextView.setText(getResources().getString(R.string.no_blocks_loaded) + "  ");
-        blocksTextView.setTextColor(Color.RED);
 
         //Set up the spinner in the action bar for the mission block which can be loaded from the service and create a handle
         menuBlockSpinner = menu.findItem(R.id.menu_block_spinner);
@@ -781,7 +774,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     /* TODO show the waypoint updated message toaster after the waypoints of all aircraft are handled */
                     Toast.makeText(getApplicationContext(), "Waypoints updated.", Toast.LENGTH_SHORT).show();
-                    missionButtons.updateLoadMissionButton();
+                    missionButtons.updateWaypointsButton();
 
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating waypoints", t);
@@ -802,9 +795,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     //Store the mission block list
                     mAircraft.get(1).missionBlocks = mServiceClient.getMissionBlockList();
 
-                    //Update the block status indicattion in the action bar
-                    blocksTextView.setText(getResources().getString(R.string.blocks_loaded) + "  ");
-                    blocksTextView.setTextColor(Color.GREEN);
+                    //Update the blocks request button
+                    missionButtons.updateBlocksButton();
 
                     //Update the dropdown menu with the block names
                     updateMissionBlocksSpinner();
@@ -864,7 +856,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         
         /* TODO: Fetch server port */
         
-        final int serverPort = 8888;
+        final int serverPort = 5000;
         
         Bundle extraParams = new Bundle();
 
@@ -1045,24 +1037,30 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //        }
 	}
 
-    //Method to handle waypoint and block request button clicks
-    public void onLoadMissionRequest(View v) {
-        missionButtons.onLoadMissionRequest(v);
+    public void onBlocksRequest(View v) {
+        missionButtons.onBlocksRequest(v);
 
+        //Request mission blocks if connected to the service
         if (isConnected) {
-            //Request mission blocks if connected to the service
             try {
                 mServiceClient.requestMissionBlockList();
                 Toast.makeText(getApplicationContext(), "Loading blocks", Toast.LENGTH_SHORT).show();
             } catch (RemoteException e) {
                 Log.e(TAG,"Error while requesting mission blocks");
             }
+        }
+    }
 
-            //Request the service to send (updated) waypoints if connected
+    //Method to handle waypoint and block request button clicks
+    public void onWaypointsRequest(View v) {
+        missionButtons.onWaypointsRequest(v);
+
+        //Request the service to send (updated) waypoints if connected
+        if (isConnected) {
             try {
                 mServiceClient.requestWpList();
             } catch (RemoteException e) {
-                Log.e(TAG, "Error while requesting waypoints and blocks");
+                Log.e(TAG, "Error while requesting waypoints");
             }
         }
     }

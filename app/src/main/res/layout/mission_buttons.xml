@@ -49,14 +49,27 @@
             android:gravity="bottom|center_horizontal"/>
 
         <Button
-            android:id="@+id/loadMissionButton"
+            android:id="@+id/loadWaypointsButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="onLoadMissionRequest"
+            android:onClick="onWaypointsRequest"
             android:background="@drawable/wp_button_blackwhite"
             android:layout_alignParentLeft="true"
             android:layout_marginLeft="5dp"
-            android:text="@string/load_mission_button"
+            android:text="@string/load_waypoints_button"
+            android:textSize="10sp"
+            android:lineSpacingMultiplier="0.9"
+            android:gravity="bottom|center_horizontal"/>
+
+        <Button
+            android:id="@+id/loadBlocksButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onBlocksRequest"
+            android:background="@drawable/blocks_button_blackwhite"
+            android:layout_toRightOf="@id/loadWaypointsButton"
+            android:layout_marginLeft="10dp"
+            android:text="@string/load_blocks_button"
             android:textSize="10sp"
             android:lineSpacingMultiplier="0.9"
             android:gravity="bottom|center_horizontal"/>

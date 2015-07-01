@@ -15,7 +15,7 @@ public class MissionButtonFragment extends Fragment {
     private static final String TAG = MissionButtonFragment.class.getName();
 	
 	private View rootView;
-    private Button homeButton, landButton, takeOffButton, loadMissionButton;
+    private Button homeButton, landButton, takeOffButton, loadWaypointsButton, loadBlocksButton;
     private Boolean homeButtonClicked = false, landButtonClicked = false, takeOffButtonClicked = false;
     private String landBlockName, takeoffBlockName;
 
@@ -38,10 +38,11 @@ public class MissionButtonFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         // Create handles for the buttons
-        homeButton        = (Button) getView().findViewById(R.id.goHomeButton);
-        landButton        = (Button) getView().findViewById(R.id.landButton);
-        takeOffButton     = (Button) getView().findViewById(R.id.takeOffButton);
-        loadMissionButton = (Button) getView().findViewById(R.id.loadMissionButton);
+        homeButton          = (Button) getView().findViewById(R.id.goHomeButton);
+        landButton          = (Button) getView().findViewById(R.id.landButton);
+        takeOffButton       = (Button) getView().findViewById(R.id.takeOffButton);
+        loadWaypointsButton = (Button) getView().findViewById(R.id.loadWaypointsButton);
+        loadBlocksButton    = (Button) getView().findViewById(R.id.loadBlocksButton);
 
         landBlockName    = getResources().getString(R.string.land_block);
         takeoffBlockName = getResources().getString(R.string.take_off_button);
@@ -86,13 +87,21 @@ public class MissionButtonFragment extends Fragment {
         setButtonAppearance(homeButtonClicked, ButtonName.HOME);
 	}
 
-	public void onLoadMissionRequest(View v) {
+	public void onWaypointsRequest(View v) {
 
         Log.d("COMMAND", "Update waypoints");
     }
 
-    public void updateLoadMissionButton() {
-        loadMissionButton.setBackgroundResource(R.drawable.wp_button_green);
+    public void onBlocksRequest(View v) {
+        Log.d("COMMAND", "Update blocks");
+    }
+
+    public void updateWaypointsButton() {
+        loadWaypointsButton.setBackgroundResource(R.drawable.wp_button_green);
+    }
+
+    public void updateBlocksButton() {
+        loadBlocksButton.setBackgroundResource(R.drawable.blocks_button_green);
     }
 
     public void updateExecutedMissionButton(String currentBlock) {
