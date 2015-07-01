@@ -126,8 +126,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private double coveragePercentage;
 
     //Declaration of items needed for mission blocks display
-    private MenuItem menuBlockSpinner = null;
-    private Spinner blockSpinner;
+    private MenuItem menuBlockSpinner = null, menuAircraftSpinner = null;
+    private Spinner blockSpinner, aircraftSpinner;
     Menu menu;
 
 	@Override
@@ -200,6 +200,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        //Temporarily fill the aircraft spinner here
+//        updateAircraftSpinner();
+
         // Start the interface update handler
 		interfaceUpdater.run();	/* TODO check if there is a better moment to start this handler (on first heartbeat?) */
 	}
@@ -210,11 +213,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 
+        ////////////BLOCKS SPINNER////////////
         //Set up the spinner in the action bar for the mission block which can be loaded from the service and create a handle
         menuBlockSpinner = menu.findItem(R.id.menu_block_spinner);
         blockSpinner = (Spinner) MenuItemCompat.getActionView(menuBlockSpinner);
 
-        //Listener on item selection in the spinner
+        //Listener on item selection in the block spinner
         blockSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             //Define what should happen when an item in the spinner is selected
@@ -233,6 +237,31 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 //Do nothing
             }
         });
+
+        ////////////AIRCRAFT SPINNER////////////
+        //Set up the spinner in the action bar for the aircraft and create a handle
+        menuAircraftSpinner = menu.findItem(R.id.aircraft_selection_spinner);
+        aircraftSpinner     = (Spinner) MenuItemCompat.getActionView(menuAircraftSpinner);
+
+        //Listener on item selection in the spinner
+        aircraftSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+            //Define what should happen when an item in the spinner is selected
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                //Item selection implementation
+                setIsSelected(position+1, true);
+            }
+
+            //Define what should happen if no item is selected in the spinner
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                //Do nothing
+            }
+        });
+
+        //Temporarily fill the aircraft spinner here
+        updateAircraftSpinner();
 
         this.menu = menu;
         return true;
@@ -844,6 +873,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    //Method to update the mission block dropdown menu
+    private void updateAircraftSpinner() {
+        List<String> aircraftList = new ArrayList<>();
+
+        for(int i=1; i<=mAircraft.size(); i++) {
+            aircraftList.add("Aircraft " + mAircraft.get(i).getLabelCharacter());
+        }
+
+        //Create an array adapter with the mission block names
+        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, aircraftList);
+        spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        //Apply the array adapter to the block spinner to update the blocks in the dropdown menu
+        aircraftSpinner.setAdapter(spinnerArrayAdapter);
+    }
 
 
 	////////OTHER COMMUNICATION FUNCTIONS
@@ -1002,7 +1045,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Method to handle land button clicks
 	public void onLandRequest(View v) {
-        if (isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
+        if(selectedAc == 0 ) {
+            //Notify the user that no aircraft is selected
+            Toast.makeText(getApplicationContext(), "No aircraft selected!", Toast.LENGTH_SHORT).show();
+            //request to land if connected and the mission blocks are loaded
+        } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
             //Select the land block and request the service to execute it
             try {
                 mServiceClient.onBlockSelected(mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.land_block)));
@@ -1014,7 +1061,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Method to handle take-off button clicks
 	public void onTakeOffRequest(View v) {
-        if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
+        if(selectedAc == 0 ) {
+            //Notify the user that no aircraft is selected
+            Toast.makeText(getApplicationContext(), "No aircraft selected!", Toast.LENGTH_SHORT).show();
+        //request takeoff if connected and the mission blocks are loaded
+        } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
             //Select the takeoff block and request the service to execute it
             try {
                 mServiceClient.onBlockSelected(mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.takeoff_block)));
@@ -1027,19 +1078,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Method to handle home button clicks
 	public void onGoHomeRequest(View v) {
         /* TODO Try to execute one of the go-home/landing blocks. Check if the drone is going home and update the button that is displayed.*/
-//        if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
+        if(selectedAc == 0 ) {
+            //Notify the user that no aircraft is selected
+            Toast.makeText(getApplicationContext(), "No aircraft selected!", Toast.LENGTH_SHORT).show();
+            //request to go home if connected and the mission blocks are loaded
+        } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
             //Select the go home block and request the service to execute it
 //            try {
 //                mServiceClient.onBlockSelected(mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.GOHOME)));
 //            } catch (RemoteException e) {
 //                Log.e(TAG,"Error while requesting the service to execute the go home block");
 //            }
-//        }
+        }
 	}
 
     public void onBlocksRequest(View v) {
         missionButtons.onBlocksRequest(v);
 
+        /* TODO make sure blocks of all aircraft are requested */
         //Request mission blocks if connected to the service
         if (isConnected) {
             try {
@@ -1055,6 +1111,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     public void onWaypointsRequest(View v) {
         missionButtons.onWaypointsRequest(v);
 
+        /* TODO make sure waypoints of all aircraft are requested */
         //Request the service to send (updated) waypoints if connected
         if (isConnected) {
             try {
@@ -1124,9 +1181,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Draw the Region Of Interest on the map (Used for test scenario)
         drawROI();
-
-        //TEMPORARY
-//        waypointUpdater(1);
 	}
 
 	/* Marker listener for (de)selecttion aircraft icons, waypoint marker actions and home marker selection */
