@@ -54,7 +54,7 @@ public class Aircraft {
     public Marker acMarker;
     public List<Marker> wpMarkers  = new ArrayList<>();
     public List<String> missionBlocks;
-    public Circle CoverageCircle;
+    public Circle CoverageCircle ;
 	public Polyline flightPath;
 	
 	private final int AltitudeLabelId   = TextView.generateViewId();
@@ -176,9 +176,9 @@ public class Aircraft {
         return mBattery.getBattVolt();
     }
 
-    public int getBattLevel() {
-        return mBattery.getBattLevel();
-    }
+//    public int getBattLevel() {
+//        return mBattery.getBattLevel();
+//    }
 
     public int getBattCurrent() {
         return mBattery.getBattCurrent();
@@ -228,7 +228,6 @@ public class Aircraft {
 		return mPosition.getTimeStamp();
 	}
 
-    /* TODO remove *1e-7 terms once the service has been corrected for this */
 	public double getLat() {
 		return mPosition.getLat()*1e-7;
 	}
@@ -386,7 +385,7 @@ public class Aircraft {
 
     public void setDistanceHome(LatLng homeLocation) {
         float[] distance = new float[1];
-        /* TODO change getLat() and getLon() to mPosition.getLat() and mPosition.getLon() once the service has been corrected*/
+        //Note that the get functions are used instead of accessing LatLng data directly because the 1e-7 factor needs to be applied
         Location.distanceBetween(getLat(),getLon(),homeLocation.latitude,homeLocation.longitude,distance);
         distanceHome = distance[0];
     }
@@ -403,16 +402,16 @@ public class Aircraft {
         if(!missionBlocks.isEmpty()) {
             currentBlock = missionBlocks.get(currentSelection);
 
-//            //If the block is a survey block
-//            String surveyBlockName = context.getResources().getString(R.string.survey_block);
-//            Log.d("CLICK1",surveyBlockName);
-//            Log.d("CLICK2",currentBlock);
-//            if(currentBlock.contains(surveyBlockName)) {
-//                currentSurveyLoc = getWpLatLng(missionBlocks.indexOf(currentBlock));
-//            } else {
-//                currentSurveyLoc = null;
-//            }
-//            Log.d("CLICK3",String.valueOf(currentSurveyLoc));
+            //If the block is a survey block
+            String surveyBlockName = context.getResources().getString(R.string.survey_block);
+            Log.d("SURVEY",surveyBlockName);
+
+            if(currentBlock.contains(surveyBlockName)) {
+                currentSurveyLoc = getWpLatLng(missionBlocks.indexOf(currentBlock));
+            } else {
+                currentSurveyLoc = null;
+            }
+            Log.d("SURVEY1",String.valueOf(currentSurveyLoc));
         }
     }
 

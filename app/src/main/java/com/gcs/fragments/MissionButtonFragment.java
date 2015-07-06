@@ -47,9 +47,6 @@ public class MissionButtonFragment extends Fragment {
         landBlockName    = getResources().getString(R.string.land_block);
         takeoffBlockName = getResources().getString(R.string.take_off_button);
     }
-	
-	/* TODO implement actions for clicks on the mission buttons */
-    /* TODO Make sure that only one button can be active: use isGoingHome, isLanding and IstakingOff booleans from service to check this */
 
 	public void onLandRequest(View v) {
 

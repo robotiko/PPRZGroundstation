@@ -7,6 +7,7 @@
     <integer name="MSA">10</integer>                          <!-- meters (minimum safe altitude)-->
     <integer name="verticalSeparationStandard">5</integer>    <!-- tenths of meters -->
     <integer name="horizontalSeparationStandard">50</integer> <!-- tenths of meters -->
+    <integer name="surveillanceCircleRadius">50</integer>     <!-- tenths of meters -->
 
     <!-- Communication signal parameters -->
     <integer name="commMaxRange">500</integer>                <!-- meters -->

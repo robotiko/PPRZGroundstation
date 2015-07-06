@@ -16,9 +16,9 @@ public class TelemetryFragment extends Fragment {
 		return view;
 	}
 
-	public void setBackgroundColor(String color) {
-		// TODO: Change background color dynamically
-	}
+//	public void setBackgroundColor(String color) {
+//
+//	}
 	
 	public void setText(String item) {
 		TextView textView = (TextView) getView().findViewById(R.id.altitudeValue);

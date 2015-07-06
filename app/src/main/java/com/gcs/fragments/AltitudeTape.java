@@ -505,7 +505,7 @@ public class AltitudeTape extends Fragment {
 			dropAltitude = flightCeiling;
 		}
 
-		/* TODO Set the target altitude to the service once this function is available */
+		/* TODO Set the target altitude to the service (change wp altitude) once this function is available */
 //		setTargetLabel(dropAltitude, 10); //Temporary setfunction to show a label
 	}
 }
