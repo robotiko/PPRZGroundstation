@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.gcs.R;
 import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polyline;
@@ -54,7 +55,8 @@ public class Aircraft {
     public Marker acMarker;
     public List<Marker> wpMarkers  = new ArrayList<>();
     public List<String> missionBlocks;
-    public Circle CoverageCircle ;
+    public Circle CoverageCircle;
+    public GroundOverlay coverageCircle;
 //	public Polyline flightPath;
 	
 	private final int AltitudeLabelId   = TextView.generateViewId();

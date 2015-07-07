@@ -10,7 +10,7 @@
     
     <string name="telemetry_default_value">0.0</string>
     <string name="meter_unit">m</string>
-    <string name="volt_unit">mV</string>
+    <string name="performance_score_unit">%</string>
     
     <string name="altitude_tape">Altitude Tape</string>
     

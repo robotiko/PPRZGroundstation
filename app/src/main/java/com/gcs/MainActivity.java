@@ -12,8 +12,11 @@ import com.aidllib.core.model.Battery;
 import com.aidllib.core.model.Position;
 import com.gcs.core.ConflictStatus;
 import com.gcs.core.Home;
+import com.gcs.fragments.PerformanceScoreFragment;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.GroundOverlay;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -21,7 +24,6 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.sharedlib.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
 import com.gcs.core.Aircraft;
 import com.gcs.fragments.AltitudeTape;
-import com.gcs.fragments.BatteryFragment;
 import com.gcs.fragments.MissionButtonFragment;
 import com.gcs.fragments.TelemetryFragment;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -108,11 +110,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean showCoverage      = false;
 
     //Declaration of the fragments
-	private TelemetryFragment     telemetryFragment;
-	private BatteryFragment       batteryFragment;
-	private AltitudeTape          altitudeTapeFragment;
-    private SupportMapFragment    mapFragment;
-    private MissionButtonFragment missionButtons;
+	private TelemetryFragment        telemetryFragment;
+	private PerformanceScoreFragment performanceScoreFragment;
+	private AltitudeTape             altitudeTapeFragment;
+    private SupportMapFragment       mapFragment;
+    private MissionButtonFragment    missionButtons;
 
     //Declaration of the lists/arrays that are used
     private SparseArray<Aircraft> mAircraft           = new SparseArray<>();
@@ -131,7 +133,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private int relayUAV = 0;                       //Set to 0 if none serves as relay (yet)
     private int selectedAc = 0;                     //Set to 0 if none serves as relay (yet)
     private int acCoverageRadius, ROIRadius;
-    private double coveragePercentage;
+    private double performanceScore = 0f;
 
     //Declaration of items needed for mission blocks display
     private MenuItem menuBlockSpinner = null, menuAircraftSpinner = null;
@@ -168,8 +170,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         /* TODO Move home location setting to a better place when service provides the home location */
         // TEMPORARY SETTING OF HOME LOCATION
-//        LatLng homeLocation = new LatLng(51.990826, 4.378248); //AE
-        LatLng homeLocation = new LatLng(43.563967, 1.481951); //ENAC
+        LatLng homeLocation = new LatLng(51.990826, 4.378248); //AE
+//        LatLng homeLocation = new LatLng(43.563967, 1.481951); //ENAC
         home.setHomeLocation(homeLocation);
 
         //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
@@ -197,10 +199,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mAircraft.get(4).setRollPitchYaw(0, 0, 270);
 
 		//Create a handles to the fragments
-		telemetryFragment = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);      //Telemetry fragment
-		batteryFragment = (BatteryFragment) getSupportFragmentManager().findFragmentById(R.id.batteryFragment);            //Battery fragment
-		altitudeTapeFragment = (AltitudeTape) getSupportFragmentManager().findFragmentById(R.id.altitudeTapeFragment);     //AltitudeTape fragment
-		missionButtons = (MissionButtonFragment) getSupportFragmentManager().findFragmentById(R.id.missionButtonFragment); //MissionButton fragment
+		telemetryFragment        = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);               //Telemetry fragment
+        performanceScoreFragment = (PerformanceScoreFragment) getSupportFragmentManager().findFragmentById(R.id.performanceScoreFragment); //Battery fragment
+		altitudeTapeFragment     = (AltitudeTape) getSupportFragmentManager().findFragmentById(R.id.altitudeTapeFragment);                 //AltitudeTape fragment
+		missionButtons           = (MissionButtonFragment) getSupportFragmentManager().findFragmentById(R.id.missionButtonFragment);       //MissionButton fragment
 		
 		// Get the map and register for the ready callback
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -282,7 +284,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             case R.id.action_settings:
                 return true;
             case R.id.show_comm_range:
-                ROIcovered();
                 //Show/hide the communication range on screen
                 showCommRange = !showCommRange;
                 /* TODO move this to the interface updater for continous up-to-date information?? */
@@ -290,7 +291,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 return true;
             case R.id.show_coverage:
                 showCoverage = !showCoverage;
-                dataLogger();
                 return true;
         }
 		return super.onOptionsItemSelected(item);
@@ -330,6 +330,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             //Calculate the time the application has been active (milliSeconds)
             uptime = (int)(System.currentTimeMillis() - initTime);
+
+            //Calculate the current performance score
+            calcPerformance();
 
             //Draw the communication range on the map
 //            drawCommunicationRange(relayUAV);
@@ -725,9 +728,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     /* TODO BATTERY use dynamic aircraft number once available in service */
                     mAircraft.get(1).setBatteryState(mBattery.getBattVolt(), -1, mBattery.getBattCurrent());
 
-                    /* TODO remove the battery text view when done debugging */
-                    //Set the battery text view
-                    batteryFragment.setText(String.valueOf(mBattery.getBattVolt()));
 				} catch (Throwable t) {
 					Log.e(TAG, "Error while updating the battery information", t);
 				}
@@ -1158,6 +1158,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //		LatLng currentLocation =  new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
 //      map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 18.0f));
 
+        /* TODO make the initial zoom level to correspond with the Region of Interest size (so it does not fill the entire screen) */
         //Move camera to the home location
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(home.getHomeLocation(),18.0f));
 		
@@ -1366,27 +1367,34 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 ////COVERAGE INDICATION
 
                 //Remove the coverage circle if it was drawn before
-                if (mAircraft.get(1).CoverageCircle  != null) {
-                    mAircraft.get(1).CoverageCircle.remove();
+                if (mAircraft.get(2).coverageCircle  != null) {
+                    mAircraft.get(2).coverageCircle.remove();
                 }
 
                 if(showCoverage) {
-//                if(mAircraft.get(1).getCurrentSurveyLoc()!= null) {
+                    /* TODO make aircraft number dynamic for coverage indication */
+//                    if(mAircraft.get(2).getCurrentSurveyLoc()!= null) {
 
-                    //Exclude relay UAVs (filter based on altitude or status)
-                    //Make dynamic (multiple aircraft)
+                        //Exclude relay UAVs (filter based on altitude or status)
+                        //Make dynamic (multiple aircraft)
 
-                    // Draw the relay commincation range circle
-                    CircleOptions coverageCircleOptions = new CircleOptions()
-//                            .center(mAircraft.get(1).getCurrentSurveyLoc())
-                            .center(mAircraft.get(1).getLatLng())
-                            .strokeWidth(5)
-                            .fillColor(0x400099CC)
-                            .strokeColor(0x5500ff00)
-                            .radius(acCoverageRadius); // In meters
+                        // Draw the relay communication range circle
+                        //Bitmap and canvas to draw a circle on
+                        Bitmap baseIcon = Bitmap.createBitmap(200, 200, Bitmap.Config.ARGB_8888);
+                        Canvas circleCanvas = new Canvas(baseIcon);
+                        Paint circlePaint = new Paint();
+                        circlePaint.setColor(0x4000ff00);
+                        circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+                        circleCanvas.drawCircle(100, 100, 100, circlePaint);
 
-                    // Get back the relay Circle object
-                    mAircraft.get(1).CoverageCircle = map.addCircle(coverageCircleOptions);
+                        GroundOverlayOptions ROI = new GroundOverlayOptions()
+                                .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
+//                            .position(mAircraft.get(1).getCurrentSurveyLoc(), acCoverageRadius * 2, acCoverageRadius * 2); //m
+                                .position(mAircraft.get(2).getLatLng(), acCoverageRadius *2, acCoverageRadius*2); //m
+
+                        // Get back the relay Circle object
+                        mAircraft.get(2).coverageCircle = map.addGroundOverlay(ROI);
+//                    }
                 }
             }
             }
@@ -1526,18 +1534,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapReady(GoogleMap map) {
 
-                // Instantiates a new Polyline object and adds points to define a rectangle
-                PolygonOptions rectOptions = new PolygonOptions()
-                        .fillColor(0x400099CC)
-                        .strokeColor(0x400099CC)
-                        .add(new LatLng(51.995262, 4.371907))
-                        .add(new LatLng(51.995906, 4.374330))
-                        .add(new LatLng(51.994248, 4.375434))
-                        .add(new LatLng(51.993647, 4.373003))
-                        .add(new LatLng(51.995262, 4.371907));
+//                LatLng ROIloc = new LatLng(43.566705, 1.474928);
+                LatLng ROIloc = home.getHomeLocation();
 
-                // Get back the mutable Polyline
-                Polygon polygon = map.addPolygon(rectOptions);
+                //Bitmap and canvas to draw a circle on
+                int circleSize = 300;
+                Bitmap baseIcon = Bitmap.createBitmap(circleSize, circleSize, Bitmap.Config.ARGB_8888);
+                Canvas circleCanvas = new Canvas(baseIcon);
+                Paint circlePaint = new Paint();
+                circlePaint.setColor(0x400099CC);
+                circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+                circleCanvas.drawCircle(circleSize/2, circleSize/2, circleSize/2, circlePaint);
+
+                float circleDiameter = 500f; //m
+                GroundOverlayOptions ROI = new GroundOverlayOptions()
+                        .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
+                        .position(ROIloc, circleDiameter, circleDiameter); //m
+
+                map.addGroundOverlay(ROI);
             }
         });
     }
@@ -1777,7 +1791,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     /////////////////////////PERFORMANCE SCORE/////////////////////////
-    private void ROIcovered(){
+    private void calcPerformance() {
+        /* TODO finish the performance score calculation */
+//        performanceScore = (ROIcovered() + conflict time score + collissions + loss of control(UAV out of comm) )/4;
+
+        //Set the performance score to the text view
+        performanceScoreFragment.setText(String.format("%.1f", performanceScore));
+    }
+
+    private double ROIcovered(){
         //Region of interest parameters
         double AREA = ROIRadius*ROIRadius*Math.PI;
         LatLng ROIcenter = home.getHomeLocation();
@@ -1794,7 +1816,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
         //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!
-        coveragePercentage = (overlapArea/AREA)*100;
+        //Coverage percentage
+        return (overlapArea/AREA)*100;
     }
 
     private double circleOverlap(double radius1, double radius2, LatLng c1, LatLng c2){
@@ -1849,9 +1872,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             FileOutputStream f = new FileOutputStream(file, true);
 
             OutputStreamWriter myOutWriter = new OutputStreamWriter(f);
-            //First column is TIME
-            myOutWriter.append(time);
-            //Loop over all aircraft to write a line to the log file with the following data of all aircraft: [ALTITUDE, Latitude, Longitude]
+            //First columns are [Time, Performance score]
+            myOutWriter.append(time + ", " + performanceScore);
+            //Loop over all aircraft to write a line to the log file with the following data of all aircraft: [Altitude, Latitude, Longitude]
             for(int i=1; i<mAircraft.size()+1; i++) {
                 /* TODO log waypoint location instead of aircraft location */
                 myOutWriter.append(", " + mAircraft.get(i).getAltitude() + ", " + mAircraft.get(i).getLat() + ", " + mAircraft.get(i).getLon());

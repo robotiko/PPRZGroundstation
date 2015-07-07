@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/batteryVerticalLayout"
+    android:id="@+id/performanceScoreVerticalLayout"
     android:orientation="vertical"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content" 
@@ -8,26 +8,26 @@
     android:gravity="center" >
     
     <LinearLayout
-        android:id="@+id/batteryHorizontalLayout"
+        android:id="@+id/performanceScoreHorizontalLayout"
        	android:orientation="horizontal"
        	android:layout_width="fill_parent"
     	android:layout_height="fill_parent" 
     	android:gravity="center" >
 		
 	    <TextView
-	        android:id="@+id/batteryValue"
+	        android:id="@+id/performanceScoreValue"
 	        style="@style/telemetryText"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"  
 	        android:text="@string/telemetry_default_value" />
 
 	    <TextView
-	        android:id="@+id/batteryUnitLabel"
+	        android:id="@+id/PerformanceScoreUnitLabel"
 	        style="@style/telemetryText"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
 	        android:layout_marginLeft="-3dp"
-	        android:text="@string/volt_unit" />
+	        android:text="@string/performance_score_unit" />
 	    
     </LinearLayout>
 </LinearLayout>
