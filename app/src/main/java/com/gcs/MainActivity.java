@@ -89,6 +89,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private final long initTime        = System.currentTimeMillis(); // milliseconds
     private int uptime                 = 0;                          // milliseconds
 
+    //Logging
+    Calendar cal=Calendar.getInstance();
+    final String logFileName = "log" + String.format("%4d%02d%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) ,cal.get(Calendar.DAY_OF_MONTH))
+            + String.format("%02d%02d", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE)) + ".txt";
+
     //Declaration of the service client
 	IMavLinkServiceClient mServiceClient;
 
@@ -285,6 +290,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 return true;
             case R.id.show_coverage:
                 showCoverage = !showCoverage;
+                dataLogger();
                 return true;
         }
 		return super.onOptionsItemSelected(item);
@@ -1827,27 +1833,31 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private void dataLogger() {
 
         //Get time and date
-        Calendar cal=Calendar.getInstance();
-        int hours   = cal.get(Calendar.HOUR_OF_DAY);
-        int minutes = cal.get(Calendar.MINUTE);
-        int seconds = cal.get(Calendar.SECOND);
-        int day     = cal.get(Calendar.DAY_OF_MONTH);
-        int month   = cal.get(Calendar.MONTH);
-        int year    = cal.get(Calendar.YEAR);
+        Calendar cal = Calendar.getInstance();
+        int hours    = cal.get(Calendar.HOUR_OF_DAY);
+        int minutes  = cal.get(Calendar.MINUTE);
+        int seconds  = cal.get(Calendar.SECOND);
 
+        //Make a time string to include in the log file
         String time = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-        String filename = "log" + String.format("%4d%02d%02d", year, month ,day) + String.format("%02d%02d", hours, minutes) + ".txt";
 
         try {
             File sdCard = Environment.getExternalStorageDirectory();
             File dir = new File (sdCard.getAbsolutePath() + "/gcsData");
             dir.mkdirs();
-            File file = new File(dir, filename);
-            FileOutputStream f = new FileOutputStream(file);
-
+            File file = new File(dir, logFileName);
+            FileOutputStream f = new FileOutputStream(file, true);
 
             OutputStreamWriter myOutWriter = new OutputStreamWriter(f);
+            //First column is TIME
             myOutWriter.append(time);
+            //Loop over all aircraft to write a line to the log file with the following data of all aircraft: [ALTITUDE, Latitude, Longitude]
+            for(int i=1; i<mAircraft.size()+1; i++) {
+                /* TODO log waypoint location instead of aircraft location */
+                myOutWriter.append(", " + mAircraft.get(i).getAltitude() + ", " + mAircraft.get(i).getLat() + ", " + mAircraft.get(i).getLon());
+            }
+            //End the line and close the file
+            myOutWriter.append("\r\n");
             myOutWriter.close();
 
         } catch(IOException e){

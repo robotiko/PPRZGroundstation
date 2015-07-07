@@ -55,7 +55,7 @@ public class Aircraft {
     public List<Marker> wpMarkers  = new ArrayList<>();
     public List<String> missionBlocks;
     public Circle CoverageCircle ;
-	public Polyline flightPath;
+//	public Polyline flightPath;
 	
 	private final int AltitudeLabelId   = TextView.generateViewId();
 	private final int targetLabelId     = TextView.generateViewId();
