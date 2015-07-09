@@ -17,11 +17,9 @@ import android.util.Log;
 import android.widget.TextView;
 
 import com.gcs.R;
-import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.Polyline;
 import com.sharedlib.model.Altitude;
 import com.sharedlib.model.Attitude;
 import com.sharedlib.model.Battery;
@@ -55,7 +53,6 @@ public class Aircraft {
     public Marker acMarker;
     public List<Marker> wpMarkers  = new ArrayList<>();
     public List<String> missionBlocks;
-    public Circle CoverageCircle;
     public GroundOverlay coverageCircle;
 //	public Polyline flightPath;
 	
@@ -195,21 +192,22 @@ public class Aircraft {
     }
 
     //////////// STATE ////////////
-    public boolean isArmed() {
-        return mState.isArmed();
-    }
-
-    public boolean isFlying() {
-        return mState.isFlying();
-    }
-
-    public void setIsFlying(boolean newState) {
-    	mState.setIsFlying(newState);
-    }
-
-    public void setArmed(boolean newState) {
-    	mState.setArmed(newState);
-    }
+    /* TODO remove the set/get functions that are used for the "State" class (that is going to be removed) */
+//    public boolean isArmed() {
+//        return mState.isArmed();
+//    }
+//
+//    public boolean isFlying() {
+//        return mState.isFlying();
+//    }
+//
+//    public void setIsFlying(boolean newState) {
+//    	mState.setIsFlying(newState);
+//    }
+//
+//    public void setArmed(boolean newState) {
+//    	mState.setArmed(newState);
+//    }
 
     public void updateConflictStatus() { mState.updateConflictStatus(); }
 
@@ -244,9 +242,9 @@ public class Aircraft {
 	}
 	
 	/* TODO Remove either this function of getAltitude() */
-	public int getAlt() {
-		return mPosition.getAlt();
-	}
+//	public int getAlt() {
+//		return mPosition.getAlt();
+//	}
 	
 	public int getHdg() {
 		return mPosition.getHdg();
@@ -636,8 +634,6 @@ public class Aircraft {
         iconCanvas.drawText(labelCharacter, center+72, center-65, labelTextPaint);
 
 ////////////////////////////////////////////////
-
-        //TODO add speedvector to icon
 
         //Recycle the previous aircraft icon in order to safe memory and avoid garbage collection
         if (AC_Icon != null) {

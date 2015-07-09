@@ -15,13 +15,10 @@ import com.gcs.core.Home;
 import com.gcs.fragments.PerformanceScoreFragment;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
-import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
-import com.google.android.gms.maps.model.Polygon;
-import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.sharedlib.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
+//import com.sharedlib.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
 import com.gcs.core.Aircraft;
 import com.gcs.fragments.AltitudeTape;
 import com.gcs.fragments.MissionButtonFragment;
@@ -86,14 +83,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Declaration of handlers and definition of time and time steps
 	private Handler handler, interfaceUpdateHandler;
-	private final int mInterval        = 900;                        // milliseconds
+	private final int mInterval        = 1000;                       // milliseconds
     private final int blockUpdateDelay = 500;                        // milliseconds
     private final long initTime        = System.currentTimeMillis(); // milliseconds
-    private int uptime                 = 0;                          // milliseconds
 
     //Logging
-    Calendar cal=Calendar.getInstance();
-    final String logFileName = "log" + String.format("%4d%02d%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) ,cal.get(Calendar.DAY_OF_MONTH))
+    Calendar cal=Calendar.getInstance(); //Note that January is 0 in JAVA
+    private final String logFileName = "log" + String.format("%4d%02d%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH)+1 ,cal.get(Calendar.DAY_OF_MONTH))
             + String.format("%02d%02d", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE)) + ".txt";
 
     //Declaration of the service client
@@ -170,8 +166,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         /* TODO Move home location setting to a better place when service provides the home location */
         // TEMPORARY SETTING OF HOME LOCATION
-        LatLng homeLocation = new LatLng(51.990826, 4.378248); //AE
-//        LatLng homeLocation = new LatLng(43.563967, 1.481951); //ENAC
+//        LatLng homeLocation = new LatLng(51.990826, 4.378248); //AE
+        LatLng homeLocation = new LatLng(43.563967, 1.481951); //ENAC
         home.setHomeLocation(homeLocation);
 
         //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
@@ -208,9 +204,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        //Temporarily test the datalogger
-        dataLogger();
-
         // Start the interface update handler
 		interfaceUpdater.run();
 	}
@@ -233,7 +226,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 try {
-                    mServiceClient.onBlockSelected(position);
+                    Bundle carrier = new Bundle();
+                    carrier.putInt("BLOCK_SELECTED", position);
+                    mServiceClient.onCallback(carrier);
                 } catch (RemoteException e) {
                     Log.e(TAG,"Error while sending mission block spinner selection to the service");
                 }
@@ -286,8 +281,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             case R.id.show_comm_range:
                 //Show/hide the communication range on screen
                 showCommRange = !showCommRange;
-                /* TODO move this to the interface updater for continous up-to-date information?? */
-                drawCommunicationRange(relayUAV);
                 return true;
             case R.id.show_coverage:
                 showCoverage = !showCoverage;
@@ -313,7 +306,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	@Override
     public void onDestroy() {
 		super.onDestroy();
+        /* TODO make sure the connection with service can always be made again without restarting the service app */
+        //Disconnect from service
+        try{
+            if (isConnected) {
+                mServiceClient.disconnectDroneClient();
+            }
+        } catch(RemoteException e) {
+            Log.e(TAG, "Failed to disconnect from service while closing application", e);
+        }
 
+        //Stop the eventlistener
     	try {
 			mServiceClient.removeEventListener(TAG);
 		} catch (RemoteException e) {
@@ -328,14 +331,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    @Override 
 	    public void run() {
 
-            //Calculate the time the application has been active (milliSeconds)
-            uptime = (int)(System.currentTimeMillis() - initTime);
+            //Log data
+            dataLogger();
 
             //Calculate the current performance score
             calcPerformance();
 
             //Draw the communication range on the map
-//            drawCommunicationRange(relayUAV);
+            drawCommunicationRange(relayUAV);
 
             //check for altitude and course conflicts
             for(int i = 1; i < mAircraft.size()+1; i++) {
@@ -761,24 +764,24 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		});
 	}
 	
-	/**
-	 * This runnable object is created to update state
-	 */
-	private void updateState() {
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
-				try {
-                    /* TODO STATE use dynamic aircraft number once available in service */
-					State mState = getAttribute("STATE");
-                    mAircraft.get(1).setIsFlying(mState.isFlying());
-                    mAircraft.get(1).setArmed(mState.isArmed());
-				} catch (Throwable t) {
-					Log.e(TAG, "Error while updating state", t);
-				}
-			}
-		});
-	}
+//	/**
+//	 * This runnable object is created to update state
+//	 */
+//	private void updateState() {
+//		handler.post(new Runnable() {
+//			@Override
+//			public void run() {
+//				try {
+/* TODO STATE use dynamic aircraft number once available in service */
+//					State mState = getAttribute("STATE");
+//                    mAircraft.get(1).setIsFlying(mState.isFlying());
+//                    mAircraft.get(1).setArmed(mState.isArmed());
+//				} catch (Throwable t) {
+//					Log.e(TAG, "Error while updating state", t);
+//				}
+//			}
+//		});
+//	}
 	
 	/**
 	 * This runnable object is created to update waypoints
@@ -789,7 +792,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			public void run() {
 				try {
                     //Get a list of waypoint objects from the service
-					List<Waypoint> waypoints = mServiceClient.getWpList();
+                    Bundle carrier = mServiceClient.getAttribute("WAYPOINTS");
+                    carrier.setClassLoader(Waypoint.class.getClassLoader());
+                    List<Waypoint> waypoints = carrier.getParcelableArrayList("WAYPOINTS");
 
                      /* TODO WAYPOINTS use dynamic aircraft number once available in service */
                     //Clear the waypoint list if the aircraft already has waypoint data
@@ -825,14 +830,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 try {
                     /* TODO BLOCKS use dynamic aircraft number once available in service */
                     //Store the mission block list
-                    mAircraft.get(1).missionBlocks = mServiceClient.getMissionBlockList();
+                    Bundle carrier = mServiceClient.getAttribute("BLOCKS");
+                    mAircraft.get(1).missionBlocks = carrier.getStringArrayList("BLOCKS");
 
                     //Update the blocks request button
                     missionButtons.updateBlocksButton();
 
                     //Update the dropdown menu with the block names
                     updateMissionBlocksSpinner();
-                    Log.d("UPDATED",String.valueOf(mServiceClient.getCurrentBlock()));
+
+                    carrier = mServiceClient.getAttribute("CURRENT_BLOCK");
+                    Log.d("UPDATED",String.valueOf(carrier.getInt("BLOCKS")));
+//                    Log.d("UPDATED",String.valueOf(mServiceClient.getCurrentBlock()));
                 } catch (RemoteException e) {
                     Log.e(TAG,"Error while updating mission blocks");
                 }
@@ -859,14 +868,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     try {
                         /* TODO BLOCKS use dynamic aircraft number once available in service */
                         /* TODO make sure that the initial block selection is the actual one and not the initial block (0) of the declaration in the service */
+                        // Get current block
+                        Bundle carrier = mServiceClient.getAttribute("CURRENT_BLOCK");
+                        int currentBlock = carrier.getInt("BLOCKS");
+
                         //Update the Mission block spinner selection
-                        blockSpinner.setSelection(mServiceClient.getCurrentBlock());
+                        blockSpinner.setSelection(currentBlock);
 
                         //Set current block to aircraft
-                        mAircraft.get(1).setCurrentBlock(mServiceClient.getCurrentBlock());
+                        mAircraft.get(1).setCurrentBlock(currentBlock);
 
                         //Update the status of the mission buttons
-                        missionButtons.updateExecutedMissionButton(mAircraft.get(1).missionBlocks.get(mServiceClient.getCurrentBlock()));
+                        missionButtons.updateExecutedMissionButton(mAircraft.get(1).missionBlocks.get(currentBlock));
                     } catch (RemoteException e) {
                         Log.e(TAG,"Error while trying to update the mission block selection in the spinner");
                     }
@@ -1010,8 +1023,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             case "POSITION":
             	return (T) new Position();
             	
-            case "STATE":
-            	return (T) new State();
+//            case "STATE":
+//            	return (T) new State();
             	
             default:
             	return null;
@@ -1038,8 +1051,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			case "POSITION":
 				return Position.class.getClassLoader();
 
-			case "STATE":
-				return State.class.getClassLoader();			
+//			case "STATE":
+//				return State.class.getClassLoader();
 
 			default:
 				return null;
@@ -1057,7 +1070,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
             //Select the land block and request the service to execute it
             try {
-                mServiceClient.onBlockSelected(mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.land_block)));
+                Bundle carrier = new Bundle();
+                carrier.putInt("BLOCK_SELECTED", mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.land_block)));
+                mServiceClient.onCallback(carrier);
+
             } catch (RemoteException e) {
                 Log.e(TAG, "Error while requesting the service to execute the land block");
             }
@@ -1073,7 +1089,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
             //Select the takeoff block and request the service to execute it
             try {
-                mServiceClient.onBlockSelected(mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.takeoff_block)));
+                Bundle carrier = new Bundle();
+                carrier.putInt("BLOCK_SELECTED", mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.takeoff_block)));
+                mServiceClient.onCallback(carrier);
+
             } catch (RemoteException e) {
                 Log.e(TAG,"Error while requesting the service to execute the takeoff block");
             }
@@ -1090,13 +1109,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
             //Select the go home block and request the service to execute it
 //            try {
-//                mServiceClient.onBlockSelected(mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.GOHOME)));
+//                Bundle carrier = new Bundle();
+//                carrier.putInt("BLOCK_SELECTED", mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.GOHOME)));
+//                mServiceClient.onCallback(carrier);
+
 //            } catch (RemoteException e) {
 //                Log.e(TAG,"Error while requesting the service to execute the go home block");
 //            }
         }
 	}
 
+    /* TODO remove block and wp request buttons?? */
     public void onBlocksRequest(View v) {
         missionButtons.onBlocksRequest(v);
 
@@ -1104,7 +1127,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Request mission blocks if connected to the service
         if (isConnected) {
             try {
-                mServiceClient.requestMissionBlockList();
+                Bundle carrier = new Bundle();
+                carrier.putInt("REQUEST_BLOCK_LIST",0);
+                mServiceClient.onCallback(carrier);
+
+
+//                mServiceClient.requestMissionBlockList();
                 Toast.makeText(getApplicationContext(), "Loading blocks", Toast.LENGTH_SHORT).show();
             } catch (RemoteException e) {
                 Log.e(TAG,"Error while requesting mission blocks");
@@ -1112,21 +1140,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    //Method to handle waypoint and block request button clicks
-    public void onWaypointsRequest(View v) {
-        missionButtons.onWaypointsRequest(v);
-
-        /* TODO make sure waypoints of all aircraft are requested */
-        //Request the service to send (updated) waypoints if connected
-        if (isConnected) {
-            try {
-                mServiceClient.requestWpList();
-                Toast.makeText(getApplicationContext(), "Loading Waypoints.", Toast.LENGTH_SHORT).show();
-            } catch (RemoteException e) {
-                Log.e(TAG, "Error while requesting waypoints");
-            }
-        }
-    }
+//    //Method to handle waypoint and block request button clicks
+//    public void onWaypointsRequest(View v) {
+//        missionButtons.onWaypointsRequest(v);
+//
+//        /* TODO make sure waypoints of all aircraft are requested */
+//        //Request the service to send (updated) waypoints if connected
+//        if (isConnected) {
+//            try {
+//                mServiceClient.requestWpList();
+//                Toast.makeText(getApplicationContext(), "Loading Waypoints.", Toast.LENGTH_SHORT).show();
+//            } catch (RemoteException e) {
+//                Log.e(TAG, "Error while requesting waypoints");
+//            }
+//        }
+//    }
 
     //Method to update the mission button appearance to selected aircraft properties
     private void updateMissionButtons() {
@@ -1149,14 +1177,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		
 		//Enable the go to my location button
 		map.setMyLocationEnabled(true);
-
-		//Go to current location
-//		LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-//		Criteria criteria = new Criteria();
-//		String provider = locationManager.getBestProvider(criteria, true);
-//		Location myLocation = locationManager.getLastKnownLocation(provider);
-//		LatLng currentLocation =  new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-//      map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 18.0f));
 
         /* TODO make the initial zoom level to correspond with the Region of Interest size (so it does not fill the entire screen) */
         //Move camera to the home location
@@ -1365,15 +1385,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
                 ////COVERAGE INDICATION
+                /* TODO Remove this if statement once aircraft 1 needs to be included */
+                if(aircraftNumber!=1) {
+                    //Remove the coverage circle if it was drawn before
+                    if (mAircraft.get(aircraftNumber).coverageCircle != null) {
+                        mAircraft.get(aircraftNumber).coverageCircle.remove();
+                    }
 
-                //Remove the coverage circle if it was drawn before
-                if (mAircraft.get(2).coverageCircle  != null) {
-                    mAircraft.get(2).coverageCircle.remove();
-                }
-
-                if(showCoverage) {
-                    /* TODO make aircraft number dynamic for coverage indication */
-//                    if(mAircraft.get(2).getCurrentSurveyLoc()!= null) {
+                    if (showCoverage) {
+//                    if(mAircraft.get(aircraftNumber).getCurrentSurveyLoc()!= null) {
 
                         //Exclude relay UAVs (filter based on altitude or status)
                         //Make dynamic (multiple aircraft)
@@ -1390,11 +1410,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         GroundOverlayOptions ROI = new GroundOverlayOptions()
                                 .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
 //                            .position(mAircraft.get(1).getCurrentSurveyLoc(), acCoverageRadius * 2, acCoverageRadius * 2); //m
-                                .position(mAircraft.get(2).getLatLng(), acCoverageRadius *2, acCoverageRadius*2); //m
+                                .position(mAircraft.get(aircraftNumber).getLatLng(), acCoverageRadius*2, acCoverageRadius*2); //m
 
                         // Get back the relay Circle object
-                        mAircraft.get(2).coverageCircle = map.addGroundOverlay(ROI);
+                        mAircraft.get(aircraftNumber).coverageCircle = map.addGroundOverlay(ROI);
 //                    }
+                    }
                 }
             }
             }
@@ -1783,7 +1804,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             //Request execution of the block
             try {
-                mServiceClient.onBlockSelected(blockIndex);
+                Bundle carrier = new Bundle();
+                carrier.putInt("BLOCK_SELECTED", blockIndex);
+                mServiceClient.onCallback(carrier);
+
             } catch (RemoteException e) {
                 Log.e(TAG, "Error while sending mission block selection to the service");
             }
@@ -1864,6 +1888,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Make a time string to include in the log file
         String time = String.format("%02d:%02d:%02d", hours, minutes, seconds);
 
+        //Calculate the time the application has been active (milliSeconds)
+        int uptime = (int)(System.currentTimeMillis() - initTime);
+
         try {
             File sdCard = Environment.getExternalStorageDirectory();
             File dir = new File (sdCard.getAbsolutePath() + "/gcsData");
@@ -1873,7 +1900,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             OutputStreamWriter myOutWriter = new OutputStreamWriter(f);
             //First columns are [Time, Performance score]
-            myOutWriter.append(time + ", " + performanceScore);
+            /* TODO make sure the formatting of uptime corresponds with the time stepsize (integers for stepsize of one second) */
+            myOutWriter.append(time + ", " + String.format("%.1f", uptime * 1e-3) + ", " + performanceScore);
             //Loop over all aircraft to write a line to the log file with the following data of all aircraft: [Altitude, Latitude, Longitude]
             for(int i=1; i<mAircraft.size()+1; i++) {
                 /* TODO log waypoint location instead of aircraft location */
