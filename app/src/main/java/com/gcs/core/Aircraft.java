@@ -192,7 +192,6 @@ public class Aircraft {
     }
 
     //////////// STATE ////////////
-    /* TODO remove the set/get functions that are used for the "State" class (that is going to be removed) */
 //    public boolean isArmed() {
 //        return mState.isArmed();
 //    }
@@ -240,8 +239,7 @@ public class Aircraft {
 		LatLng latLng = new LatLng(mPosition.getLat()*1e-7, mPosition.getLon()*1e-7);
 		return latLng;
 	}
-	
-	/* TODO Remove either this function of getAltitude() */
+
 //	public int getAlt() {
 //		return mPosition.getAlt();
 //	}
@@ -304,7 +302,7 @@ public class Aircraft {
     	wp.setTargetComp(targetComp);
     	waypoints.set(wpNumber,wp);
 	}
-	
+
 	public double getWpLat(int wpNumber) {
 		return waypoints.get(wpNumber).getLat();
 	}

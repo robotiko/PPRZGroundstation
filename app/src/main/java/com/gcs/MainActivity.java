@@ -341,170 +341,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             drawCommunicationRange(relayUAV);
 
             //check for altitude and course conflicts
-            for(int i = 1; i < mAircraft.size()+1; i++) {
-                for(int j = 1; j < mAircraft.size()+1; j++) {
-                    if(i!=j) {
-                        if(Math.abs(mAircraft.get(i).getAltitude() - mAircraft.get(j).getAltitude()) <= verticalSeparationStandard) {
-                            //Check for conflict course
-                            if(isOnconflictCourse(i,j)){ //On conflict course
-                                conflictingAircraft.add(i);
-                                conflictingAircraft.add(j);
-                            } else { //Not on conflict course
-                                sameLevelAircraft.add(i);
-                                sameLevelAircraft.add(j);
-                            }
-                        } else {
-                            mAircraft.get(i).setConflictStatusNew(ConflictStatus.GRAY);
-                            mAircraft.get(j).setConflictStatusNew(ConflictStatus.GRAY);
-                        }
-                    }
-                }
-            }
-
-            // Remove double couples from the conflictlist
-            if (conflictingAircraft.size()>2) {
-                //Loop starting at the end of the list to be able to remove double pairs
-                for (int p=conflictingAircraft.size()-2; p>1; p-=2) {
-                    for (int q = 0; q < p; q += 2) {
-                        if (conflictingAircraft.get(p+1) == conflictingAircraft.get(q) && conflictingAircraft.get(p) == conflictingAircraft.get(q+1)) {
-                            conflictingAircraft.remove(p+1);
-                            conflictingAircraft.remove(p);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Remove double couples from the samelevellist
-            if (sameLevelAircraft.size()>2) {
-                //Loop starting at the end of the list to be able to remove double pairs
-                for (int r=sameLevelAircraft.size()-2; r>1; r-=2) {
-                    for (int s=0; s<r; s+=2) {
-                        if (sameLevelAircraft.get(r+1) == sameLevelAircraft.get(s) && sameLevelAircraft.get(r) == sameLevelAircraft.get(s+1)) {
-                            sameLevelAircraft.remove(r+1);
-                            sameLevelAircraft.remove(r);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            //Set the color of the aircraft that have the "red" conflict status
-            if(!conflictingAircraft.isEmpty()) {
-                for (int k = 0; k < conflictingAircraft.size(); k+=2) {
-                    mAircraft.get(conflictingAircraft.get(k)).setConflictStatusNew(ConflictStatus.RED);
-                    mAircraft.get(conflictingAircraft.get(k + 1)).setConflictStatusNew(ConflictStatus.RED);
-                }
-
-                //Get unique aircraft (remove duplicates)
-                Set<Integer> uniqueAcRed = new HashSet<Integer>(conflictingAircraft);
-                for (Integer l : uniqueAcRed) {
-                    groupList.add(l);
-                    for (Integer m : uniqueAcRed) {
-                        if(l!=m) {
-                            if(Math.abs(mAircraft.get(l).getAltitude() - mAircraft.get(m).getAltitude()) <= verticalSeparationStandard) {
-                                groupList.add(m);
-                            }
-                        }
-                    }
-                    //Sort the list of conflicting aircraft
-                    Collections.sort(groupList);
-                    //Generate a string containing the aircraftnumbers of a conflict group
-                    String set = "";
-                    for(int d=0; d<groupList.size(); d++) {
-                        set = set + String.valueOf(groupList.get(d));
-                    }
-
-                    //Check if the conflict group already exists in the list, if not add it (this code creates groups for all seperate conflict groups, the result is a huge load of labels in some cases)
-                    if(!conflictGroupList.contains(set)) {
-                        conflictGroupList.add(set);
-                    }
-
-//                    if(conflictGroupList.isEmpty()) {
-//                        conflictGroupList.add(set);
-//                    } else {
-//                        Boolean inGroup = false;
-//                        for(int i=0; i<conflictGroupList.size(); i++) {
-//                            if(conflictGroupList.get(i).contains(set)) {
-//                                inGroup = true;
-//                                break;
-//                            }
-//                        }
-//                        if(!inGroup) {
-//                            conflictGroupList.add(set);
-//                        }
-//                    }
-//                    Log.d("test",String.valueOf(conflictGroupList.size()));
-
-                    //Clear the temporary list
-                    groupList.clear();
-                }
-            }
-
-            //Set the color of the aircraft that have the "blue" conflict status
-            if(!sameLevelAircraft.isEmpty()) {
-                for (int k = 0; k < sameLevelAircraft.size(); k+=2) {
-                    mAircraft.get(sameLevelAircraft.get(k)).setConflictStatusNew(ConflictStatus.BLUE);
-                    mAircraft.get(sameLevelAircraft.get(k+1)).setConflictStatusNew(ConflictStatus.BLUE);
-                }
-
-                //Get unique aircraft (remove duplicates)
-                Set<Integer> uniqueAcBlue = new HashSet<Integer>(sameLevelAircraft);
-                for (Integer l : uniqueAcBlue) {
-                    groupList.add(l);
-                    for (Integer m : uniqueAcBlue) {
-                        if(l!=m) {
-                            if(Math.abs(mAircraft.get(l).getAltitude() - mAircraft.get(m).getAltitude()) <= verticalSeparationStandard) {
-                                groupList.add(m);
-                            }
-                        }
-                    }
-                    //Sort the list of conflicting aircraft
-                    Collections.sort(groupList);
-                    //Generate a string containing the aircraftnumbers of a conflict group
-                    String set = "";
-                    for(int d=0; d<groupList.size(); d++) {
-                        set = set + String.valueOf(groupList.get(d));
-                    }
-                    //Check if the conflict group already exists in the list, if not add it
-//                    if(!sameLevelGroupList.contains(set)) {
-//                        sameLevelGroupList.add(set);
-//                    }
-
-                    ///////////////////////////////////////////////////////
-                    if(sameLevelGroupList.isEmpty()) {
-                        sameLevelGroupList.add(set);
-                    } else {
-                        Boolean inGroup = false;
-                        int i;
-                        mainLoop:   //Label for breaking out of two nested loops
-                        for(i=0; i<sameLevelGroupList.size(); i++) {
-                            for(int j=0; j<set.length(); j++) {
-                                if(sameLevelGroupList.get(i).contains(Character.toString(set.charAt(j)))) {
-//                                    Log.d("AAP1",set);
-//                                    set.replace(Character.toString(set.charAt(j)), "");
-//                                    Log.d("AAP2",set);
-//                                    Log.d("aapje",sameLevelGroupList.get(i));
-                                    inGroup = true;
-                                    break mainLoop;
-                                }
-                            }
-                        }
-
-                        if(inGroup) { //If one of the aircraft in the set is already present in another group, add the missing one to this group
-//                            Log.d("AAP",sameLevelGroupList.get(i));
-                        } else {
-                            sameLevelGroupList.add(set);
-                        }
-                    }
-                    for(int i=0; i< sameLevelGroupList.size(); i++) {
-                        Log.d("test", sameLevelGroupList.get(i));
-                    }
-
-                    //Clear the temporary list
-                    groupList.clear();
-                }
-            }
+            checkConflicts();
 
             //Update the altitude tape
             if (isAltitudeUpdated){
@@ -1273,8 +1110,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Get the drop location
         LatLng newPosition = marker.getPosition();
 
-        /* TODO implement waypoint location change setfunction for the service */
+        /* TODO implement waypoint location change setfunction for the service and remove this line*/
         mAircraft.get(acNumber).setWpLatLon((float) newPosition.latitude, (float) newPosition.longitude, wpNumber);
+
+        try {
+            Bundle carrier = new Bundle();
+            carrier.putParcelable("WRITE_WP", new Waypoint((float) (newPosition.latitude * 1e7), (float) (newPosition.longitude * 1e7), mAircraft.get(acNumber).getWpAlt(wpNumber), mAircraft.get(acNumber).getWpSeq(wpNumber), mAircraft.get(acNumber).getWpTargetSys(wpNumber), mAircraft.get(acNumber).getWpTargetComp(wpNumber)));
+            mServiceClient.onCallback(carrier);
+        } catch(RemoteException e) {
+                Log.e(TAG, "Error while sending waypoint to the service");
+        }
+
         /* TODO see if the service automatically sends the updated waypoint information or if this must be requested. In any way, remove the call to the map updater here once this is solved. */
         //Update the waypoints on the map
         waypointUpdater(acNumber);
@@ -1618,6 +1464,174 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     /////////////////////////CLASS METHODS/////////////////////////
 
+    private void checkConflicts() {
+        //check for altitude and course conflicts
+        for(int i = 1; i < mAircraft.size()+1; i++) {
+            for(int j = 1; j < mAircraft.size()+1; j++) {
+                if(i!=j) {
+                    if(Math.abs(mAircraft.get(i).getAltitude() - mAircraft.get(j).getAltitude()) <= verticalSeparationStandard) {
+                        //Check for conflict course
+                        if(isOnconflictCourse(i,j)){ //On conflict course
+                            conflictingAircraft.add(i);
+                            conflictingAircraft.add(j);
+                        } else { //Not on conflict course
+                            sameLevelAircraft.add(i);
+                            sameLevelAircraft.add(j);
+                        }
+                    } else {
+                        mAircraft.get(i).setConflictStatusNew(ConflictStatus.GRAY);
+                        mAircraft.get(j).setConflictStatusNew(ConflictStatus.GRAY);
+                    }
+                }
+            }
+        }
+
+        // Remove double couples from the conflictlist
+        if (conflictingAircraft.size()>2) {
+            //Loop starting at the end of the list to be able to remove double pairs
+            for (int p=conflictingAircraft.size()-2; p>1; p-=2) {
+                for (int q = 0; q < p; q += 2) {
+                    if (conflictingAircraft.get(p+1) == conflictingAircraft.get(q) && conflictingAircraft.get(p) == conflictingAircraft.get(q+1)) {
+                        conflictingAircraft.remove(p+1);
+                        conflictingAircraft.remove(p);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Remove double couples from the samelevellist
+        if (sameLevelAircraft.size()>2) {
+            //Loop starting at the end of the list to be able to remove double pairs
+            for (int r=sameLevelAircraft.size()-2; r>1; r-=2) {
+                for (int s=0; s<r; s+=2) {
+                    if (sameLevelAircraft.get(r+1) == sameLevelAircraft.get(s) && sameLevelAircraft.get(r) == sameLevelAircraft.get(s+1)) {
+                        sameLevelAircraft.remove(r+1);
+                        sameLevelAircraft.remove(r);
+                        break;
+                    }
+                }
+            }
+        }
+
+        //Set the color of the aircraft that have the "red" conflict status
+        if(!conflictingAircraft.isEmpty()) {
+            for (int k = 0; k < conflictingAircraft.size(); k+=2) {
+                mAircraft.get(conflictingAircraft.get(k)).setConflictStatusNew(ConflictStatus.RED);
+                mAircraft.get(conflictingAircraft.get(k + 1)).setConflictStatusNew(ConflictStatus.RED);
+            }
+
+            //Get unique aircraft (remove duplicates)
+            Set<Integer> uniqueAcRed = new HashSet<Integer>(conflictingAircraft);
+            for (Integer l : uniqueAcRed) {
+                groupList.add(l);
+                for (Integer m : uniqueAcRed) {
+                    if(l!=m) {
+                        if(Math.abs(mAircraft.get(l).getAltitude() - mAircraft.get(m).getAltitude()) <= verticalSeparationStandard) {
+                            groupList.add(m);
+                        }
+                    }
+                }
+                //Sort the list of conflicting aircraft
+                Collections.sort(groupList);
+                //Generate a string containing the aircraftnumbers of a conflict group
+                String set = "";
+                for(int d=0; d<groupList.size(); d++) {
+                    set = set + String.valueOf(groupList.get(d));
+                }
+
+                //Check if the conflict group already exists in the list, if not add it (this code creates groups for all seperate conflict groups, the result is a huge load of labels in some cases)
+                if(!conflictGroupList.contains(set)) {
+                    conflictGroupList.add(set);
+                }
+
+//                    if(conflictGroupList.isEmpty()) {
+//                        conflictGroupList.add(set);
+//                    } else {
+//                        Boolean inGroup = false;
+//                        for(int i=0; i<conflictGroupList.size(); i++) {
+//                            if(conflictGroupList.get(i).contains(set)) {
+//                                inGroup = true;
+//                                break;
+//                            }
+//                        }
+//                        if(!inGroup) {
+//                            conflictGroupList.add(set);
+//                        }
+//                    }
+//                    Log.d("test",String.valueOf(conflictGroupList.size()));
+
+                //Clear the temporary list
+                groupList.clear();
+            }
+        }
+
+        //Set the color of the aircraft that have the "blue" conflict status
+        if(!sameLevelAircraft.isEmpty()) {
+            for (int k = 0; k < sameLevelAircraft.size(); k+=2) {
+                mAircraft.get(sameLevelAircraft.get(k)).setConflictStatusNew(ConflictStatus.BLUE);
+                mAircraft.get(sameLevelAircraft.get(k+1)).setConflictStatusNew(ConflictStatus.BLUE);
+            }
+
+            //Get unique aircraft (remove duplicates)
+            Set<Integer> uniqueAcBlue = new HashSet<Integer>(sameLevelAircraft);
+            for (Integer l : uniqueAcBlue) {
+                groupList.add(l);
+                for (Integer m : uniqueAcBlue) {
+                    if(l!=m) {
+                        if(Math.abs(mAircraft.get(l).getAltitude() - mAircraft.get(m).getAltitude()) <= verticalSeparationStandard) {
+                            groupList.add(m);
+                        }
+                    }
+                }
+                //Sort the list of conflicting aircraft
+                Collections.sort(groupList);
+                //Generate a string containing the aircraftnumbers of a conflict group
+                String set = "";
+                for(int d=0; d<groupList.size(); d++) {
+                    set = set + String.valueOf(groupList.get(d));
+                }
+                //Check if the conflict group already exists in the list, if not add it
+//                    if(!sameLevelGroupList.contains(set)) {
+//                        sameLevelGroupList.add(set);
+//                    }
+
+                ///////////////////////////////////////////////////////
+                if(sameLevelGroupList.isEmpty()) {
+                    sameLevelGroupList.add(set);
+                } else {
+                    Boolean inGroup = false;
+                    int i;
+                    mainLoop:   //Label for breaking out of two nested loops
+                    for(i=0; i<sameLevelGroupList.size(); i++) {
+                        for(int j=0; j<set.length(); j++) {
+                            if(sameLevelGroupList.get(i).contains(Character.toString(set.charAt(j)))) {
+//                                    Log.d("AAP1",set);
+//                                    set.replace(Character.toString(set.charAt(j)), "");
+//                                    Log.d("AAP2",set);
+//                                    Log.d("aapje",sameLevelGroupList.get(i));
+                                inGroup = true;
+                                break mainLoop;
+                            }
+                        }
+                    }
+
+                    if(inGroup) { //If one of the aircraft in the set is already present in another group, add the missing one to this group
+//                            Log.d("AAP",sameLevelGroupList.get(i));
+                    } else {
+                        sameLevelGroupList.add(set);
+                    }
+                }
+                for(int i=0; i< sameLevelGroupList.size(); i++) {
+                    Log.d("test", sameLevelGroupList.get(i));
+                }
+
+                //Clear the temporary list
+                groupList.clear();
+            }
+        }
+    }
+
     //Method to determine if a couple of aircraft needs to get conflict status
     private boolean isOnconflictCourse(int ac1, int ac2) {
         /* TODO make sure the conflict status is given for small coverage overlaps */
@@ -1912,6 +1926,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             myOutWriter.close();
 
         } catch(IOException e){
+            Log.e(TAG, "Error while writing to logfile");
         }
     }
 }
