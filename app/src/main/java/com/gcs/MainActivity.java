@@ -303,10 +303,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-	@Override
-    public void onDestroy() {
-		super.onDestroy();
-        /* TODO make sure the connection with service can always be made again without restarting the service app */
+    @Override
+    public void onPause() {
+        super.onPause();
         //Disconnect from service
         try{
             if (isConnected) {
@@ -315,7 +314,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         } catch(RemoteException e) {
             Log.e(TAG, "Failed to disconnect from service while closing application", e);
         }
+    }
 
+	@Override
+    public void onDestroy() {
+		super.onDestroy();
         //Stop the eventlistener
     	try {
 			mServiceClient.removeEventListener(TAG);
