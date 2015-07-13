@@ -225,9 +225,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 try {
+                    //Take the selected block index and send it to the service
                     Bundle carrier = new Bundle();
-                    carrier.putString("TYPE","BLOCK_SELECTED");
-                    carrier.putInt("BLOCK_SELECTED", position);
+                    carrier.putString("TYPE", "BLOCK_SELECTED");
+                    carrier.putShort("SEQ",(short)position);
                     mServiceClient.onCallback(carrier);
                 } catch (RemoteException e) {
                     Log.e(TAG,"Error while sending mission block spinner selection to the service");
@@ -678,9 +679,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     //Update the dropdown menu with the block names
                     updateMissionBlocksSpinner();
-
-                    carrier = mServiceClient.getAttribute("CURRENT_BLOCK");
-                    Log.d("UPDATED", String.valueOf(carrier.getInt("BLOCKS")));
                 } catch (RemoteException e) {
                     Log.e(TAG, "Error while updating mission blocks");
                 }
@@ -710,8 +708,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         // Get current block
                         Bundle carrier = mServiceClient.getAttribute("CURRENT_BLOCK");
                         int currentBlock = carrier.getInt("CURRENT_BLOCK");
-/* TODO find error with three times update current block */
-                        Log.d("BLOCKS", String.valueOf(currentBlock));
+
                         //Update the Mission block spinner selection
                         blockSpinner.setSelection(currentBlock);
 
@@ -911,10 +908,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Select the land block and request the service to execute it
             try {
                 Bundle carrier = new Bundle();
-                carrier.putString("TYPE","BLOCK_SELECTED");
-                carrier.putInt("BLOCK_SELECTED", mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.land_block)));
+                carrier.putString("TYPE", "BLOCK_SELECTED");
+                carrier.putShort("SEQ", (short) mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.land_block)));
                 mServiceClient.onCallback(carrier);
-
             } catch (RemoteException e) {
                 Log.e(TAG, "Error while requesting the service to execute the land block");
             }
@@ -929,15 +925,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //request takeoff if connected and the mission blocks are loaded
         } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
             //Select the takeoff block and request the service to execute it
-            try {
-                Bundle carrier = new Bundle();
-                carrier.putString("TYPE","BLOCK_SELECTED");
-                carrier.putInt("BLOCK_SELECTED", mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.takeoff_block)));
-                mServiceClient.onCallback(carrier);
-
-            } catch (RemoteException e) {
-                Log.e(TAG,"Error while requesting the service to execute the takeoff block");
-            }
+//            try {
+//                Bundle carrier = new Bundle();
+//                carrier.putString("TYPE","BLOCK_SELECTED");
+//                carrier.putShort("SEQ",(short) mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.takeoff_block)));
+//                mServiceClient.onCallback(carrier);
+//
+//            } catch (RemoteException e) {
+//                Log.e(TAG,"Error while requesting the service to execute the takeoff block");
+//            }
         }
 	}
 
@@ -952,7 +948,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Select the go home block and request the service to execute it
 //            try {
 //                Bundle carrier = new Bundle();
-//                carrier.putInt("BLOCK_SELECTED", mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.GOHOME)));
+//                carrier.putString("TYPE","BLOCK_SELECTED");
+//                carrier.putShort("SEQ",(short) mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.GOHOME)));
 //                mServiceClient.onCallback(carrier);
 
 //            } catch (RemoteException e) {
@@ -970,7 +967,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //            try {
 //                Bundle carrier = new Bundle();
 //                carrier.putString("TYPE", "REQUEST_BLOCK_LIST");
-////                carrier.putInt("REQUEST_BLOCK_LIST",0);
 //                mServiceClient.onCallback(carrier);
 //
 //                Toast.makeText(getApplicationContext(), "Loading blocks", Toast.LENGTH_SHORT).show();
@@ -1826,15 +1822,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             int blockIndex = mAircraft.get(selectedAc).missionBlocks.indexOf(blockName);
 
             //Request execution of the block
-            try {
-                Bundle carrier = new Bundle();
-                carrier.putString("TYPE","BLOCK_SELECTED");
-                carrier.putInt("BLOCK_SELECTED", blockIndex);
-                mServiceClient.onCallback(carrier);
-
-            } catch (RemoteException e) {
-                Log.e(TAG, "Error while sending mission block selection to the service");
-            }
+//            try {
+//                Bundle carrier = new Bundle();
+//                carrier.putString("TYPE","BLOCK_SELECTED");
+//                carrier.putShort("SEQ",(short) blockIndex);
+//                mServiceClient.onCallback(carrier);
+//
+//            } catch (RemoteException e) {
+//                Log.e(TAG, "Error while sending mission block selection to the service");
+//            }
         }
     }
 
