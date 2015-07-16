@@ -16,9 +16,12 @@ public class TelemetryFragment extends Fragment {
 		return view;
 	}
 
-//	public void setBackgroundColor(String color) {
-//
-//	}
+	public void setTextColor(int color) {
+		TextView textViewVALUE = (TextView) getView().findViewById(R.id.altitudeValue);
+		textViewVALUE.setTextColor(color);
+		TextView textViewUNIT = (TextView) getView().findViewById(R.id.altitudeUnitLabel);
+		textViewUNIT.setTextColor(color);
+	}
 	
 	public void setText(String item) {
 		TextView textView = (TextView) getView().findViewById(R.id.altitudeValue);

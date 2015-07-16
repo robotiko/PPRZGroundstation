@@ -15,6 +15,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
 import android.view.Gravity;
@@ -26,6 +27,7 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
@@ -71,7 +73,7 @@ public class AltitudeTape extends Fragment {
         redLabel       = R.drawable.altitude_label_small_red;
         LargeBlueLabel = R.drawable.altitude_label_large_blue;
         LargeRedLabel  = R.drawable.altitude_label_large_red;
-		
+
         // Inflate the layout for this fragment
 		rootView = inflater.inflate(R.layout.altitude_tape, container, false);
 
@@ -232,8 +234,12 @@ public class AltitudeTape extends Fragment {
                     case DragEvent.ACTION_DRAG_STARTED:
                         break;
                     case DragEvent.ACTION_DRAG_LOCATION:
+                        //Give the user feedback (on the altitude instrument) about the altitude of the label while dragging
+                        ((MainActivity) getActivity()).setDragAltitude(labelList.get(draggedLabel),labelLocationToAltitude(event.getY() - dragShadowVerticalOffset),false);
                         break;
                     case DragEvent.ACTION_DROP:
+                        //Set the altitude instrument back to normal
+                        ((MainActivity) getActivity()).setDragAltitude(labelList.get(draggedLabel),labelLocationToAltitude(event.getY() - dragShadowVerticalOffset),true);
                         //Send the drop location to the method that implements the command (Note that an offset value was used to be able to see the label while dragging)
                         if (groupSelectLabelList.containsKey(draggedLabel)) {   //Group selection label
                             setTargetAltitude(groupSelectLabelList.get(draggedLabel), event.getY() - dragShadowVerticalOffset);
@@ -507,5 +513,6 @@ public class AltitudeTape extends Fragment {
 
 		/* TODO Set the target altitude to the service (change wp altitude) once this function is available */
 //		setTargetLabel(dropAltitude, 10); //Temporary setfunction to show a label
+        ((MainActivity) getActivity()).changeCurrentWpAltitude(aircraftNumber,dropAltitude);
 	}
 }

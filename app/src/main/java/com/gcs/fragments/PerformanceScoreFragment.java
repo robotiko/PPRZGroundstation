@@ -21,14 +21,4 @@ public class PerformanceScoreFragment extends Fragment {
 		TextView textView = (TextView) getView().findViewById(R.id.performanceScoreValue);
 	    textView.setText(item);
 	}
-	
-//	public void setBackground(String colorString) {
-//		int color = Color.parseColor(colorString);
-//
-//		TextView valueField = (TextView) getView().findViewById(R.id.batteryValue);
-//		valueField.setBackgroundColor(color);
-//
-//		TextView unitField = (TextView) getView().findViewById(R.id.batteryUnitLabel);
-//		unitField.setBackgroundColor(color);
-//	}
 }

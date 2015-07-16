@@ -12,6 +12,10 @@ public class Waypoint {
 	private byte targetSys;
 	
 	private byte targetComp;
+
+	private boolean isSelected = false;
+
+    private boolean isUpdating = false;
 	
 	public Waypoint(double lat, double lon, float alt, short seq, byte targetSys, byte targetComp) {
 		this.lat = lat;
@@ -45,6 +49,10 @@ public class Waypoint {
 	public void setTargetComp(byte targetComp) {
 		this.targetComp = targetComp;
 	}
+
+    public void setSelected(boolean isSelected) { this.isSelected = isSelected; }
+
+    public void setUpdating() {this.isUpdating = true;}
 	
 	public double getLat() {
 		return this.lat;
@@ -69,4 +77,8 @@ public class Waypoint {
 	public byte getTargetComp() {
 		return this.targetComp;
 	}
+
+    public boolean isSelected() {return this.isSelected; }
+
+    public boolean isUpdating() {return this.isUpdating; }
 }

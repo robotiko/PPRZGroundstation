@@ -63,7 +63,8 @@ public class Aircraft {
     private boolean showInfoWindow      = true;
     private float distanceHome          = 0f;
     private String currentBlock;
-    private LatLng currentSurveyLoc;
+    private int currentSurveyWp         = 0;
+//    private LatLng currentSurveyLoc;
 
     //////////// HEARTBEAT ////////////
     public byte getSysid() {
@@ -303,6 +304,18 @@ public class Aircraft {
     	waypoints.set(wpNumber,wp);
 	}
 
+    public void setWpSelected(int wpNumber, boolean isSelected) {
+        Waypoint wp = waypoints.get(wpNumber);
+        wp.setSelected(isSelected);
+        waypoints.set(wpNumber, wp);
+    }
+
+    public void setWpUpdating(int wpNumber) {
+        Waypoint wp = waypoints.get(wpNumber);
+        wp.setUpdating();
+        waypoints.set(wpNumber, wp);
+    }
+
 	public double getWpLat(int wpNumber) {
 		return waypoints.get(wpNumber).getLat();
 	}
@@ -344,6 +357,14 @@ public class Aircraft {
 	public int getNumberOfWaypoints() { return waypoints.size(); }
 
 	public void clearWpList() { waypoints.clear();}
+
+    public boolean isWpSelected(int wpNumber) {
+        return waypoints.get(wpNumber).isSelected();
+    }
+
+    public boolean isWpUpdating(int wpNumber) {
+        return waypoints.get(wpNumber).isUpdating();
+    }
 
     //////////// CLASS ATTRIBUTES ////////////
     public int getCommunicationSignal(){
@@ -402,20 +423,22 @@ public class Aircraft {
 
             //If the block is a survey block
             String surveyBlockName = context.getResources().getString(R.string.survey_block);
-            Log.d("SURVEY",surveyBlockName);
-
             if(currentBlock.contains(surveyBlockName)) {
-                currentSurveyLoc = getWpLatLng(missionBlocks.indexOf(currentBlock));
+                //Generate the waypoint name that corresponds to the survey block
+                String wpName = "WP" + currentBlock.substring(4);
+                //Get the waypoint
+                currentSurveyWp = Integer.parseInt(currentBlock.substring(4));
+//                currentSurveyLoc = getWpLatLng(missionBlocks.indexOf(currentBlock));
             } else {
-                currentSurveyLoc = null;
+                currentSurveyWp = 0;
+//                currentSurveyLoc = null;
             }
-            Log.d("SURVEY1",String.valueOf(currentSurveyLoc));
         }
     }
 
     public String getCurrentBlock() {return currentBlock; }
 
-    public LatLng getCurrentSurveyLoc() { return currentSurveyLoc; }
+    public int getCurrentSurveyWp() { return currentSurveyWp; }
 
     public void setShowInfoWindow(boolean showInfoWindow) {this.showInfoWindow = showInfoWindow;}
 
