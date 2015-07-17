@@ -131,7 +131,7 @@ public class Aircraft {
     }
     
     public void setAGL(double AGL) {
-    	mAltitude.setTargetAltitude(AGL);
+    	mAltitude.setAGL(AGL);
     }
     
     public double getAltitude() {

@@ -175,25 +175,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
         mAircraft.put(2, new Aircraft(getApplicationContext()));
-//        mAircraft.get(2).setLlaHdg(519925740, 43775620, 0, (short) 180);
         mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180);
-        mAircraft.get(2).setAltitude(10);
+        mAircraft.get(2).setAGL(10);
         mAircraft.get(2).setBatteryState(10000, 45, 1);
         mAircraft.get(2).setDistanceHome(homeLocation);
 		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
 
 		mAircraft.put(3, new Aircraft(getApplicationContext()));
 		mAircraft.get(3).setLlaHdg(519910540, 43794130, 0, (short) 300);
-//        mAircraft.get(3).setLlaHdg(519925740, 43775620, 0, (short) 180);
-		mAircraft.get(3).setAltitude(10.3);
+		mAircraft.get(3).setAGL(10.3);
 		mAircraft.get(3).setBatteryState(9000, 1, 1);
 		mAircraft.get(3).setDistanceHome(homeLocation);
 		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
 
         mAircraft.put(4, new Aircraft(getApplicationContext()));
-//        mAircraft.get(4).setLlaHdg(519920900, 43796160, 0, (short) 270);
         mAircraft.get(4).setLlaHdg(519880620, 43793190, 0, (short) 180);
-        mAircraft.get(4).setAltitude(9.7);
+        mAircraft.get(4).setAGL(9.7);
         mAircraft.get(4).setBatteryState(12000, 90, 1);
         mAircraft.get(4).setDistanceHome(homeLocation);
         mAircraft.get(4).setRollPitchYaw(0, 0, 270);
@@ -532,9 +529,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					Altitude mAltitude = getAttribute("ALTITUDE");
                     /* TODO ALTITUDE use dynamic aircraft number once available in service */
                     //Note that in paparazzi the z-axis is defined pointing downwards, so a minus sign is applied to all incoming altitude values
-                    mAircraft.get(1).setAltitude(-mAltitude.getAltitude());
+                    mAircraft.get(1).setAltitude(mAltitude.getAGL());
                     mAircraft.get(1).setTargetAltitude(-mAltitude.getTargetAltitude());
-//					mAircraft.get(1).setAGL(-mAltitude.getAGL());
+					mAircraft.get(1).setAGL(-mAltitude.getAltitude());
 
                     telemetryFragment.setText(String.format("%.1f", -mAltitude.getAltitude()));
 					
@@ -1233,7 +1230,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 //Set the values in the information windows
                                 infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
                                 infoDistHome.setText("Distance Home: " + String.format("%.1f", mAircraft.get(acNumber).getDistanceHome()) + "m");
-                                infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(acNumber).getAltitude()) + "m");
+                                infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(acNumber).getAGL()) + "m");
                                 infoBattery.setText("Battery voltage: " + String.valueOf(mAircraft.get(acNumber).getBattVolt()) + "mV");
                                 if(mAircraft.get(acNumber).getCurrentBlock()==null) {
                                     infoMode.setText("Current block: " + getResources().getString(R.string.no_blocks_loaded));
@@ -1521,7 +1518,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         for(int i = 1; i < mAircraft.size()+1; i++) {
             for(int j = 1; j < mAircraft.size()+1; j++) {
                 if(i!=j) {
-                    if(Math.abs(mAircraft.get(i).getAltitude() - mAircraft.get(j).getAltitude()) <= verticalSeparationStandard) {
+                    if(Math.abs(mAircraft.get(i).getAGL() - mAircraft.get(j).getAGL()) <= verticalSeparationStandard) {
                         //Check for conflict course
                         if(isOnconflictCourse(i,j)){ //On conflict course
                             conflictingAircraft.add(i);
@@ -1579,7 +1576,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 groupList.add(l);
                 for (Integer m : uniqueAcRed) {
                     if(l!=m) {
-                        if(Math.abs(mAircraft.get(l).getAltitude() - mAircraft.get(m).getAltitude()) <= verticalSeparationStandard) {
+                        if(Math.abs(mAircraft.get(l).getAGL() - mAircraft.get(m).getAGL()) <= verticalSeparationStandard) {
                             groupList.add(m);
                         }
                     }
@@ -1631,7 +1628,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 groupList.add(l);
                 for (Integer m : uniqueAcBlue) {
                     if(l!=m) {
-                        if(Math.abs(mAircraft.get(l).getAltitude() - mAircraft.get(m).getAltitude()) <= verticalSeparationStandard) {
+                        if(Math.abs(mAircraft.get(l).getAGL() - mAircraft.get(m).getAGL()) <= verticalSeparationStandard) {
                             groupList.add(m);
                         }
                     }
@@ -1712,7 +1709,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         /* TODO make the aircraft number dynamic */
 		/* Set the location of the target label on the altitude tape and check wether to 
 		 * show the target label or not (aka is the aircraft already on target altitude?) */
-        if (Math.abs(mAircraft.get(1).getTargetAltitude() - mAircraft.get(1).getAltitude()) > 0.001) {
+        if (Math.abs(mAircraft.get(1).getTargetAltitude() - mAircraft.get(1).getAGL()) > 0.001) {
 //            altitudeTapeFragment.setTargetLabel(mAircraft.get(1).getTargetAltitude(), mAircraft.get(1).getTargetLabelId());
         } else {
             altitudeTapeFragment.deleteTargetLabel(mAircraft.get(1).getTargetLabelId());
@@ -1725,7 +1722,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //If a group is selected
         if(!groupSelectedAircraft.isEmpty()) {
             for(int i=0; i< groupSelectedAircraft.size(); i++) {
-                altitudeTapeFragment.drawGroupSelection(mAircraft.get(groupSelectedAircraft.get(i)).getAltitude(),mAircraft.get(groupSelectedAircraft.get(i)).getLabelCharacter(),i,groupSelectedAircraft.size(),groupSelectedAircraft.get(i));
+                altitudeTapeFragment.drawGroupSelection(mAircraft.get(groupSelectedAircraft.get(i)).getAGL(),mAircraft.get(groupSelectedAircraft.get(i)).getLabelCharacter(),i,groupSelectedAircraft.size(),groupSelectedAircraft.get(i));
             }
         } else {
             // Put the grouped red labels on the altitude tape
@@ -1736,7 +1733,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     String characters = "";
                     for(int h = 0; h<conflictGroupList.get(j).length();h++){//Loop over conflict group string
                         conflict[h] = Character.getNumericValue(conflictGroupList.get(j).charAt(h));
-                        altSum = altSum + mAircraft.get(conflict[h]).getAltitude();
+                        altSum = altSum + mAircraft.get(conflict[h]).getAGL();
                         characters = characters + mAircraft.get(conflict[h]).getLabelCharacter() + " ";
                     }
                     characters = characters.substring(0,conflict.length+2);
@@ -1757,7 +1754,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     String characters = "";
                     for(int b = 0; b<sameLevelGroupList.get(k).length();b++){//Loop over conflict group string
                         conflict[b] = Character.getNumericValue(sameLevelGroupList.get(k).charAt(b));
-                        altSum = altSum + mAircraft.get(conflict[b]).getAltitude();
+                        altSum = altSum + mAircraft.get(conflict[b]).getAGL();
                         characters = characters + mAircraft.get(conflict[b]).getLabelCharacter() + " ";
                     }
                     characters = characters.substring(0,conflict.length+2);
@@ -1780,7 +1777,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 singleLabelVisibility = View.VISIBLE;
             }
             //Set the individual label on the tape
-            altitudeTapeFragment.setLabel(mAircraft.get(i).getAltitude(), mAircraft.get(i).getAltLabelId(), mAircraft.get(i).getLabelCharacter(), mAircraft.get(i).isSelected(), mAircraft.get(i).isLabelCreated(), i, singleLabelVisibility);
+            altitudeTapeFragment.setLabel(mAircraft.get(i).getAGL(), mAircraft.get(i).getAltLabelId(), mAircraft.get(i).getLabelCharacter(), mAircraft.get(i).isSelected(), mAircraft.get(i).isLabelCreated(), i, singleLabelVisibility);
         }
 
         //If no group labels were drawn in this iteration, remove any existing ones because ther are no groups anymore
@@ -1864,7 +1861,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     public void setDragAltitude(int acNumber, double altitude, boolean endDrag) {
         if(endDrag) {
             telemetryFragment.setTextColor(Color.WHITE);
-            telemetryFragment.setText(String.format("%.1f",mAircraft.get(acNumber).getAltitude()));
+            telemetryFragment.setText(String.format("%.1f",mAircraft.get(acNumber).getAGL()));
         } else {
             telemetryFragment.setTextColor(Color.YELLOW);
             telemetryFragment.setText(String.format("%.1f", altitude));
@@ -1892,12 +1889,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    public void changeCurrentWpAltitude(int acNumber, double altitude) {
+    public void changeCurrentWpAltitude(int acNumber, double AGL) {
         if(selectedWp!=0) {
-            double wpAltitude = altitude;
+            double groundLevel = mAircraft.get(acNumber).getAltitude() - mAircraft.get(acNumber).getAGL();
+            double wpAltitude = groundLevel + AGL;
             int wpNumber = selectedWp - 1;
 
-            Toast.makeText(getApplicationContext(), "Altitude of WP " + String.valueOf(wpNumber) + " to " + String.format("%.1f", wpAltitude), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Altitude of WP " + String.valueOf(wpNumber) + " to " + String.format("%.1f", wpAltitude) + " m", Toast.LENGTH_SHORT).show();
 
             //Send update waypoint data to the service (same location, different altitude)
             try {
@@ -1935,7 +1933,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Region of interest parameters
         double AREA = ROIRadius*ROIRadius*Math.PI;
         LatLng ROIcenter = home.getHomeLocation();
-
+        /* TODO: Take the altitude into account (0 is zero coverage, only at optimum height??) */
         //Calculate the overlap between covered region by aircraft and the ROI area
         double overlapArea = 0;
 
@@ -1944,6 +1942,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIcenter, mAircraft.get(i).getLatLng());
             double doubleOverlap = 0;
             /* TODO: account for overlap by decreasing performance score in case of overlap/violation of the separation standard instead of calculating overlap */
+            //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!
             if(overlap>0) { //If not outside the ROI
                 for (int j = i + 1; j <= mAircraft.size(); j++) {
                 //Account for overlap of the two UAVs
@@ -1953,7 +1952,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Calculate the total coverage ove the ROI
             overlapArea += overlap - doubleOverlap;
         }
-        //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!
+
         //Coverage percentage
         return (overlapArea/AREA)*100;
     }
@@ -2018,7 +2017,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Loop over all aircraft to write a line to the log file with the following data of all aircraft: [Altitude, Latitude, Longitude]
             for(int i=1; i<mAircraft.size()+1; i++) {
                 /* TODO log waypoint location instead of aircraft location */
-                myOutWriter.append(", " + mAircraft.get(i).getAltitude() + ", " + mAircraft.get(i).getLat() + ", " + mAircraft.get(i).getLon());
+                myOutWriter.append(", " + mAircraft.get(i).getAGL() + ", " + mAircraft.get(i).getLat() + ", " + mAircraft.get(i).getLon());
             }
             //End the line and close the file
             myOutWriter.append("\r\n");
