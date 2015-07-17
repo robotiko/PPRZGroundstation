@@ -175,7 +175,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
         mAircraft.put(2, new Aircraft(getApplicationContext()));
-        mAircraft.get(2).setLlaHdg(519925740, 43775620, 0, (short) 180);
+//        mAircraft.get(2).setLlaHdg(519925740, 43775620, 0, (short) 180);
+        mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180);
         mAircraft.get(2).setAltitude(10);
         mAircraft.get(2).setBatteryState(10000, 45, 1);
         mAircraft.get(2).setDistanceHome(homeLocation);
@@ -258,8 +259,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 //Item selection implementation
-                if(position>0) {
+            if(position>0) {                        //Select an aircraft
                     setIsSelected(position, true);
+                } else {                            //Deselect aircraft
+                    deselectAllAircraft();
                 }
             }
 
@@ -1178,86 +1181,84 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapReady(GoogleMap map) {
 
-            //Loop over all aircraft
-            for(int aircraftNumber=1; aircraftNumber<mAircraft.size()+1; aircraftNumber++) {
+                //Loop over all aircraft
+                for(int aircraftNumber=1; aircraftNumber<mAircraft.size()+1; aircraftNumber++) {
 
-                //Clear marker from map (if it exists)
-                if (mAircraft.get(aircraftNumber).acMarker != null) {
-                    mAircraft.get(aircraftNumber).acMarker.remove();
-                }
+                    //Clear marker from map (if it exists)
+                    if (mAircraft.get(aircraftNumber).acMarker != null) {
+                        mAircraft.get(aircraftNumber).acMarker.remove();
+                    }
 
-                //Add marker to map with the following settings and save it in the aircraft object
-                mAircraft.get(aircraftNumber).acMarker = map.addMarker(new MarkerOptions()
-                                .position(mAircraft.get(aircraftNumber).getLatLng())
-                                .anchor((float) 0.5, (float) 0.5)
-                                .icon(BitmapDescriptorFactory.fromBitmap(mAircraft.get(aircraftNumber).getIcon()))
-                                .title(" " + mAircraft.get(aircraftNumber).getLabelCharacter())
-                                .snippet(String.valueOf(aircraftNumber))
-                                .infoWindowAnchor(0.5f, mAircraft.get(aircraftNumber).getIconBoundOffset())
-                                .flat(true)
-                                .draggable(false)
-                );
+                    //Add marker to map with the following settings and save it in the aircraft object
+                    mAircraft.get(aircraftNumber).acMarker = map.addMarker(new MarkerOptions()
+                                    .position(mAircraft.get(aircraftNumber).getLatLng())
+                                    .anchor((float) 0.5, (float) 0.5)
+                                    .icon(BitmapDescriptorFactory.fromBitmap(mAircraft.get(aircraftNumber).getIcon()))
+                                    .title(" " + mAircraft.get(aircraftNumber).getLabelCharacter())
+                                    .snippet(String.valueOf(aircraftNumber))
+                                    .infoWindowAnchor(0.5f, mAircraft.get(aircraftNumber).getIconBoundOffset())
+                                    .flat(true)
+                                    .draggable(false)
+                    );
 
-                //Either show the label or the detailed information window of the aircraft based on selection status
-                if (mAircraft.get(aircraftNumber).isSelected()) {
-                    //Make aircraft number final to use in inner class
-                    final int acNumber = aircraftNumber;
+                    //Either show the label or the detailed information window of the aircraft based on selection status
+                    if (mAircraft.get(aircraftNumber).isSelected()) {
+                        //Make aircraft number final to use in inner class
+                        final int acNumber = aircraftNumber;
 
-                    //Adapt the information window
-                    map.setInfoWindowAdapter(new InfoWindowAdapter() {
+                        //Adapt the information window
+                        map.setInfoWindowAdapter(new InfoWindowAdapter() {
 
-                        // Use default InfoWindow frame
-                        @Override
-                        public View getInfoWindow(Marker marker) {
-                            return (null);
-                        }
-
-                        // Defines the contents of the InfoWindow
-                        @Override
-                        public View getInfoContents(Marker marker) {
-
-                            View v = getLayoutInflater().inflate(R.layout.info_window_detail, null);
-
-                            /* TODO add content to the detailed infowindow */
-
-                            //Get handles to the textviews
-                            TextView infoAirtime  = (TextView) v.findViewById(R.id.info_airtime);
-                            TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
-                            TextView infoAlt      = (TextView) v.findViewById(R.id.info_alt);
-                            TextView infoMode     = (TextView) v.findViewById(R.id.info_mode);
-                            TextView infoBattery  = (TextView) v.findViewById(R.id.info_battery);
-
-                            //Set the values in the information windows
-                            infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
-                            infoDistHome.setText("Distance Home: " + String.format("%.1f", mAircraft.get(acNumber).getDistanceHome()) + "m");
-                            infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(acNumber).getAltitude()) + "m");
-                            infoBattery.setText("Battery voltage: " + String.valueOf(mAircraft.get(acNumber).getBattVolt()) + "mV");
-                            if(mAircraft.get(acNumber).getCurrentBlock()==null) {
-                                infoMode.setText("Current block: " + getResources().getString(R.string.no_blocks_loaded));
-                            } else {
-                                infoMode.setText("Current block: " + mAircraft.get(acNumber).getCurrentBlock());
+                            // Use default InfoWindow frame
+                            @Override
+                            public View getInfoWindow(Marker marker) {
+                                return (null);
                             }
 
-                            return v;
+                            // Defines the contents of the InfoWindow
+                            @Override
+                            public View getInfoContents(Marker marker) {
+
+                                View v = getLayoutInflater().inflate(R.layout.info_window_detail, null);
+
+                                /* TODO add content to the detailed infowindow */
+
+                                //Get handles to the textviews
+                                TextView infoAirtime  = (TextView) v.findViewById(R.id.info_airtime);
+                                TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
+                                TextView infoAlt      = (TextView) v.findViewById(R.id.info_alt);
+                                TextView infoMode     = (TextView) v.findViewById(R.id.info_mode);
+                                TextView infoBattery  = (TextView) v.findViewById(R.id.info_battery);
+
+                                //Set the values in the information windows
+                                infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
+                                infoDistHome.setText("Distance Home: " + String.format("%.1f", mAircraft.get(acNumber).getDistanceHome()) + "m");
+                                infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(acNumber).getAltitude()) + "m");
+                                infoBattery.setText("Battery voltage: " + String.valueOf(mAircraft.get(acNumber).getBattVolt()) + "mV");
+                                if(mAircraft.get(acNumber).getCurrentBlock()==null) {
+                                    infoMode.setText("Current block: " + getResources().getString(R.string.no_blocks_loaded));
+                                } else {
+                                    infoMode.setText("Current block: " + mAircraft.get(acNumber).getCurrentBlock());
+                                }
+
+                                return v;
+                            }
+                        });
+
+                        //Set the marker to show the information window
+                        if(mAircraft.get(aircraftNumber).getShowInfoWindow()) {
+                            mAircraft.get(aircraftNumber).acMarker.showInfoWindow();
                         }
-                    });
-
-                    //Set the marker to show the information window
-                    if(mAircraft.get(aircraftNumber).getShowInfoWindow()) {
-                        mAircraft.get(aircraftNumber).acMarker.showInfoWindow();
                     }
-                }
 
-                ////COVERAGE INDICATION
-                /* TODO Remove this if statement once aircraft 1 needs to be included */
-                if(aircraftNumber!=1) {
+                    ////COVERAGE INDICATION
                     //Remove the coverage circle if it was drawn before
                     if (mAircraft.get(aircraftNumber).coverageCircle != null) {
                         mAircraft.get(aircraftNumber).coverageCircle.remove();
                     }
 
                     if (showCoverage) {
-//                    if(mAircraft.get(aircraftNumber).getCurrentSurveyLoc()!= null) {
+    //                    if(mAircraft.get(aircraftNumber).getCurrentSurveyLoc()!= null) {
 
                         //Exclude relay UAVs (filter based on altitude or status)
                         //Make dynamic (multiple aircraft)
@@ -1279,15 +1280,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                         GroundOverlayOptions ROI = new GroundOverlayOptions()
                                 .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
-//                            .position(mAircraft.get(1).getCurrentSurveyLoc(), acCoverageRadius * 2, acCoverageRadius * 2); //m
+    //                            .position(mAircraft.get(1).getCurrentSurveyLoc(), acCoverageRadius * 2, acCoverageRadius * 2); //m
                                 .position(mAircraft.get(aircraftNumber).getLatLng(), acCoverageRadius*2, acCoverageRadius*2); //m
 
                         // Get back the relay Circle object
                         mAircraft.get(aircraftNumber).coverageCircle = map.addGroundOverlay(ROI);
-//                    }
+    //                    }
                     }
                 }
-            }
             }
         });
 	}
@@ -1455,7 +1455,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapReady(GoogleMap map) {
 
-//                LatLng ROIloc = new LatLng(43.566705, 1.474928);
                 LatLng ROIloc = home.getHomeLocation();
 
                 //Bitmap and canvas to draw a circle on
@@ -1467,10 +1466,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
                 circleCanvas.drawCircle(circleSize/2, circleSize/2, circleSize/2, circlePaint);
 
-                float circleDiameter = 500f; //m
                 GroundOverlayOptions ROI = new GroundOverlayOptions()
                         .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
-                        .position(ROIloc, circleDiameter, circleDiameter); //m
+                        .position(ROIloc, ROIRadius*2, ROIRadius*2); //m
 
                 map.addGroundOverlay(ROI);
             }
@@ -1927,6 +1925,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private void calcPerformance() {
         /* TODO finish the performance score calculation */
 //        performanceScore = (ROIcovered() + conflict time score + collissions + loss of control(UAV out of comm) )/4;
+        performanceScore = ROIcovered();
 
         //Set the performance score to the text view
         performanceScoreFragment.setText(String.format("%.1f", performanceScore));
@@ -1939,14 +1938,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Calculate the overlap between covered region by aircraft and the ROI area
         double overlapArea = 0;
-        /* TODO include all aircraft once app is further developed */
-        for(int i = 2; i<=mAircraft.size(); i++) { //Loop over all aircraft
+
+        for(int i = 1; i<=mAircraft.size(); i++) { //Loop over all aircraft
             //Add overlap between aircraft coverage and ROI
-            overlapArea += circleOverlap(ROIRadius, acCoverageRadius, ROIcenter, mAircraft.get(i).getLatLng());
-            for(int j = i+1; j<=mAircraft.size(); j++){
+            double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIcenter, mAircraft.get(i).getLatLng());
+            double doubleOverlap = 0;
+            /* TODO: account for overlap by decreasing performance score in case of overlap/violation of the separation standard instead of calculating overlap */
+            if(overlap>0) { //If not outside the ROI
+                for (int j = i + 1; j <= mAircraft.size(); j++) {
                 //Account for overlap of the two UAVs
-                overlapArea -= circleOverlap(acCoverageRadius, acCoverageRadius, mAircraft.get(i).getLatLng(), mAircraft.get(j).getLatLng());
+                doubleOverlap+= circleOverlap(acCoverageRadius, acCoverageRadius, mAircraft.get(i).getLatLng(), mAircraft.get(j).getLatLng());
+                }
             }
+            //Calculate the total coverage ove the ROI
+            overlapArea += overlap - doubleOverlap;
         }
         //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!
         //Coverage percentage
@@ -1972,7 +1977,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         double overlapArea;
         if(distance[0] > (R+r)) {                  //No overlap
             overlapArea = 0;
-        } else if(distance[0] <= Math.abs(R-r)) {  //inside
+        } else if((distance[0]+r) <= R) {  //inside
             //Entire area of the small circle
             overlapArea = r*r*Math.PI;
         } else {                                   //Overlap
