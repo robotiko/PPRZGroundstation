@@ -15,6 +15,7 @@ import com.gcs.core.Home;
 import com.gcs.fragments.PerformanceScoreFragment;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -120,15 +121,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private ArrayList<Integer>  groupList             = new ArrayList<>();
     private ArrayList<String>   conflictGroupList     = new ArrayList<>();
     private ArrayList<String>   sameLevelGroupList    = new ArrayList<>();
-    private List<Integer>       groupSelectedAircraft = new ArrayList<>();;
+    private List<Integer>       groupSelectedAircraft = new ArrayList<>();
+    private List<Integer>       relayAircraft         = new ArrayList<>();
+    private List<Circle>        relayCommCircles      = new ArrayList<>();
 
 	private Home home;
-    private Circle homeCommCircle, relayCommCircle;
+
     private float verticalSeparationStandard, horizontalSeparationStandard, surveillanceCircleRadius;
-    private int commMaxRange, commRelayRange, singleLabelVisibility, acCoverageRadius, ROIRadius;
+    private int commMaxRange, commRelayRange, singleLabelVisibility, acCoverageRadius, ROIRadius, surveillanceAltitude, relayAltitude,altitudeAccuracyDistance;
     private String surveyWpName;
     private int selectedAc = 0;                     //Set to 0 if none serves as relay (yet)
-    private int relayUAV   = 0;                     //Set to 0 if none serves as relay (yet)
+//    private int relayUAV   = 0;                     //Set to 0 if none serves as relay (yet)
     private double performanceScore = 0f;
     private int selectedWp = 0;
 
@@ -157,7 +160,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         commRelayRange = getResources().getInteger(R.integer.commRelayRange);                    //meters
         acCoverageRadius = getResources().getInteger(R.integer.acCoverageRadius);                  //meters
         ROIRadius = getResources().getInteger(R.integer.ROIRadius);                         //meters
+        surveillanceAltitude = getResources().getInteger(R.integer.surveillanceAltitude); //meters
+        relayAltitude = getResources().getInteger(R.integer.relayAltitude); //meters
+        altitudeAccuracyDistance = getResources().getInteger(R.integer.altitudeAccuracyDistance); //meters
         surveyWpName =  getResources().getString(R.string.survey_wp);
+
 
         /* TODO Move the aircraft instantiation to a more suitable location once the service provides data of multiple aircraft (first Heartbeat?)*/
 		// Instantiate aircraft object
@@ -175,14 +182,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
         mAircraft.put(2, new Aircraft(getApplicationContext()));
-        mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180);
-        mAircraft.get(2).setAGL(10);
+//        mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180); //south
+//        mAircraft.get(2).setLlaHdg(434654440, 12767810, 0, (short) 180); //North
+        mAircraft.get(2).setLlaHdg(434599700, 12723040, 0, (short) 180); //Middle
+        mAircraft.get(2).setAGL(90);
         mAircraft.get(2).setBatteryState(10000, 45, 1);
         mAircraft.get(2).setDistanceHome(homeLocation);
 		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
 
-		mAircraft.put(3, new Aircraft(getApplicationContext()));
-		mAircraft.get(3).setLlaHdg(519910540, 43794130, 0, (short) 300);
+        mAircraft.put(3, new Aircraft(getApplicationContext()));
+//		mAircraft.get(3).setLlaHdg(434651420, 12756540, 0, (short) 300);
+		mAircraft.get(3).setLlaHdg(434666020, 12774780, 0, (short) 300);
 		mAircraft.get(3).setAGL(10.3);
 		mAircraft.get(3).setBatteryState(9000, 1, 1);
 		mAircraft.get(3).setDistanceHome(homeLocation);
@@ -339,8 +349,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    @Override 
 	    public void run() {
 
+            //Check for aircraft relay status
+            checkRelayAircraft();
+
+            //TEMPORARY
+
             //Draw the communication range on the map
-            drawCommunicationRange(relayUAV);
+            drawCommunicationRange(relayAircraft);
 
             //check for altitude and course conflicts
             checkConflicts();
@@ -534,7 +549,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 					mAircraft.get(1).setAGL(-mAltitude.getAltitude());
 
                     telemetryFragment.setText(String.format("%.1f", -mAltitude.getAltitude()));
-					
+
 					/* Set isAltitudeUpdated to true at first update of altitude (used for altitude tape updates) */
 					if(!isAltitudeUpdated) isAltitudeUpdated = true;
 
@@ -1254,18 +1269,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         mAircraft.get(aircraftNumber).coverageCircle.remove();
                     }
 
-                    if (showCoverage) {
+                    if (showCoverage && !mAircraft.get(aircraftNumber).isRelay()) {
     //                    if(mAircraft.get(aircraftNumber).getCurrentSurveyLoc()!= null) {
 
-                        //Exclude relay UAVs (filter based on altitude or status)
                         //Make dynamic (multiple aircraft)
 
-                        // Draw the relay communication range circle
                         //Bitmap and canvas to draw a circle on
                         Bitmap baseIcon = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888);
                         Canvas circleCanvas = new Canvas(baseIcon);
                         Paint circlePaint = new Paint();
-                        circlePaint.setColor(0x4000ff00);
+                        if(mAircraft.get(aircraftNumber).getCommunicationSignal() > 0) {//Green color for aircraft that are within the communication range
+                            circlePaint.setColor(0x4000ff00);
+                        } else { //Red color for aircraft that are out of the communication range
+                            circlePaint.setColor(0x40ff0000);
+                        }
                         circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
                         //Circle fill
                         circleCanvas.drawCircle(200, 200, 200, circlePaint);
@@ -1382,8 +1399,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     /* Draw the area in which communication is possible */
-    private void drawCommunicationRange(final int relayAc) {
-
+    private void drawCommunicationRange(final List<Integer> relayAc) {
         //Only call the map if something needs to be drawn or if something needs to be removed from the map
         if(showCommRange) {
             //Call GoogleMaps
@@ -1392,12 +1408,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 public void onMapReady(GoogleMap map) {
 
                     //Remove the communication range circle around home if it was drawn before
-                    if (homeCommCircle != null) {
-                        homeCommCircle.remove();
+                    if (home.homeCommCircle != null) {
+                        home.homeCommCircle.remove();
                     }
                     //Remove the communication range circle around the relay aircraft if it was drawn before
-                    if (relayCommCircle != null) {
-                        relayCommCircle.remove();
+                    if (!relayCommCircles.isEmpty()) {
+                        //Remove all circles
+                        for(int i=0; i< relayCommCircles.size(); i++) {
+                            relayCommCircles.get(i).remove();
+                        }
+                        //Clear the list
+                        relayCommCircles.clear();
                     }
 
                     //Add the home communication range circle to the map
@@ -1408,36 +1429,43 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             .radius(commMaxRange); // In meters
 
                     // Get back the home Circle object
-                    homeCommCircle = map.addCircle(homeCircleOptions);
+                    home.homeCommCircle = map.addCircle(homeCircleOptions);
 
-                    //If a relay UAV is active
-                    if (relayAc != 0) {
+                    //If one or more relay UAVs are active
+                    if (!relayAc.isEmpty()) {
+                        for (int i = 0; i < relayAc.size(); i++) {
+                            // Draw the relay commincation range circle
+                            CircleOptions relayCircleOptions = new CircleOptions()
+                                    .center(mAircraft.get(relayAc.get(i)).getLatLng())
+                                    .strokeWidth(5)
+                                    .strokeColor(0x5500ff00)
+                                    .radius(commRelayRange); // In meters
 
-                        // Draw the relay commincation range circle
-                        CircleOptions relayCircleOptions = new CircleOptions()
-                                .center(mAircraft.get(relayAc).getLatLng())
-                                .strokeWidth(5)
-                                .strokeColor(0x5500ff00)
-                                .radius(commRelayRange); // In meters
-
-                        // Get back the relay Circle object
-                        relayCommCircle = map.addCircle(relayCircleOptions);
+                            // Get back the relay Circle object
+                            Circle relayCommCircle = map.addCircle(relayCircleOptions);
+                            relayCommCircles.add(relayCommCircle);
+                        }
                     }
                 }
             });
-        //If no communication ranges need to be drawn, remove them
+            //If no communication ranges need to be drawn, remove them
         } else {
             mapFragment.getMapAsync(new OnMapReadyCallback() {
                 @Override
                 public void onMapReady(GoogleMap map) {
 
                     //Remove the communication range circle around home if it was drawn before
-                    if (homeCommCircle != null) {
-                        homeCommCircle.remove();
+                    if (home.homeCommCircle != null) {
+                        home.homeCommCircle.remove();
                     }
                     //Remove the communication range circle around the relay aircraft if it was drawn before
-                    if (relayCommCircle != null) {
-                        relayCommCircle.remove();
+                    if (!relayCommCircles.isEmpty()) {
+                        //Remove all circles
+                        for(int i=0; i< relayCommCircles.size(); i++) {
+                            relayCommCircles.get(i).remove();
+                        }
+                        //Clear the list
+                        relayCommCircles.clear();
                     }
                 }
             });
@@ -1461,11 +1489,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 Paint circlePaint = new Paint();
                 circlePaint.setColor(0x400099CC);
                 circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-                circleCanvas.drawCircle(circleSize/2, circleSize/2, circleSize/2, circlePaint);
+                circleCanvas.drawCircle(circleSize / 2, circleSize / 2, circleSize / 2, circlePaint);
 
                 GroundOverlayOptions ROI = new GroundOverlayOptions()
                         .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
-                        .position(ROIloc, ROIRadius*2, ROIRadius*2); //m
+                        .position(ROIloc, ROIRadius * 2, ROIRadius * 2); //m
 
                 map.addGroundOverlay(ROI);
             }
@@ -1483,36 +1511,75 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapReady(GoogleMap map) {
 
-            //If lines have been drawn before, remove them from the map and clear the list with references to them
-            if (!mConnectingLines.isEmpty()) {
-                for (int i = 0; i < mConnectingLines.size(); i++) {
-                    mConnectingLines.get(i).remove();
+                //If lines have been drawn before, remove them from the map and clear the list with references to them
+                if (!mConnectingLines.isEmpty()) {
+                    for (int i = 0; i < mConnectingLines.size(); i++) {
+                        mConnectingLines.get(i).remove();
+                    }
+                    mConnectingLines.clear();
                 }
-                mConnectingLines.clear();
-            }
 
-            //If conflicts exist, draw the conflict lines
-            if(conflictingAircraft != null) {
-                for (int i = 0; i < conflictingAircraft.size(); i += 2) {
+                //If conflicts exist, draw the conflict lines
+                if (conflictingAircraft != null) {
+                    for (int i = 0; i < conflictingAircraft.size(); i += 2) {
 
-                    //Draw a connecting line on the map with the following settings
-                    Polyline connectingLine = map.addPolyline(new PolylineOptions()
-                            .add(mAircraft.get(conflictingAircraft.get(i)).getLatLng(), mAircraft.get(conflictingAircraft.get(i+1)).getLatLng())
-                            .width(6)
-                            .color(Color.RED));
+                        //Draw a connecting line on the map with the following settings
+                        Polyline connectingLine = map.addPolyline(new PolylineOptions()
+                                .add(mAircraft.get(conflictingAircraft.get(i)).getLatLng(), mAircraft.get(conflictingAircraft.get(i + 1)).getLatLng())
+                                .width(6)
+                                .color(Color.RED));
 
-                    //Save polyline object in a list to have a reference to it
-                    mConnectingLines.add(connectingLine);
+                        //Save polyline object in a list to have a reference to it
+                        mConnectingLines.add(connectingLine);
+                    }
+                    //Clear all points for which the lines were drawn
+                    conflictingAircraft.clear();
                 }
-                //Clear all points for which the lines were drawn
-                conflictingAircraft.clear();
-            }
             }
         });
     }
 
     /////////////////////////CLASS METHODS/////////////////////////
 
+    //Method to check which aircraft have the relay status in order to keep track of which communication range circles have to be drawn
+    private void checkRelayAircraft() {
+        //Check if there are relay aircraft and assign this status accordingly
+        for(int i=1; i < mAircraft.size()+1; i++) {
+            //Relay status
+            if(Math.abs(relayAltitude-mAircraft.get(i).getAGL()) < altitudeAccuracyDistance && mAircraft.get(i).getCommunicationSignal() > 0) { //If the difference between the altitude and the surveillance altitude is less than 2m and it is within the home comm range
+                mAircraft.get(i).setIsRelay(true);
+            } else {
+                mAircraft.get(i).setIsRelay(false);
+            }
+            //Surveillance status
+            if(Math.abs(surveillanceAltitude-mAircraft.get(i).getAGL()) < altitudeAccuracyDistance && mAircraft.get(i).getCommunicationSignal() > 0) {
+                mAircraft.get(i).setIsSurveillance(true);
+            } else {
+                mAircraft.get(i).setIsSurveillance(false);
+            }
+        }
+
+        //Clear the list holding the relay aircraft numbers
+        if(!relayAircraft.isEmpty()) {
+            relayAircraft.clear();
+        }
+
+        //Update the list
+        for(int i = 1; i < mAircraft.size()+1; i++) {
+            if(mAircraft.get(i).isRelay()) {
+                relayAircraft.add(i);
+            }
+        }
+
+        //Send the relay locations to aircraft class
+        List<LatLng> relayLocations = new ArrayList<>();
+        for(int i=0; i < relayAircraft.size(); i++) {
+            relayLocations.add(mAircraft.get(relayAircraft.get(i)).getLatLng());
+        }
+        mAircraft.get(1).setRelayList(relayLocations);
+    }
+
+    //Method to check for conflicts between aircraft
     private void checkConflicts() {
         //check for altitude and course conflicts
         for(int i = 1; i < mAircraft.size()+1; i++) {
@@ -1683,9 +1750,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Method to determine if a couple of aircraft needs to get conflict status
     private boolean isOnconflictCourse(int ac1, int ac2) {
-        /* TODO make sure the conflict status is given for small coverage overlaps */
 
         boolean isInconflictcourse = false;
+
+        /* TODO make sure the conflict status is given for small coverage overlaps (separation between waypoints should be more than 4 times the surveillance circle radius) */
+        /*Steps taken:
+        * Check if both aircraft have active surveillance waypoints
+        * If yes, the distance should be more than 4 times the surveillance circle radius
+        * If not, the distance between the aircraft should be more than 2 time the circle radius
+        */
 
 //        if(mAircraft.get(ac1).getCurrentSurveyLoc() != null && mAircraft.get(ac2).getCurrentSurveyLoc() != null) {
 //
@@ -1938,19 +2011,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         double overlapArea = 0;
 
         for(int i = 1; i<=mAircraft.size(); i++) { //Loop over all aircraft
-            //Add overlap between aircraft coverage and ROI
-            double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIcenter, mAircraft.get(i).getLatLng());
-            double doubleOverlap = 0;
+            if(mAircraft.get(i).getCommunicationSignal()>0 && mAircraft.get(i).isSurveillance()) { //Only calculate coverage if the aircraft can communicate with the ground station and has a surveillance status (at correct altitude)
+                //Add overlap between aircraft coverage and ROI
+                double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIcenter, mAircraft.get(i).getLatLng());
+                double doubleOverlap = 0;
             /* TODO: account for overlap by decreasing performance score in case of overlap/violation of the separation standard instead of calculating overlap */
-            //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!
-            if(overlap>0) { //If not outside the ROI
-                for (int j = i + 1; j <= mAircraft.size(); j++) {
-                //Account for overlap of the two UAVs
-                doubleOverlap+= circleOverlap(acCoverageRadius, acCoverageRadius, mAircraft.get(i).getLatLng(), mAircraft.get(j).getLatLng());
+                //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!
+                if (overlap > 0) { //If not outside the ROI
+                    for (int j = i + 1; j <= mAircraft.size(); j++) {
+                        //Account for overlap of the two UAVs
+                        doubleOverlap += circleOverlap(acCoverageRadius, acCoverageRadius, mAircraft.get(i).getLatLng(), mAircraft.get(j).getLatLng());
+                    }
                 }
+                //Calculate the total coverage ove the ROI
+                overlapArea += overlap - doubleOverlap;
             }
-            //Calculate the total coverage ove the ROI
-            overlapArea += overlap - doubleOverlap;
         }
 
         //Coverage percentage

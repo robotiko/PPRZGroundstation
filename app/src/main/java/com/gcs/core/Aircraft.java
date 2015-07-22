@@ -40,7 +40,7 @@ public class Aircraft {
         labelCharacter = String.valueOf((char) (64 + aircraftCount));
 	}
 
-    //Instatntiation of class attributes
+    //Instantiation of class attributes
 	private Heartbeat	   mHeartbeat = new Heartbeat();
 	private Attitude       mAttitude  = new Attitude();
 	private Altitude       mAltitude  = new Altitude();
@@ -54,6 +54,7 @@ public class Aircraft {
     public List<Marker> wpMarkers  = new ArrayList<>();
     public List<String> missionBlocks;
     public GroundOverlay coverageCircle;
+    public static List<LatLng> relayLocations = new ArrayList<>();
 //	public Polyline flightPath;
 	
 	private final int AltitudeLabelId   = TextView.generateViewId();
@@ -176,9 +177,9 @@ public class Aircraft {
         return mBattery.getBattVolt();
     }
 
-//    public int getBattLevel() {
-//        return mBattery.getBattLevel();
-//    }
+    public int getBattLevel() {
+        return mBattery.getBattLevel();
+    }
 
     public int getBattCurrent() {
         return mBattery.getBattCurrent();
@@ -217,6 +218,22 @@ public class Aircraft {
 
     public ConflictStatus getConflictStatus() {
         return mState.getConflictStatus();
+    }
+
+    public void setIsRelay(boolean isRelay) {
+        mState.setIsRelay(isRelay);
+    }
+
+    public boolean isRelay() {
+        return mState.isRelay();
+    }
+
+    public void setIsSurveillance (boolean isSurveillance) {
+        mState.setIsSurveillance(isSurveillance);
+    }
+
+    public boolean isSurveillance() {
+        return mState.isSurveillance();
     }
 
     //////////// POSITION ////////////
@@ -373,9 +390,35 @@ public class Aircraft {
         int maxRange         = context.getResources().getInteger(R.integer.commMaxRange);
 
         double scalingFactor = (1f/maxRange)*(Math.pow((1/boundaryLevel),(1f/4))-1);
-        int signalStrength = (int) (1/Math.pow(scalingFactor*distanceHome+1,4)*100);
+        int signalStrength = 0;
 
+        if(distanceHome < maxRange) {
+            signalStrength = (int) (1 / Math.pow(scalingFactor * distanceHome + 1, 4) * 100);
+
+            /* TODO: add option to form chain of relays */
+        } else if (!mState.isRelay() && !relayLocations.isEmpty()){ //If the aircraft is not a communication relay and there are relay aircraft active
+            //Calculate distance between ac and relay
+            float[] distance = new float[1];
+            float distanceToRelay = maxRange;
+            for(int i=0; i< relayLocations.size(); i++) {
+                Location.distanceBetween(getLat(), getLon(), relayLocations.get(i).latitude, relayLocations.get(i).longitude, distance);
+                if(distance[0] < distanceToRelay) {
+                    distanceToRelay = distance[0];
+                }
+            }
+            //calc signal strength
+            signalStrength = (int) (1 / Math.pow(scalingFactor * distanceToRelay + 1, 4) * 100);
+            Log.d("RELAYsignal"+labelCharacter,String.valueOf(signalStrength));
+        }
         return signalStrength;
+    }
+
+    public static void setRelayList(List<LatLng> relayList) {
+        if(!relayLocations.isEmpty()) {
+            relayLocations.clear();
+        }
+
+        relayLocations = relayList;
     }
     
     public int getAltLabelId(){
