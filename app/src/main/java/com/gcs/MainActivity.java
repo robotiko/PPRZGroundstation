@@ -122,7 +122,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private ArrayList<String>   conflictGroupList     = new ArrayList<>();
     private ArrayList<String>   sameLevelGroupList    = new ArrayList<>();
     private List<Integer>       groupSelectedAircraft = new ArrayList<>();
-    private List<Integer>       relayAircraft         = new ArrayList<>();
     private List<Circle>        relayCommCircles      = new ArrayList<>();
 
 	private Home home;
@@ -182,9 +181,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
         mAircraft.put(2, new Aircraft(getApplicationContext()));
-//        mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180); //south
+        mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180); //south
 //        mAircraft.get(2).setLlaHdg(434654440, 12767810, 0, (short) 180); //North
-        mAircraft.get(2).setLlaHdg(434599700, 12723040, 0, (short) 180); //Middle
+//        mAircraft.get(2).setLlaHdg(434599700, 12723040, 0, (short) 180); //Middle
         mAircraft.get(2).setAGL(90);
         mAircraft.get(2).setBatteryState(10000, 45, 1);
         mAircraft.get(2).setDistanceHome(homeLocation);
@@ -193,7 +192,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mAircraft.put(3, new Aircraft(getApplicationContext()));
 //		mAircraft.get(3).setLlaHdg(434651420, 12756540, 0, (short) 300);
 		mAircraft.get(3).setLlaHdg(434666020, 12774780, 0, (short) 300);
-		mAircraft.get(3).setAGL(10.3);
+		mAircraft.get(3).setAGL(90);
 		mAircraft.get(3).setBatteryState(9000, 1, 1);
 		mAircraft.get(3).setDistanceHome(homeLocation);
 		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
@@ -352,10 +351,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Check for aircraft relay status
             checkRelayAircraft();
 
-            //TEMPORARY
-
             //Draw the communication range on the map
-            drawCommunicationRange(relayAircraft);
+            drawCommunicationRange(mAircraft.get(1).relayAircraft);
 
             //check for altitude and course conflicts
             checkConflicts();
@@ -1268,7 +1265,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     if (mAircraft.get(aircraftNumber).coverageCircle != null) {
                         mAircraft.get(aircraftNumber).coverageCircle.remove();
                     }
-
                     if (showCoverage && !mAircraft.get(aircraftNumber).isRelay()) {
     //                    if(mAircraft.get(aircraftNumber).getCurrentSurveyLoc()!= null) {
 
@@ -1560,21 +1556,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         //Clear the list holding the relay aircraft numbers
-        if(!relayAircraft.isEmpty()) {
-            relayAircraft.clear();
+        if(!mAircraft.get(1).relayAircraft.isEmpty()) {
+            mAircraft.get(1).relayAircraft.clear();
         }
 
         //Update the list
         for(int i = 1; i < mAircraft.size()+1; i++) {
             if(mAircraft.get(i).isRelay()) {
-                relayAircraft.add(i);
+                mAircraft.get(1).relayAircraft.add(i);
             }
         }
 
         //Send the relay locations to aircraft class
         List<LatLng> relayLocations = new ArrayList<>();
-        for(int i=0; i < relayAircraft.size(); i++) {
-            relayLocations.add(mAircraft.get(relayAircraft.get(i)).getLatLng());
+        for(int i=0; i < mAircraft.get(1).relayAircraft.size(); i++) {
+            relayLocations.add(mAircraft.get(mAircraft.get(1).relayAircraft.get(i)).getLatLng());
         }
         mAircraft.get(1).setRelayList(relayLocations);
     }

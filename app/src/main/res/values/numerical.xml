@@ -15,6 +15,7 @@
     <integer name="altitudeAccuracyDistance">2</integer>      <!-- meters -->
 
     <!-- Communication signal parameters -->
+    <integer name="boundaryLevel">1</integer>                 <!-- percentage -->
     <integer name="commMaxRange">500</integer>                <!-- meters -->
     <integer name="commRelayRange">500</integer>              <!-- meters -->
 

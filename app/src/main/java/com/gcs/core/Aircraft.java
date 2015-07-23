@@ -13,7 +13,7 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
-import android.util.Log;
+import android.util.SparseArray;
 import android.widget.TextView;
 
 import com.gcs.R;
@@ -30,13 +30,17 @@ import com.sharedlib.model.Position;
 public class Aircraft {
 	
 	private Context context;
+    public final int aircraftNumber;
     private final String labelCharacter;
     private static int aircraftCount = 0;
+    private static SparseArray<Integer> AcConnectionList = new SparseArray<>();
 
     //Constructor in which the total aircraft count is updated and the label character is determined
 	public Aircraft(Context context){
 	    this.context = context;
         aircraftCount++;
+        aircraftNumber = aircraftCount;
+        AcConnectionList.put(aircraftNumber, 0);
         labelCharacter = String.valueOf((char) (64 + aircraftCount));
 	}
 
@@ -54,6 +58,7 @@ public class Aircraft {
     public List<Marker> wpMarkers  = new ArrayList<>();
     public List<String> missionBlocks;
     public GroundOverlay coverageCircle;
+    public static List<Integer> relayAircraft = new ArrayList<>();
     public static List<LatLng> relayLocations = new ArrayList<>();
 //	public Polyline flightPath;
 	
@@ -65,6 +70,7 @@ public class Aircraft {
     private float distanceHome          = 0f;
     private String currentBlock;
     private int currentSurveyWp         = 0;
+    private int connectedTo             = 0; //0 is home, higher numbers are aircraft
 //    private LatLng currentSurveyLoc;
 
     //////////// HEARTBEAT ////////////
@@ -384,33 +390,72 @@ public class Aircraft {
     }
 
     //////////// CLASS ATTRIBUTES ////////////
+    //Method to calculate the communication signal strength (percentage) of connection with ground station or relay UAVs
     public int getCommunicationSignal(){
 
-        double boundaryLevel = 0.01;
+        //Define the value at which the signal is considered to be irreceivable and the maximum range
+        double boundaryLevel = context.getResources().getInteger(R.integer.boundaryLevel)/100;
         int maxRange         = context.getResources().getInteger(R.integer.commMaxRange);
 
+        //Dependent on the maximum range and boundary level a scaling factor is calculated for the signal strength calculations
         double scalingFactor = (1f/maxRange)*(Math.pow((1/boundaryLevel),(1f/4))-1);
-        int signalStrength = 0;
+        int signalStrength, relaySignalStrength=0;
 
-        if(distanceHome < maxRange) {
-            signalStrength = (int) (1 / Math.pow(scalingFactor * distanceHome + 1, 4) * 100);
+        //Signal strength directly with ground station
+        signalStrength = (int) (1 / Math.pow(scalingFactor * distanceHome + 1, 4) * 100);
 
-            /* TODO: add option to form chain of relays */
-        } else if (!mState.isRelay() && !relayLocations.isEmpty()){ //If the aircraft is not a communication relay and there are relay aircraft active
-            //Calculate distance between ac and relay
+        if (!relayLocations.isEmpty()){ //If relay aircraft active, see if they provide a better signal strength
+            //Initialize/declare parameters
             float[] distance = new float[1];
             float distanceToRelay = maxRange;
-            for(int i=0; i< relayLocations.size(); i++) {
-                Location.distanceBetween(getLat(), getLon(), relayLocations.get(i).latitude, relayLocations.get(i).longitude, distance);
-                if(distance[0] < distanceToRelay) {
-                    distanceToRelay = distance[0];
+            for(int i=0; i< relayLocations.size(); i++) { //Loop over the available aircraft
+                if(relayAircraft.get(i) != aircraftNumber) { //Prevent connecting with itself
+                    //Check if the aircraft wants to make a connection with a relay aircraft that is connected with the aircraft itself, if so skip iteration
+                    if (chainSelfConnection(relayAircraft.get(i))) {
+                        continue;
+                    }
+                    //Calculate distance between aircraft and relay
+                    Location.distanceBetween(getLat(), getLon(), relayLocations.get(i).latitude, relayLocations.get(i).longitude, distance);
+
+                    if (distance[0] < distanceToRelay) { //If the distance is smaller than with another aircraft of the maximum range
+                        distanceToRelay = distance[0];
+                        AcConnectionList.put(aircraftNumber, relayAircraft.get(i));  //Keep track of to which relay the aircraft is connected
+                    }
                 }
             }
-            //calc signal strength
-            signalStrength = (int) (1 / Math.pow(scalingFactor * distanceToRelay + 1, 4) * 100);
-            Log.d("RELAYsignal"+labelCharacter,String.valueOf(signalStrength));
+            //calculate the relay signal strength
+            relaySignalStrength = (int) (1 / Math.pow(scalingFactor * distanceToRelay + 1, 4) * 100);
+        }
+
+        if(relaySignalStrength > signalStrength) { //Check is the relay signal is stronger than that of the ground station
+            signalStrength = relaySignalStrength; //If yes, take relay signal
+        } else {
+            AcConnectionList.put(aircraftNumber,0); //Else keep ground station signal and set the value in the connectinolist back to 0 (=ground station)
         }
         return signalStrength;
+    }
+
+    //Method to check if a relay aircraft tries to connect with another relay aircraft that is already connected to the one that is trying
+    private boolean chainSelfConnection(int acNumber) {
+        //Initiation
+        boolean hasSelfConnection = false;
+        boolean continueCheck = true;
+
+        //Keep looping over the connection chain of relays, if it ends by the trying aircraft the connection is not possible else it ends up at the ground station (0) which means that it can connect
+        while(continueCheck) {
+            int connectedTo = AcConnectionList.get(acNumber);
+
+            if(connectedTo == aircraftNumber) { //If connected to itself
+                hasSelfConnection = true;
+                continueCheck = false;
+            } else if (connectedTo == 0) {     //If connected to home
+                hasSelfConnection = false;
+                continueCheck = false;
+            } else {                          //Continue following the chain
+                acNumber = connectedTo;
+            }
+        }
+        return hasSelfConnection;
     }
 
     public static void setRelayList(List<LatLng> relayList) {
