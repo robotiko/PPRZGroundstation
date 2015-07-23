@@ -13,6 +13,7 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
+import android.util.Log;
 import android.util.SparseArray;
 import android.widget.TextView;
 
@@ -394,7 +395,7 @@ public class Aircraft {
     public int getCommunicationSignal(){
 
         //Define the value at which the signal is considered to be irreceivable and the maximum range
-        double boundaryLevel = context.getResources().getInteger(R.integer.boundaryLevel)/100;
+        double boundaryLevel = context.getResources().getInteger(R.integer.boundaryLevel)/100.0;
         int maxRange         = context.getResources().getInteger(R.integer.commMaxRange);
 
         //Dependent on the maximum range and boundary level a scaling factor is calculated for the signal strength calculations

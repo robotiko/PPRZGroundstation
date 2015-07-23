@@ -181,9 +181,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
         mAircraft.put(2, new Aircraft(getApplicationContext()));
-        mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180); //south
+//        mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180); //Middle
 //        mAircraft.get(2).setLlaHdg(434654440, 12767810, 0, (short) 180); //North
-//        mAircraft.get(2).setLlaHdg(434599700, 12723040, 0, (short) 180); //Middle
         mAircraft.get(2).setAGL(90);
         mAircraft.get(2).setBatteryState(10000, 45, 1);
         mAircraft.get(2).setDistanceHome(homeLocation);
@@ -2002,7 +2001,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Region of interest parameters
         double AREA = ROIRadius*ROIRadius*Math.PI;
         LatLng ROIcenter = home.getHomeLocation();
-        /* TODO: Take the altitude into account (0 is zero coverage, only at optimum height??) */
+
         //Calculate the overlap between covered region by aircraft and the ROI area
         double overlapArea = 0;
 
