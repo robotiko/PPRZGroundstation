@@ -183,6 +183,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mAircraft.put(2, new Aircraft(getApplicationContext()));
 //        mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180); //Middle
 //        mAircraft.get(2).setLlaHdg(434654440, 12767810, 0, (short) 180); //North
+        mAircraft.get(2).setLlaHdg(434621910, 12673600, 0, (short) 180); //West
         mAircraft.get(2).setAGL(90);
         mAircraft.get(2).setBatteryState(10000, 45, 1);
         mAircraft.get(2).setDistanceHome(homeLocation);
@@ -197,8 +198,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
 
         mAircraft.put(4, new Aircraft(getApplicationContext()));
-        mAircraft.get(4).setLlaHdg(519880620, 43793190, 0, (short) 180);
-        mAircraft.get(4).setAGL(9.7);
+        mAircraft.get(4).setLlaHdg(434610520, 12714270, 0, (short) 180); //Inside ROI
+//        mAircraft.get(4).setLlaHdg(434622110, 12632490, 0, (short) 180); //Outside ROI
+        mAircraft.get(4).setAGL(50);
         mAircraft.get(4).setBatteryState(12000, 90, 1);
         mAircraft.get(4).setDistanceHome(homeLocation);
         mAircraft.get(4).setRollPitchYaw(0, 0, 270);
@@ -1229,12 +1231,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 View v = getLayoutInflater().inflate(R.layout.info_window_detail, null);
 
-                                /* TODO add content to the detailed infowindow */
+                                /* TODO add content to the detailed infowindow (show if relay/surveilance) */
 
                                 //Get handles to the textviews
                                 TextView infoAirtime  = (TextView) v.findViewById(R.id.info_airtime);
                                 TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
                                 TextView infoAlt      = (TextView) v.findViewById(R.id.info_alt);
+                                TextView infoTask     = (TextView) v.findViewById(R.id.info_task);
                                 TextView infoMode     = (TextView) v.findViewById(R.id.info_mode);
                                 TextView infoBattery  = (TextView) v.findViewById(R.id.info_battery);
 
@@ -1243,10 +1246,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 infoDistHome.setText("Distance Home: " + String.format("%.1f", mAircraft.get(acNumber).getDistanceHome()) + "m");
                                 infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(acNumber).getAGL()) + "m");
                                 infoBattery.setText("Battery voltage: " + String.valueOf(mAircraft.get(acNumber).getBattVolt()) + "mV");
+                                //Current block
                                 if(mAircraft.get(acNumber).getCurrentBlock()==null) {
                                     infoMode.setText("Current block: " + getResources().getString(R.string.no_blocks_loaded));
                                 } else {
                                     infoMode.setText("Current block: " + mAircraft.get(acNumber).getCurrentBlock());
+                                }
+                                //Task of aircraft
+                                if(mAircraft.get(acNumber).isRelay()) {
+                                    infoTask.setText("Task: "+"RELAY");
+                                } else if(mAircraft.get(acNumber).isSurveillance()) {
+                                    infoTask.setText("Task: "+"SURVEILLANCE");
+                                } else {
+                                    infoTask.setText("Task: "+"NONE");
                                 }
 
                                 return v;
@@ -1989,9 +2001,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     /////////////////////////PERFORMANCE SCORE/////////////////////////
     private void calcPerformance() {
-        /* TODO finish the performance score calculation */
-//        performanceScore = (ROIcovered() + conflict time score + collissions + loss of control(UAV out of comm) )/4;
-        performanceScore = ROIcovered();
+        /* TODO: finish the performance score calculation (add: conflict time score, collisions) */
+        performanceScore = ROIcovered()*LossOfCommunicationCheck()*100; //Percentage
 
         //Set the performance score to the text view
         performanceScoreFragment.setText(String.format("%.1f", performanceScore));
@@ -2007,6 +2018,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         for(int i = 1; i<=mAircraft.size(); i++) { //Loop over all aircraft
             if(mAircraft.get(i).getCommunicationSignal()>0 && mAircraft.get(i).isSurveillance()) { //Only calculate coverage if the aircraft can communicate with the ground station and has a surveillance status (at correct altitude)
+
                 //Add overlap between aircraft coverage and ROI
                 double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIcenter, mAircraft.get(i).getLatLng());
                 double doubleOverlap = 0;
@@ -2024,7 +2036,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         //Coverage percentage
-        return (overlapArea/AREA)*100;
+        return overlapArea/AREA;
     }
 
     private double circleOverlap(double radius1, double radius2, LatLng c1, LatLng c2){
@@ -2057,6 +2069,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             overlapArea = part1 + part2 - part3;
         }
         return overlapArea;
+    }
+
+    private double LossOfCommunicationCheck() {
+        float numberOfAircraft = mAircraft.size();
+        int activeAircraft = 0;
+
+        //Loop over aircraft in system
+        for(int i=1; i<mAircraft.size()+1; i++) {
+            if(mAircraft.get(i).getCommunicationSignal()>0) {
+                activeAircraft++;
+            }
+        }
+        return activeAircraft/numberOfAircraft;
     }
 
     /////////////////////////LOGGING/////////////////////////

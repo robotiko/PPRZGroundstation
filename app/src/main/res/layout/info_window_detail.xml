@@ -19,6 +19,11 @@
         android:id="@+id/info_alt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/info_task"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
     
     <TextView
         android:id="@+id/info_mode"
