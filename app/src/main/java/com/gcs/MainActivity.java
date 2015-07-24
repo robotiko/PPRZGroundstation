@@ -13,9 +13,10 @@ import com.aidllib.core.model.Position;
 import com.gcs.core.ConflictStatus;
 import com.gcs.core.Home;
 import com.gcs.fragments.PerformanceScoreFragment;
+import com.gcs.helpers.LogHelper;
+import com.gcs.helpers.PerformanceCalcHelper;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
-import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -46,9 +47,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.location.Location;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcelable;
@@ -67,10 +66,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -85,7 +80,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Declaration of handlers and definition of time and time steps
 	private Handler handler, interfaceUpdateHandler;
 	private final int mInterval        = 1000;                       // milliseconds
-    private final int blockUpdateDelay = 500;                        // milliseconds
+//    private final int blockUpdateDelay = 500;                        // milliseconds
     private final long initTime        = System.currentTimeMillis(); // milliseconds
 
     //Logging
@@ -153,15 +148,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Obtain values from resources
         verticalSeparationStandard = getResources().getInteger(R.integer.verticalSeparationStandard)/10f;       //(Divided by 10 to convert to meters)
-        horizontalSeparationStandard = getResources().getInteger(R.integer.horizontalSeparationStandard)/10f;   //(Divided by 10 to convert to meters)
-        surveillanceCircleRadius     = getResources().getInteger(R.integer.surveillanceCircleRadius)/10f;   //(Divided by 10 to convert to meters)
-        commMaxRange = getResources().getInteger(R.integer.commMaxRange);                      //meters
-        commRelayRange = getResources().getInteger(R.integer.commRelayRange);                    //meters
-        acCoverageRadius = getResources().getInteger(R.integer.acCoverageRadius);                  //meters
-        ROIRadius = getResources().getInteger(R.integer.ROIRadius);                         //meters
-        surveillanceAltitude = getResources().getInteger(R.integer.surveillanceAltitude); //meters
-        relayAltitude = getResources().getInteger(R.integer.relayAltitude); //meters
-        altitudeAccuracyDistance = getResources().getInteger(R.integer.altitudeAccuracyDistance); //meters
+        horizontalSeparationStandard = getResources().getInteger(R.integer.horizontalSeparationStandard)/10f;                                //(Divided by 10 to convert to meters)
+        surveillanceCircleRadius     = getResources().getInteger(R.integer.surveillanceCircleRadius)/10f;                                //(Divided by 10 to convert to meters)
+        commMaxRange = getResources().getInteger(R.integer.commMaxRange);                                                   //meters
+        commRelayRange = getResources().getInteger(R.integer.commRelayRange);                                                 //meters
+        acCoverageRadius = getResources().getInteger(R.integer.acCoverageRadius);                                               //meters
+        ROIRadius = getResources().getInteger(R.integer.ROIRadius);                                                      //meters
+        surveillanceAltitude = getResources().getInteger(R.integer.surveillanceAltitude);                                            //meters
+        relayAltitude = getResources().getInteger(R.integer.relayAltitude);                                                   //meters
+        altitudeAccuracyDistance = getResources().getInteger(R.integer.altitudeAccuracyDistance);               //meters
         surveyWpName =  getResources().getString(R.string.survey_wp);
 
 
@@ -182,8 +177,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
         mAircraft.put(2, new Aircraft(getApplicationContext()));
 //        mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180); //Middle
-//        mAircraft.get(2).setLlaHdg(434654440, 12767810, 0, (short) 180); //North
-        mAircraft.get(2).setLlaHdg(434621910, 12673600, 0, (short) 180); //West
+        mAircraft.get(2).setLlaHdg(434654440, 12767810, 0, (short) 180); //North
+//        mAircraft.get(2).setLlaHdg(434621910, 12673600, 0, (short) 180); //West
         mAircraft.get(2).setAGL(90);
         mAircraft.get(2).setBatteryState(10000, 45, 1);
         mAircraft.get(2).setDistanceHome(homeLocation);
@@ -353,7 +348,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             checkRelayAircraft();
 
             //Draw the communication range on the map
-            drawCommunicationRange(mAircraft.get(1).relayAircraft);
+            drawCommunicationRange(Aircraft.relayAircraft);
 
             //check for altitude and course conflicts
             checkConflicts();
@@ -373,11 +368,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Draw the connecting lines on the map that indicate conflicts
             drawConnectingLines();
 
+            /////PERFORMANCE SCORE
             //Calculate the current performance score
-            calcPerformance();
+            performanceScore = PerformanceCalcHelper.calcPerformance(ROIRadius, acCoverageRadius, home.getHomeLocation(), mAircraft);
+            //Set the performance score to the text view
+            performanceScoreFragment.setText(String.format("%.1f", performanceScore));
 
-            //Log data
-            dataLogger();
+            /////DATA LOGGING
+            LogHelper.dataLogger(initTime, logFileName, performanceScore, mAircraft);
 
             //Restart this updater after the set interval
 	    	interfaceUpdateHandler.postDelayed(interfaceUpdater, mInterval);
@@ -1231,8 +1229,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 View v = getLayoutInflater().inflate(R.layout.info_window_detail, null);
 
-                                /* TODO add content to the detailed infowindow (show if relay/surveilance) */
-
                                 //Get handles to the textviews
                                 TextView infoAirtime  = (TextView) v.findViewById(R.id.info_airtime);
                                 TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
@@ -1271,6 +1267,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                     }
 
+                    /* TODO: change coverage indication to waypoint location instead of aircraft */
                     ////COVERAGE INDICATION
                     //Remove the coverage circle if it was drawn before
                     if (mAircraft.get(aircraftNumber).coverageCircle != null) {
@@ -1321,53 +1318,53 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapReady(GoogleMap map) {
 
-                //If the waypoints are already initiated, remove them from the map and clear the list that holds them
-                if (!mAircraft.get(acNumber).wpMarkers.isEmpty()) {
-                    //Remove markers from map
-                    for (int i = 0; i < mAircraft.get(acNumber).getNumberOfWaypoints(); i++) {
-                        mAircraft.get(acNumber).wpMarkers.get(i).remove();
-                    }
-
-                    //Clear the marker list (not the marker data)
-                    mAircraft.get(acNumber).wpMarkers.clear();
+            //If the waypoints are already initiated, remove them from the map and clear the list that holds them
+            if (!mAircraft.get(acNumber).wpMarkers.isEmpty()) {
+                //Remove markers from map
+                for (int i = 0; i < mAircraft.get(acNumber).getNumberOfWaypoints(); i++) {
+                    mAircraft.get(acNumber).wpMarkers.get(i).remove();
                 }
 
-                //(Re)generate waypoint markers
-                for (int i = 0; i < mAircraft.get(acNumber).getNumberOfWaypoints(); i++) {
-                    //Custom wp marker with text (aircraft label + wp number)
-                    Bitmap wpMarkerBitmap;
-                    if(mAircraft.get(acNumber).isWpSelected(i)) {
-                        wpMarkerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wp_map_selected).copy(Bitmap.Config.ARGB_8888, true);
-                    } else if (mAircraft.get(acNumber).isWpUpdating(i)) {
-                        wpMarkerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wp_map_updating).copy(Bitmap.Config.ARGB_8888, true);
-                    } else {
-                        wpMarkerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wp_map).copy(Bitmap.Config.ARGB_8888, true);
-                    }
+                //Clear the marker list (not the marker data)
+                mAircraft.get(acNumber).wpMarkers.clear();
+            }
 
-                    Canvas markerCanvas = new Canvas(wpMarkerBitmap);
-                    Paint markerPaint = new Paint();
-                    markerPaint.setTextSize(22);
-                    markerPaint.setFakeBoldText(true);
-                    markerPaint.setColor(Color.BLACK);
-                    markerPaint.setTextAlign(Paint.Align.CENTER);
+            //(Re)generate waypoint markers
+            for (int i = 0; i < mAircraft.get(acNumber).getNumberOfWaypoints(); i++) {
+                //Custom wp marker with text (aircraft label + wp number)
+                Bitmap wpMarkerBitmap;
+                if(mAircraft.get(acNumber).isWpSelected(i)) {
+                    wpMarkerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wp_map_selected).copy(Bitmap.Config.ARGB_8888, true);
+                } else if (mAircraft.get(acNumber).isWpUpdating(i)) {
+                    wpMarkerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wp_map_updating).copy(Bitmap.Config.ARGB_8888, true);
+                } else {
+                    wpMarkerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wp_map).copy(Bitmap.Config.ARGB_8888, true);
+                }
+
+                Canvas markerCanvas = new Canvas(wpMarkerBitmap);
+                Paint markerPaint = new Paint();
+                markerPaint.setTextSize(22);
+                markerPaint.setFakeBoldText(true);
+                markerPaint.setColor(Color.BLACK);
+                markerPaint.setTextAlign(Paint.Align.CENTER);
 //                    markerCanvas.drawText(mAircraft.get(acNumber).getLabelCharacter() + String.valueOf(i + 1), wpMarkerBitmap.getWidth() / 2, wpMarkerBitmap.getHeight() / 2 + 4, markerPaint);
-                    markerCanvas.drawText(mAircraft.get(acNumber).getLabelCharacter() + String.valueOf(mAircraft.get(acNumber).getWpSeq(i)), wpMarkerBitmap.getWidth() / 2, wpMarkerBitmap.getHeight() / 2 + 4, markerPaint);
+                markerCanvas.drawText(mAircraft.get(acNumber).getLabelCharacter() + String.valueOf(mAircraft.get(acNumber).getWpSeq(i)), wpMarkerBitmap.getWidth() / 2, wpMarkerBitmap.getHeight() / 2 + 4, markerPaint);
 
 //                    LatLng pos = new LatLng(mAircraft.get(acNumber).getWpLat(i)* 1e-7, mAircraft.get(acNumber).getWpLon(i)* 1e-7);
 
-                    //Add waypoint marker to map
-                    Marker wpMarker = map.addMarker(new MarkerOptions()
-                                    .position(mAircraft.get(acNumber).getWpLatLng(i))
-                                    .flat(true)
-                                    .icon(BitmapDescriptorFactory.fromBitmap(wpMarkerBitmap))
-                                    .snippet(String.valueOf(acNumber) + "-" + String.valueOf(mAircraft.get(acNumber).getWpSeq(i)))
-                                    .draggable(true)
-                    );
-                    //Add the newly generated waypoint marker to the list to keep reference to it
-                    mAircraft.get(acNumber).wpMarkers.add(wpMarker);
-                }
+                //Add waypoint marker to map
+                Marker wpMarker = map.addMarker(new MarkerOptions()
+                                .position(mAircraft.get(acNumber).getWpLatLng(i))
+                                .flat(true)
+                                .icon(BitmapDescriptorFactory.fromBitmap(wpMarkerBitmap))
+                                .snippet(String.valueOf(acNumber) + "-" + String.valueOf(mAircraft.get(acNumber).getWpSeq(i)))
+                                .draggable(true)
+                );
+                //Add the newly generated waypoint marker to the list to keep reference to it
+                mAircraft.get(acNumber).wpMarkers.add(wpMarker);
+            }
 
-                ///* FLIGHT PATH (lines between waypoints) *///
+            ///* FLIGHT PATH (lines between waypoints) *///
 
             /* TODO Distinguish pattern- and relay waypoints using color and draw circles around the waypoints to show the flightpath of the aircraft
 
@@ -1550,6 +1547,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Method to check which aircraft have the relay status in order to keep track of which communication range circles have to be drawn
     private void checkRelayAircraft() {
+
         //Check if there are relay aircraft and assign this status accordingly
         for(int i=1; i < mAircraft.size()+1; i++) {
             //Relay status
@@ -1567,23 +1565,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         //Clear the list holding the relay aircraft numbers
-        if(!mAircraft.get(1).relayAircraft.isEmpty()) {
-            mAircraft.get(1).relayAircraft.clear();
+        if(!Aircraft.relayAircraft.isEmpty()) {
+            Aircraft.relayAircraft.clear();
         }
 
         //Update the list
         for(int i = 1; i < mAircraft.size()+1; i++) {
             if(mAircraft.get(i).isRelay()) {
-                mAircraft.get(1).relayAircraft.add(i);
+                Aircraft.relayAircraft.add(i);
             }
         }
 
         //Send the relay locations to aircraft class
         List<LatLng> relayLocations = new ArrayList<>();
-        for(int i=0; i < mAircraft.get(1).relayAircraft.size(); i++) {
-            relayLocations.add(mAircraft.get(mAircraft.get(1).relayAircraft.get(i)).getLatLng());
+        for(int i=0; i < Aircraft.relayAircraft.size(); i++) {
+            relayLocations.add(mAircraft.get(Aircraft.relayAircraft.get(i)).getLatLng());
         }
-        mAircraft.get(1).setRelayList(relayLocations);
+        Aircraft.setRelayList(relayLocations);
     }
 
     //Method to check for conflicts between aircraft
@@ -1697,7 +1695,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             //Get unique aircraft (remove duplicates)
-            Set<Integer> uniqueAcBlue = new HashSet<Integer>(sameLevelAircraft);
+            Set<Integer> uniqueAcBlue = new HashSet<>(sameLevelAircraft);
             for (Integer l : uniqueAcBlue) {
                 groupList.add(l);
                 for (Integer m : uniqueAcBlue) {
@@ -1783,7 +1781,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	/////////////////////////ALTITUDE TAPE/////////////////////////
 
     //Method to update the labels on the altitude tape
-	public void updateAltitudeTape() {
+	private void updateAltitudeTape() {
 
         /* TODO move the targetalttiude indication to the for loop */
         /* TODO make the aircraft number dynamic */
@@ -1949,6 +1947,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     //////////////////////////MISSION COMMANDS/////////////////////////
+    //Method used to execute a block corresponding to a selected waypoint
     private void executeWaypointBlock(int wpNumber){
         //Continue only if the selected aircraft has blocks available
         if(mAircraft.get(selectedAc).missionBlocks != null) {
@@ -1969,6 +1968,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    //Method used by the altitude tape fragment to change the altitude of a waypoint (send to service)
     public void changeCurrentWpAltitude(int acNumber, double AGL) {
         if(selectedWp!=0) {
             double groundLevel = mAircraft.get(acNumber).getAltitude() - mAircraft.get(acNumber).getAGL();
@@ -1996,130 +1996,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             waypointUpdater(acNumber);
         } else {
             Toast.makeText(getApplicationContext(), "No waypoint selected!", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    /////////////////////////PERFORMANCE SCORE/////////////////////////
-    private void calcPerformance() {
-        /* TODO: finish the performance score calculation (add: conflict time score, collisions) */
-        performanceScore = ROIcovered()*LossOfCommunicationCheck()*100; //Percentage
-
-        //Set the performance score to the text view
-        performanceScoreFragment.setText(String.format("%.1f", performanceScore));
-    }
-
-    private double ROIcovered(){
-        //Region of interest parameters
-        double AREA = ROIRadius*ROIRadius*Math.PI;
-        LatLng ROIcenter = home.getHomeLocation();
-
-        //Calculate the overlap between covered region by aircraft and the ROI area
-        double overlapArea = 0;
-
-        for(int i = 1; i<=mAircraft.size(); i++) { //Loop over all aircraft
-            if(mAircraft.get(i).getCommunicationSignal()>0 && mAircraft.get(i).isSurveillance()) { //Only calculate coverage if the aircraft can communicate with the ground station and has a surveillance status (at correct altitude)
-
-                //Add overlap between aircraft coverage and ROI
-                double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIcenter, mAircraft.get(i).getLatLng());
-                double doubleOverlap = 0;
-            /* TODO: account for overlap by decreasing performance score in case of overlap/violation of the separation standard instead of calculating overlap */
-                //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!
-                if (overlap > 0) { //If not outside the ROI
-                    for (int j = i + 1; j <= mAircraft.size(); j++) {
-                        //Account for overlap of the two UAVs
-                        doubleOverlap += circleOverlap(acCoverageRadius, acCoverageRadius, mAircraft.get(i).getLatLng(), mAircraft.get(j).getLatLng());
-                    }
-                }
-                //Calculate the total coverage ove the ROI
-                overlapArea += overlap - doubleOverlap;
-            }
-        }
-
-        //Coverage percentage
-        return overlapArea/AREA;
-    }
-
-    private double circleOverlap(double radius1, double radius2, LatLng c1, LatLng c2){
-        //Calculation of distance between two LatLng coordinates
-        float[] distance = new float[1];
-        Location.distanceBetween(c1.latitude, c1.longitude, c2.latitude, c2.longitude, distance);
-
-        //Define the used radii
-        double R = radius1;
-        double r = radius2;
-
-        //Make sure R is the largest of the two circles
-        if(R < r) {
-            R = radius2;
-            r = radius1;
-        }
-
-        //Check whether the circles overlap, do not intersect or are inside each other. Then calculate accordingly
-        double overlapArea;
-        if(distance[0] > (R+r)) {                  //No overlap
-            overlapArea = 0;
-        } else if((distance[0]+r) <= R) {  //inside
-            //Entire area of the small circle
-            overlapArea = r*r*Math.PI;
-        } else {                                   //Overlap
-            double part1 = r*r*Math.acos((distance[0]*distance[0] + r*r - R*R)/(2*distance[0]*r));
-            double part2 = R*R*Math.acos((distance[0]*distance[0] + R*R - r*r)/(2*distance[0]*R));
-            double part3 = 0.5*Math.sqrt((-distance[0]+r+R)*(distance[0]+r-R)*(distance[0]-r+R)*(distance[0]+r+R));
-            //Subtract the triangle areas from the cone areas to end up with the overlap area
-            overlapArea = part1 + part2 - part3;
-        }
-        return overlapArea;
-    }
-
-    private double LossOfCommunicationCheck() {
-        float numberOfAircraft = mAircraft.size();
-        int activeAircraft = 0;
-
-        //Loop over aircraft in system
-        for(int i=1; i<mAircraft.size()+1; i++) {
-            if(mAircraft.get(i).getCommunicationSignal()>0) {
-                activeAircraft++;
-            }
-        }
-        return activeAircraft/numberOfAircraft;
-    }
-
-    /////////////////////////LOGGING/////////////////////////
-    private void dataLogger() {
-
-        //Get time and date
-        Calendar cal = Calendar.getInstance();
-        int hours    = cal.get(Calendar.HOUR_OF_DAY);
-        int minutes  = cal.get(Calendar.MINUTE);
-        int seconds  = cal.get(Calendar.SECOND);
-
-        //Make a time string to include in the log file
-        String time = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-
-        //Calculate the time the application has been active (milliSeconds)
-        int uptime = (int)(System.currentTimeMillis() - initTime);
-
-        try {
-            File sdCard = Environment.getExternalStorageDirectory();
-            File dir = new File (sdCard.getAbsolutePath() + "/gcsData");
-            dir.mkdirs();
-            File file = new File(dir, logFileName);
-            FileOutputStream f = new FileOutputStream(file, true);
-
-            OutputStreamWriter myOutWriter = new OutputStreamWriter(f);
-            //First columns are [Time, Uptime, Performance score]
-            myOutWriter.append(time + ", " + String.format("%.1f", uptime*1e-3) + ", " + performanceScore);
-            //Loop over all aircraft to write a line to the log file with the following data of all aircraft: [Altitude, Latitude, Longitude]
-            for(int i=1; i<mAircraft.size()+1; i++) {
-                /* TODO log waypoint location instead of aircraft location */
-                myOutWriter.append(", " + mAircraft.get(i).getAGL() + ", " + mAircraft.get(i).getLat() + ", " + mAircraft.get(i).getLon());
-            }
-            //End the line and close the file
-            myOutWriter.append("\r\n");
-            myOutWriter.close();
-
-        } catch(IOException e){
-            Log.e(TAG, "Error while writing to logfile");
         }
     }
 }

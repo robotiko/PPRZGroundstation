@@ -13,7 +13,6 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
-import android.util.Log;
 import android.util.SparseArray;
 import android.widget.TextView;
 
@@ -60,7 +59,7 @@ public class Aircraft {
     public List<String> missionBlocks;
     public GroundOverlay coverageCircle;
     public static List<Integer> relayAircraft = new ArrayList<>();
-    public static List<LatLng> relayLocations = new ArrayList<>();
+    private static List<LatLng> relayLocations = new ArrayList<>();
 //	public Polyline flightPath;
 	
 	private final int AltitudeLabelId   = TextView.generateViewId();
@@ -412,7 +411,7 @@ public class Aircraft {
             for(int i=0; i< relayLocations.size(); i++) { //Loop over the available aircraft
                 if(relayAircraft.get(i) != aircraftNumber) { //Prevent connecting with itself
                     //Check if the aircraft wants to make a connection with a relay aircraft that is connected with the aircraft itself, if so skip iteration
-                    if (chainSelfConnection(relayAircraft.get(i))) {
+                    if (chainSelfConnection(aircraftNumber, relayAircraft.get(i))) {
                         continue;
                     }
                     //Calculate distance between aircraft and relay
@@ -437,14 +436,14 @@ public class Aircraft {
     }
 
     //Method to check if a relay aircraft tries to connect with another relay aircraft that is already connected to the one that is trying
-    private boolean chainSelfConnection(int acNumber) {
+    private static boolean chainSelfConnection(int aircraftNumber, int otherAcNumber) {
         //Initiation
         boolean hasSelfConnection = false;
         boolean continueCheck = true;
 
         //Keep looping over the connection chain of relays, if it ends by the trying aircraft the connection is not possible else it ends up at the ground station (0) which means that it can connect
         while(continueCheck) {
-            int connectedTo = AcConnectionList.get(acNumber);
+            int connectedTo = AcConnectionList.get(otherAcNumber);
 
             if(connectedTo == aircraftNumber) { //If connected to itself
                 hasSelfConnection = true;
@@ -453,7 +452,7 @@ public class Aircraft {
                 hasSelfConnection = false;
                 continueCheck = false;
             } else {                          //Continue following the chain
-                acNumber = connectedTo;
+                otherAcNumber = connectedTo;
             }
         }
         return hasSelfConnection;
@@ -463,7 +462,6 @@ public class Aircraft {
         if(!relayLocations.isEmpty()) {
             relayLocations.clear();
         }
-
         relayLocations = relayList;
     }
     
