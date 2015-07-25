@@ -4,15 +4,14 @@ import android.location.Location;
 import android.util.SparseArray;
 
 import com.gcs.core.Aircraft;
+import com.gcs.core.ConflictStatus;
 import com.google.android.gms.maps.model.LatLng;
 
 public class PerformanceCalcHelper {
 
     public static final double calcPerformance(int ROIRadius, int acCoverageRadius, LatLng ROIcenter, SparseArray<Aircraft> mAircraft) {
 
-        /* TODO: finish the performance score calculation (add: conflict time score, collisions) */
-
-        return ROIcovered(ROIRadius,acCoverageRadius,ROIcenter,mAircraft)*LossOfCommunicationCheck(mAircraft)*100; //Percentage;
+        return ROIcovered(ROIRadius,acCoverageRadius,ROIcenter,mAircraft)*LossOfCommunicationCheck(mAircraft)*ConflictCheck(mAircraft)*100; //Percentage;
     }
 
     //Calculate the percentage of the Region of Interest (ROI) that is covered by surveillance aircraft
@@ -90,5 +89,19 @@ public class PerformanceCalcHelper {
             }
         }
         return activeAircraft/numberOfAircraft;
+    }
+
+    //Calculate the percentage of aircraft that have conflict
+    private final static double ConflictCheck(SparseArray<Aircraft> mAircraft) {
+        float numberOfAircraft = mAircraft.size();
+        int noConflictAircraft = mAircraft.size();
+
+        //Loop over aircraft in system
+        for(int i=1; i<mAircraft.size()+1; i++) {
+            if(mAircraft.get(i).getConflictStatus() == ConflictStatus.RED) {
+                noConflictAircraft--;
+            }
+        }
+        return noConflictAircraft/numberOfAircraft;
     }
 }
