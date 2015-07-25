@@ -41,19 +41,10 @@ public class LogHelper {
             OutputStreamWriter myOutWriter = new OutputStreamWriter(f);
             //First columns are [Time, Uptime, Performance score]
             myOutWriter.append(time + ", " + String.format("%.1f", uptime*1e-3) + ", " + performanceScore);
-            //Loop over all aircraft to write a line to the log file with the following data of all aircraft: [Altitude, Latitude, Longitude, Communication signal, Status/task (0=none,1=surveillance,2=relay)]
+            //Loop over all aircraft to write a line to the log file with the following data of all aircraft: [Altitude, Latitude, Longitude, Communication signal, Status/task (0=none,1=surveillance,2=relay), Conflictstatus]
             for(int i=1; i<mAircraft.size()+1; i++) {
-                int task;
-                //Task of aircraft
-                if(mAircraft.get(i).isRelay()) {
-                    task = 2;
-                } else if(mAircraft.get(i).isSurveillance()) {
-                    task = 1;
-                } else {
-                    task = 0;
-                }
                 /* TODO log waypoint location instead of aircraft location */
-                myOutWriter.append(", " + mAircraft.get(i).getAGL() + ", " + mAircraft.get(i).getLat() + ", " + mAircraft.get(i).getLon() + ", " + mAircraft.get(i).getCommunicationSignal() + ", "  + task);
+                myOutWriter.append(", " + mAircraft.get(i).getAGL() + ", " + mAircraft.get(i).getLat() + ", " + mAircraft.get(i).getLon() + ", " + mAircraft.get(i).getCommunicationSignal() + ", "  + mAircraft.get(i).getTaskStatus().getValue() + ", "  + mAircraft.get(i).getConflictStatus().getValue());
             }
             //End the line and close the file
             myOutWriter.append("\r\n");

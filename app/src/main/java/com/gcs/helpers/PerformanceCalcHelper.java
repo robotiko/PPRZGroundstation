@@ -5,6 +5,7 @@ import android.util.SparseArray;
 
 import com.gcs.core.Aircraft;
 import com.gcs.core.ConflictStatus;
+import com.gcs.core.TaskStatus;
 import com.google.android.gms.maps.model.LatLng;
 
 public class PerformanceCalcHelper {
@@ -23,7 +24,7 @@ public class PerformanceCalcHelper {
         double overlapArea = 0;
 
         for(int i = 1; i<=mAircraft.size(); i++) { //Loop over all aircraft
-            if(mAircraft.get(i).getCommunicationSignal()>0 && mAircraft.get(i).isSurveillance()) { //Only calculate coverage if the aircraft can communicate with the ground station and has a surveillance status (at correct altitude)
+            if(mAircraft.get(i).getCommunicationSignal()>0 && mAircraft.get(i).getTaskStatus() == TaskStatus.SURVEILLANCE) { //Only calculate coverage if the aircraft can communicate with the ground station and has a surveillance status (at correct altitude)
 
                 //Add overlap between aircraft coverage and ROI
                 double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIcenter, mAircraft.get(i).getLatLng());

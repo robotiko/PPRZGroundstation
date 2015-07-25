@@ -8,10 +8,9 @@ public class CustomState extends State {
 
 	private boolean isInConflict = false;
 	private boolean isOnUniqueAltitude = false;
-    private boolean isRelay = false;
-    private boolean isSurveillance = false;
 
     private ConflictStatus conflictStatus = ConflictStatus.GRAY;
+    private TaskStatus taskStatus = TaskStatus.NONE;
 
     public void updateConflictStatus() {
         if(isOnUniqueAltitude){
@@ -33,19 +32,11 @@ public class CustomState extends State {
         return conflictStatus;
     }
 
-    public void setIsRelay(boolean isRelay) {
-        this.isRelay = isRelay;
+    public void setTaskStatus(TaskStatus taskStatus) {
+        this.taskStatus = taskStatus;
     }
 
-    public boolean isRelay() {
-        return isRelay;
-    }
-
-    public void setIsSurveillance (boolean isSurveillance) {
-        this.isSurveillance = isSurveillance;
-    }
-
-    public boolean isSurveillance() {
-        return isSurveillance;
+    public TaskStatus getTaskStatus() {
+        return taskStatus;
     }
 }

@@ -12,6 +12,7 @@ import com.aidllib.core.model.Battery;
 import com.aidllib.core.model.Position;
 import com.gcs.core.ConflictStatus;
 import com.gcs.core.Home;
+import com.gcs.core.TaskStatus;
 import com.gcs.fragments.PerformanceScoreFragment;
 import com.gcs.helpers.LogHelper;
 import com.gcs.helpers.PerformanceCalcHelper;
@@ -345,7 +346,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    public void run() {
 
             //Check for aircraft relay status
-            checkRelayAircraft();
+            checkAircraftTaskStatus();
 
             //Draw the communication range on the map
             drawCommunicationRange(Aircraft.relayAircraft);
@@ -1249,13 +1250,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                     infoMode.setText("Current block: " + mAircraft.get(acNumber).getCurrentBlock());
                                 }
                                 //Task of aircraft
-                                if(mAircraft.get(acNumber).isRelay()) {
-                                    infoTask.setText("Task: "+"RELAY");
-                                } else if(mAircraft.get(acNumber).isSurveillance()) {
-                                    infoTask.setText("Task: "+"SURVEILLANCE");
-                                } else {
-                                    infoTask.setText("Task: "+"NONE");
-                                }
+                                infoTask.setText("Task: " + String.valueOf(mAircraft.get(acNumber).getTaskStatus()));
+
+//                                if(mAircraft.get(acNumber).isRelay()) {
+//                                    infoTask.setText("Task: "+"RELAY");
+//                                } else if(mAircraft.get(acNumber).isSurveillance()) {
+//                                    infoTask.setText("Task: "+"SURVEILLANCE");
+//                                } else {
+//                                    infoTask.setText("Task: "+"NONE");
+//                                }
 
                                 return v;
                             }
@@ -1273,7 +1276,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     if (mAircraft.get(aircraftNumber).coverageCircle != null) {
                         mAircraft.get(aircraftNumber).coverageCircle.remove();
                     }
-                    if (showCoverage && !mAircraft.get(aircraftNumber).isRelay()) {
+                    //If the operator wants to see coverage and only for aircraft with the surveillance task status
+                    if (showCoverage && mAircraft.get(aircraftNumber).getTaskStatus() == TaskStatus.SURVEILLANCE) {
     //                    if(mAircraft.get(aircraftNumber).getCurrentSurveyLoc()!= null) {
 
                         //Make dynamic (multiple aircraft)
@@ -1546,21 +1550,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     /////////////////////////CLASS METHODS/////////////////////////
 
     //Method to check which aircraft have the relay status in order to keep track of which communication range circles have to be drawn
-    private void checkRelayAircraft() {
+    private void checkAircraftTaskStatus() {
 
-        //Check if there are relay aircraft and assign this status accordingly
+        //Check if aircraft should be flagged for a certain task (Relay, surveillance or none)
         for(int i=1; i < mAircraft.size()+1; i++) {
-            //Relay status
-            if(Math.abs(relayAltitude-mAircraft.get(i).getAGL()) < altitudeAccuracyDistance && mAircraft.get(i).getCommunicationSignal() > 0) { //If the difference between the altitude and the surveillance altitude is less than 2m and it is within the home comm range
-                mAircraft.get(i).setIsRelay(true);
-            } else {
-                mAircraft.get(i).setIsRelay(false);
-            }
+            //Relay status:If the difference between the altitude and the surveillance altitude is less than 2m and it is within the home comm range
+            if(Math.abs(relayAltitude-mAircraft.get(i).getAGL()) < altitudeAccuracyDistance && mAircraft.get(i).getCommunicationSignal() > 0) {
+                mAircraft.get(i).setTaskStatus(TaskStatus.RELAY);
             //Surveillance status
-            if(Math.abs(surveillanceAltitude-mAircraft.get(i).getAGL()) < altitudeAccuracyDistance && mAircraft.get(i).getCommunicationSignal() > 0) {
-                mAircraft.get(i).setIsSurveillance(true);
+            } else if(Math.abs(surveillanceAltitude-mAircraft.get(i).getAGL()) < altitudeAccuracyDistance && mAircraft.get(i).getCommunicationSignal() > 0) {
+                mAircraft.get(i).setTaskStatus(TaskStatus.SURVEILLANCE);
             } else {
-                mAircraft.get(i).setIsSurveillance(false);
+                mAircraft.get(i).setTaskStatus(TaskStatus.NONE);
             }
         }
 
@@ -1571,7 +1572,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         //Update the list
         for(int i = 1; i < mAircraft.size()+1; i++) {
-            if(mAircraft.get(i).isRelay()) {
+            if(mAircraft.get(i).getTaskStatus() == TaskStatus.RELAY) {
                 Aircraft.relayAircraft.add(i);
             }
         }

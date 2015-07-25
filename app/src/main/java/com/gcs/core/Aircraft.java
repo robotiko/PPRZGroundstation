@@ -17,6 +17,7 @@ import android.util.SparseArray;
 import android.widget.TextView;
 
 import com.gcs.R;
+import com.google.android.gms.gcm.Task;
 import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -226,20 +227,12 @@ public class Aircraft {
         return mState.getConflictStatus();
     }
 
-    public void setIsRelay(boolean isRelay) {
-        mState.setIsRelay(isRelay);
+    public void setTaskStatus(TaskStatus taskStatus) {
+        mState.setTaskStatus(taskStatus);
     }
 
-    public boolean isRelay() {
-        return mState.isRelay();
-    }
-
-    public void setIsSurveillance (boolean isSurveillance) {
-        mState.setIsSurveillance(isSurveillance);
-    }
-
-    public boolean isSurveillance() {
-        return mState.isSurveillance();
+    public TaskStatus getTaskStatus() {
+        return mState.getTaskStatus();
     }
 
     //////////// POSITION ////////////
