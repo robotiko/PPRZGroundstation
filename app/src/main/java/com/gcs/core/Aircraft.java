@@ -13,6 +13,7 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
+import android.util.Log;
 import android.util.SparseArray;
 import android.widget.TextView;
 
@@ -21,6 +22,7 @@ import com.google.android.gms.gcm.Task;
 import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.Polyline;
 import com.sharedlib.model.Altitude;
 import com.sharedlib.model.Attitude;
 import com.sharedlib.model.Battery;
@@ -34,6 +36,7 @@ public class Aircraft {
     public final int aircraftNumber;
     private final String labelCharacter;
     private static int aircraftCount = 0;
+    private static final int maxFlightPathSize = 25;
     private static SparseArray<Integer> AcConnectionList = new SparseArray<>();
 
     //Constructor in which the total aircraft count is updated and the label character is determined
@@ -61,7 +64,8 @@ public class Aircraft {
     public GroundOverlay coverageCircle;
     public static List<Integer> relayAircraft = new ArrayList<>();
     private static List<LatLng> relayLocations = new ArrayList<>();
-//	public Polyline flightPath;
+	public Polyline flightTrackPoly;
+    private List<LatLng> flightPath = new ArrayList<>();
 	
 	private final int AltitudeLabelId   = TextView.generateViewId();
 	private final int targetLabelId     = TextView.generateViewId();
@@ -523,6 +527,24 @@ public class Aircraft {
     public void setShowInfoWindow(boolean showInfoWindow) {this.showInfoWindow = showInfoWindow;}
 
     public boolean getShowInfoWindow() {return showInfoWindow;}
+
+    public List<LatLng> getFlightPath() {
+        return flightPath;
+    }
+
+    public void updateFlightPath() {
+        LatLng newPoint = getLatLng();
+        if(newPoint.latitude!=0.0 && newPoint.longitude!=0.0) {
+            //check size of the list. If max will be exceeded, remove the first point.
+            if(flightPath.size()==maxFlightPathSize) {
+                flightPath.remove(0);
+            }
+            if(flightPath.isEmpty() || !newPoint.equals(flightPath.get(flightPath.size()-1))) {
+                //Add point to list
+                flightPath.add(newPoint);
+            }
+        }
+    }
 
     //////////////////////////////////////////////////////
     ////////////////////// ICON //////////////////////////

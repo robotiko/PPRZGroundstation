@@ -46,5 +46,8 @@
     <integer name="CommVertLocation">75</integer>	        <!-- percent of radius from center -->
     <integer name="CommHorLocation">18</integer>	        <!-- percent of radiusfrom center  -->
     <integer name="CommScaling">40</integer>	            <!-- percent of the original image -->
+
+    <!-- Map drawing settings -->
+    <integer name="flightPathOnOff">1</integer> 	        <!-- 1=ON, 0=OFF -->
     
 </resources>

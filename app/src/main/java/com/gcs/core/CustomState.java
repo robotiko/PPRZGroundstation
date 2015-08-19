@@ -4,7 +4,7 @@ import com.sharedlib.model.State;
 
 public class CustomState extends State {
 
-    /* TODO Remove State extend?? */
+    /* TODO Remove State extend?? (are armed and isFlying used?) */
 
 	private boolean isInConflict = false;
 	private boolean isOnUniqueAltitude = false;

@@ -70,9 +70,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, OnMarkerClickListener, OnInfoWindowClickListener, OnMarkerDragListener {
 	
@@ -110,15 +108,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private MissionButtonFragment    missionButtons;
 
     //Declaration of the lists/arrays that are used
-    private SparseArray<Aircraft> mAircraft           = new SparseArray<>();
-    private List<Polyline>      mConnectingLines      = new ArrayList<>();
-    private ArrayList<Integer>  conflictingAircraft   = new ArrayList<>();
-    private ArrayList<Integer>  sameLevelAircraft     = new ArrayList<>();
-    private ArrayList<Integer>  groupList             = new ArrayList<>();
-    private ArrayList<String>   conflictGroupList     = new ArrayList<>();
-    private ArrayList<String>   sameLevelGroupList    = new ArrayList<>();
-    private List<Integer>       groupSelectedAircraft = new ArrayList<>();
-    private List<Circle>        relayCommCircles      = new ArrayList<>();
+    private SparseArray<Aircraft>     mAircraft             = new SparseArray<>();
+    private List<Polyline>            mConnectingLines      = new ArrayList<>();
+    private ArrayList<Integer>        conflictingAircraft   = new ArrayList<>();
+    private ArrayList<Integer>        sameLevelAircraft     = new ArrayList<>();
+    private ArrayList<List<Integer>>  groupList             = new ArrayList<>();
+    private ArrayList<String>         conflictGroupList     = new ArrayList<>();
+    private List<Integer>             groupSelectedAircraft = new ArrayList<>();
+    private List<Circle>              relayCommCircles      = new ArrayList<>();
 
 	private Home home;
 
@@ -172,34 +169,44 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // TEMPORARY SETTING OF HOME LOCATION
 //        LatLng homeLocation = new LatLng(51.990826, 4.378248); //AE
 //        LatLng homeLocation = new LatLng(43.563967, 1.481951); //ENAC
-        LatLng homeLocation = new LatLng(43.46223, 1.27289); //airfield ENAC
+//        LatLng homeLocation = new LatLng(43.46223, 1.27289); //airfield ENAC
+        LatLng homeLocation = new LatLng(52.004523, 5.894406); //Zoo
         home.setHomeLocation(homeLocation);
 
         //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
-        mAircraft.put(2, new Aircraft(getApplicationContext()));
-//        mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180); //Middle
-        mAircraft.get(2).setLlaHdg(434654440, 12767810, 0, (short) 180); //North
-//        mAircraft.get(2).setLlaHdg(434621910, 12673600, 0, (short) 180); //West
-        mAircraft.get(2).setAGL(90);
-        mAircraft.get(2).setBatteryState(10000, 45, 1);
-        mAircraft.get(2).setDistanceHome(homeLocation);
-		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
-
-        mAircraft.put(3, new Aircraft(getApplicationContext()));
-//		mAircraft.get(3).setLlaHdg(434651420, 12756540, 0, (short) 300);
-		mAircraft.get(3).setLlaHdg(434666020, 12774780, 0, (short) 300);
-		mAircraft.get(3).setAGL(90);
-		mAircraft.get(3).setBatteryState(9000, 1, 1);
-		mAircraft.get(3).setDistanceHome(homeLocation);
-		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
-
-        mAircraft.put(4, new Aircraft(getApplicationContext()));
-        mAircraft.get(4).setLlaHdg(434610520, 12714270, 0, (short) 180); //Inside ROI
-//        mAircraft.get(4).setLlaHdg(434622110, 12632490, 0, (short) 180); //Outside ROI
-        mAircraft.get(4).setAGL(50);
-        mAircraft.get(4).setBatteryState(12000, 90, 1);
-        mAircraft.get(4).setDistanceHome(homeLocation);
-        mAircraft.get(4).setRollPitchYaw(0, 0, 270);
+//        mAircraft.put(2, new Aircraft(getApplicationContext()));
+////        mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180); //Middle
+//        mAircraft.get(2).setLlaHdg(434654440, 12767810, 0, (short) 180); //North
+////        mAircraft.get(2).setLlaHdg(434621910, 12673600, 0, (short) 180); //West
+//        mAircraft.get(2).setAGL(90);
+//        mAircraft.get(2).setBatteryState(10000, 45, 1);
+//        mAircraft.get(2).setDistanceHome(homeLocation);
+//		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
+//
+//        mAircraft.put(3, new Aircraft(getApplicationContext()));
+////		mAircraft.get(3).setLlaHdg(434651420, 12756540, 0, (short) 300);
+//		mAircraft.get(3).setLlaHdg(434666020, 12774780, 0, (short) 300);
+//		mAircraft.get(3).setAGL(90);
+//		mAircraft.get(3).setBatteryState(9000, 1, 1);
+//		mAircraft.get(3).setDistanceHome(homeLocation);
+//		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
+//
+//        mAircraft.put(4, new Aircraft(getApplicationContext()));
+//        mAircraft.get(4).setLlaHdg(434610520, 12714270, 0, (short) 180); //Inside ROI
+////        mAircraft.get(4).setLlaHdg(434622110, 12632490, 0, (short) 180); //Outside ROI
+////        mAircraft.get(4).setAGL(50);
+//        mAircraft.get(4).setAGL(90);
+//        mAircraft.get(4).setBatteryState(12000, 90, 1);
+//        mAircraft.get(4).setDistanceHome(homeLocation);
+//        mAircraft.get(4).setRollPitchYaw(0, 0, 270);
+//
+//        mAircraft.put(5, new Aircraft(getApplicationContext()));
+////        mAircraft.get(5).setLlaHdg(434610520, 12714270, 0, (short) 180); //Inside ROI
+//        mAircraft.get(5).setLlaHdg(434622110, 12632490, 0, (short) 180); //Outside ROI
+//        mAircraft.get(5).setAGL(50);
+//        mAircraft.get(5).setBatteryState(12000, 90, 1);
+//        mAircraft.get(5).setDistanceHome(homeLocation);
+//        mAircraft.get(5).setRollPitchYaw(0, 0, 270);
 
 		//Create a handles to the fragments
 		telemetryFragment        = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);               //Telemetry fragment
@@ -360,6 +367,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 isAltitudeUpdated = false;
             }
 
+            //TEMP
+            conflictGroupList.clear();
+
             //Clear the list of aircraft that are on the same level (after the altitude tape is updated)
             sameLevelAircraft.clear();
 
@@ -376,7 +386,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             performanceScoreFragment.setText(String.format("%.1f", performanceScore));
 
             /////DATA LOGGING
-            LogHelper.dataLogger(initTime, logFileName, performanceScore, mAircraft);
+//            LogHelper.dataLogger(initTime, logFileName, performanceScore, mAircraft);
 
             //Restart this updater after the set interval
 	    	interfaceUpdateHandler.postDelayed(interfaceUpdater, mInterval);
@@ -611,6 +621,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //                    Log.d("DATATESTlat",String.valueOf(mPosition.getLat()));
 //                    Log.d("DATATESTlng",String.valueOf(mPosition.getLon()));
 //                    Log.d("DATATESTalt",String.valueOf(mPosition.getAlt()));
+
+//                    //Update the flight track with the current position
+//                    mAircraft.get(1).updateFlightPath();
+
                 } catch (Throwable t) {
 					Log.e(TAG, "Error while updating position", t);
 				}
@@ -1091,7 +1105,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             //When the aircraft icon is clicked, select it or deselect it
             if(!mAircraft.get(acNumber).isSelected()) {
-                if(aircraftSelected) {
+                if(aircraftSelected) { //If another aircraft is selected
                     //Set all aircraft on not selected
                     deselectAllAircraft();
                 }
@@ -1181,6 +1195,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 mAircraft.get(acNumber).setCircleColor(Color.WHITE);
             }
 
+            //Update the flight tracks with the current positions
+            mAircraft.get(acNumber).updateFlightPath();
+
             //Generate an icon
             mAircraft.get(acNumber).generateIcon();
         }
@@ -1268,6 +1285,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         if(mAircraft.get(aircraftNumber).getShowInfoWindow()) {
                             mAircraft.get(aircraftNumber).acMarker.showInfoWindow();
                         }
+                    }
+
+                    ///* FLIGHT PATH  *///
+                    if(getResources().getInteger(R.integer.flightPathOnOff)==1 && !mAircraft.get(aircraftNumber).getFlightPath().isEmpty()) {
+                        // If the flight path has been drawn before, remove it to be updated
+                        if (mAircraft.get(aircraftNumber).flightTrackPoly != null) {
+                            mAircraft.get(aircraftNumber).flightTrackPoly.remove();
+                        }
+
+                        // Draw the flight path with the specified characteristics
+                        mAircraft.get(aircraftNumber).flightTrackPoly = map.addPolyline(new PolylineOptions()
+                                .addAll(mAircraft.get(aircraftNumber).getFlightPath())
+                                .width(4)
+                                .color(Color.WHITE));
                     }
 
                     /* TODO: change coverage indication to waypoint location instead of aircraft */
@@ -1360,6 +1391,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 Marker wpMarker = map.addMarker(new MarkerOptions()
                                 .position(mAircraft.get(acNumber).getWpLatLng(i))
                                 .flat(true)
+                                .anchor((float) 0.5, (float) 0.5)
                                 .icon(BitmapDescriptorFactory.fromBitmap(wpMarkerBitmap))
                                 .snippet(String.valueOf(acNumber) + "-" + String.valueOf(mAircraft.get(acNumber).getWpSeq(i)))
                                 .draggable(true)
@@ -1370,19 +1402,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             ///* FLIGHT PATH (lines between waypoints) *///
 
-            /* TODO Distinguish pattern- and relay waypoints using color and draw circles around the waypoints to show the flightpath of the aircraft
-
+            // TODO Distinguish pattern- and relay waypoints using color and draw circles around the waypoints to show the flightpath of the aircraft
+            // TODO: make ac number dynamic
             // If the flight path has been drawn before, remove it to be updated
-            if (mAircraft.get(aircraftNumber).flightPath != null) {
-                mAircraft.get(aircraftNumber).flightPath.remove();
-            }
-
-            // Draw the flight path with the specified characteristics
-            mAircraft.get(aircraftNumber).flightPath = map.addPolyline(new PolylineOptions()
-                    .addAll(mAircraft.get(aircraftNumber).getWpLatLngList())
-                    .width(4)
-                    .color(Color.WHITE));
-            */
+//            if (mAircraft.get(1).flightTrackPoly != null) {
+//                mAircraft.get(1).flightTrackPoly.remove();
+//            }
+//            Log.d("TEST1",String.valueOf(mAircraft.get(1).getFlightPath()));
+//            // Draw the flight path with the specified characteristics
+//            mAircraft.get(1).flightTrackPoly = map.addPolyline(new PolylineOptions()
+//                    .addAll(mAircraft.get(1).getFlightPath())
+//                    .width(3)
+//                    .color(Color.WHITE));
             }
         });
     }
@@ -1587,20 +1618,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Method to check for conflicts between aircraft
     private void checkConflicts() {
-        //check for altitude and course conflicts
+        //check for altitude and course conflicts and put the aircraft numbers in lists of aircraft that have a conflict or are on the same level
         for(int i = 1; i < mAircraft.size()+1; i++) {
             for(int j = 1; j < mAircraft.size()+1; j++) {
                 if(i!=j) {
                     if(Math.abs(mAircraft.get(i).getAGL() - mAircraft.get(j).getAGL()) <= verticalSeparationStandard) {
                         //Check for conflict course
-                        if(isOnconflictCourse(i,j)){ //On conflict course
+                        if(isOnconflictCourse(i,j)){ //Pait is on conflict course, so add to conflict list
                             conflictingAircraft.add(i);
                             conflictingAircraft.add(j);
-                        } else { //Not on conflict course
-                            sameLevelAircraft.add(i);
-                            sameLevelAircraft.add(j);
                         }
-                    } else {
+                        //Pair is not on conflict course, so add to same level list
+                        sameLevelAircraft.add(i);
+                        sameLevelAircraft.add(j);
+
+                    } else { //Pair is not at the same level, so they are safe and a "GRAY" status can be given
                         mAircraft.get(i).setConflictStatusNew(ConflictStatus.GRAY);
                         mAircraft.get(j).setConflictStatusNew(ConflictStatus.GRAY);
                     }
@@ -1608,150 +1640,86 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
 
-        // Remove double couples from the conflictlist
+        //Remove double couples from the conflictlist
         if (conflictingAircraft.size()>2) {
-            //Loop starting at the end of the list to be able to remove double pairs
-            for (int p=conflictingAircraft.size()-2; p>1; p-=2) {
-                for (int q = 0; q < p; q += 2) {
-                    if (conflictingAircraft.get(p+1) == conflictingAircraft.get(q) && conflictingAircraft.get(p) == conflictingAircraft.get(q+1)) {
-                        conflictingAircraft.remove(p+1);
-                        conflictingAircraft.remove(p);
-                        break;
-                    }
-                }
-            }
+            conflictingAircraft = removeDoubleCouples(conflictingAircraft);
         }
 
-        // Remove double couples from the samelevellist
+        //Remove double couples from the samelevellist
         if (sameLevelAircraft.size()>2) {
-            //Loop starting at the end of the list to be able to remove double pairs
-            for (int r=sameLevelAircraft.size()-2; r>1; r-=2) {
-                for (int s=0; s<r; s+=2) {
-                    if (sameLevelAircraft.get(r+1) == sameLevelAircraft.get(s) && sameLevelAircraft.get(r) == sameLevelAircraft.get(s+1)) {
-                        sameLevelAircraft.remove(r+1);
-                        sameLevelAircraft.remove(r);
-                        break;
-                    }
-                }
+            sameLevelAircraft = removeDoubleCouples(sameLevelAircraft);
+        }
+
+        //Assign the "BLUE" status to all aircraft that fly on the same level
+        if(!sameLevelAircraft.isEmpty()) {
+            for (int k = 0; k < sameLevelAircraft.size(); k += 2) {
+                mAircraft.get(sameLevelAircraft.get(k)).setConflictStatusNew(ConflictStatus.BLUE);
+                mAircraft.get(sameLevelAircraft.get(k + 1)).setConflictStatusNew(ConflictStatus.BLUE);
             }
         }
 
-        //Set the color of the aircraft that have the "red" conflict status
+        //Assign the "RED" status to all aircraft that have a conflict
         if(!conflictingAircraft.isEmpty()) {
-            for (int k = 0; k < conflictingAircraft.size(); k+=2) {
+            for (int k = 0; k < conflictingAircraft.size(); k += 2) {
                 mAircraft.get(conflictingAircraft.get(k)).setConflictStatusNew(ConflictStatus.RED);
                 mAircraft.get(conflictingAircraft.get(k + 1)).setConflictStatusNew(ConflictStatus.RED);
             }
-
-            //Get unique aircraft (remove duplicates)
-            Set<Integer> uniqueAcRed = new HashSet<Integer>(conflictingAircraft);
-            for (Integer l : uniqueAcRed) {
-                groupList.add(l);
-                for (Integer m : uniqueAcRed) {
-                    if(l!=m) {
-                        if(Math.abs(mAircraft.get(l).getAGL() - mAircraft.get(m).getAGL()) <= verticalSeparationStandard) {
-                            groupList.add(m);
-                        }
-                    }
-                }
-                //Sort the list of conflicting aircraft
-                Collections.sort(groupList);
-                //Generate a string containing the aircraftnumbers of a conflict group
-                String set = "";
-                for(int d=0; d<groupList.size(); d++) {
-                    set = set + String.valueOf(groupList.get(d));
-                }
-
-                //Check if the conflict group already exists in the list, if not add it (this code creates groups for all seperate conflict groups, the result is a huge load of labels in some cases)
-                if(!conflictGroupList.contains(set)) {
-                    conflictGroupList.add(set);
-                }
-
-//                    if(conflictGroupList.isEmpty()) {
-//                        conflictGroupList.add(set);
-//                    } else {
-//                        Boolean inGroup = false;
-//                        for(int i=0; i<conflictGroupList.size(); i++) {
-//                            if(conflictGroupList.get(i).contains(set)) {
-//                                inGroup = true;
-//                                break;
-//                            }
-//                        }
-//                        if(!inGroup) {
-//                            conflictGroupList.add(set);
-//                        }
-//                    }
-//                    Log.d("test",String.valueOf(conflictGroupList.size()));
-
-                //Clear the temporary list
-                groupList.clear();
-            }
         }
 
-        //Set the color of the aircraft that have the "blue" conflict status
+        //First clear the grouplist to reset
+        groupList.clear();
+
+        //Create groups of the pairs
         if(!sameLevelAircraft.isEmpty()) {
-            for (int k = 0; k < sameLevelAircraft.size(); k+=2) {
-                mAircraft.get(sameLevelAircraft.get(k)).setConflictStatusNew(ConflictStatus.BLUE);
-                mAircraft.get(sameLevelAircraft.get(k+1)).setConflictStatusNew(ConflictStatus.BLUE);
-            }
+            //Fill the group list with the first pair there is
+            List<Integer> couple = new ArrayList<>();
+            couple.add(sameLevelAircraft.get(0));
+            couple.add(sameLevelAircraft.get(1));
+            groupList.add(couple);
 
-            //Get unique aircraft (remove duplicates)
-            Set<Integer> uniqueAcBlue = new HashSet<>(sameLevelAircraft);
-            for (Integer l : uniqueAcBlue) {
-                groupList.add(l);
-                for (Integer m : uniqueAcBlue) {
-                    if(l!=m) {
-                        if(Math.abs(mAircraft.get(l).getAGL() - mAircraft.get(m).getAGL()) <= verticalSeparationStandard) {
-                            groupList.add(m);
-                        }
-                    }
-                }
-                //Sort the list of conflicting aircraft
-                Collections.sort(groupList);
-                //Generate a string containing the aircraftnumbers of a conflict group
-                String set = "";
-                for(int d=0; d<groupList.size(); d++) {
-                    set = set + String.valueOf(groupList.get(d));
-                }
-                //Check if the conflict group already exists in the list, if not add it
-//                    if(!sameLevelGroupList.contains(set)) {
-//                        sameLevelGroupList.add(set);
-//                    }
-
-                ///////////////////////////////////////////////////////
-                if(sameLevelGroupList.isEmpty()) {
-                    sameLevelGroupList.add(set);
-                } else {
-                    Boolean inGroup = false;
-                    int i;
-                    mainLoop:   //Label for breaking out of two nested loops
-                    for(i=0; i<sameLevelGroupList.size(); i++) {
-                        for(int j=0; j<set.length(); j++) {
-                            if(sameLevelGroupList.get(i).contains(Character.toString(set.charAt(j)))) {
-//                                    Log.d("AAP1",set);
-//                                    set.replace(Character.toString(set.charAt(j)), "");
-//                                    Log.d("AAP2",set);
-//                                    Log.d("aapje",sameLevelGroupList.get(i));
-                                inGroup = true;
-                                break mainLoop;
+            //In case more than more couple is present, check if they should be merged are put as a separate one
+            if(sameLevelAircraft.size()>2) {
+                for(int i = 2; i < sameLevelAircraft.size(); i += 2) { //Loop over the couples
+                    Boolean isPairInList = false;
+                    for(int j = 0; j < groupList.size(); j++){ //Loop over the sets already in the grouplist
+                        if(groupList.get(j).contains(sameLevelAircraft.get(i)) || groupList.get(j).contains(sameLevelAircraft.get(i+1))){//If one of the two aircraft is already present in another set
+                            if(!groupList.get(j).contains(sameLevelAircraft.get(i))) {
+                                groupList.get(j).add(sameLevelAircraft.get(i));
                             }
+                            if(!groupList.get(j).contains(sameLevelAircraft.get(i+1))) {
+                                groupList.get(j).add(sameLevelAircraft.get(i+1));
+                            }
+                            isPairInList = true;
                         }
                     }
-
-                    if(inGroup) { //If one of the aircraft in the set is already present in another group, add the missing one to this group
-//                            Log.d("AAP",sameLevelGroupList.get(i));
-                    } else {
-                        sameLevelGroupList.add(set);
+                    if(!isPairInList) {
+                        List<Integer> newCouple = new ArrayList<>();
+                        newCouple.add(sameLevelAircraft.get(i));
+                        newCouple.add(sameLevelAircraft.get(i+1));
+                        groupList.add(newCouple);
                     }
                 }
-                for(int i=0; i< sameLevelGroupList.size(); i++) {
-//                    Log.d("test", sameLevelGroupList.get(i));
-                }
-
-                //Clear the temporary list
-                groupList.clear();
+            }
+            //Sort all sets
+            for(int k = 0; k < groupList.size(); k++) {
+                Collections.sort(groupList.get(k));
             }
         }
+    }
+
+    //Remove double couples from the aircraft list
+    private ArrayList<Integer> removeDoubleCouples(ArrayList<Integer> list) {
+        //Loop starting at the end of the list to be able to remove double pairs
+        for (int p = list.size() - 2; p > 1; p -= 2) {
+            for (int q = 0; q < p; q += 2) {
+                if (list.get(p + 1) == list.get(q) && list.get(p) == list.get(q + 1)) {
+                    list.remove(p + 1);
+                    list.remove(p);
+                    break;
+                }
+            }
+        }
+        return list;
     }
 
     //Method to determine if a couple of aircraft needs to get conflict status
@@ -1763,7 +1731,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         /*Steps taken:
         * Check if both aircraft have active surveillance waypoints
         * If yes, the distance should be more than 4 times the surveillance circle radius
-        * If not, the distance between the aircraft should be more than 2 time the circle radius
+        * If not, the distance between the aircraft should be more than 2 times the circle radius
         */
 
 //        if(mAircraft.get(ac1).getCurrentSurveyLoc() != null && mAircraft.get(ac2).getCurrentSurveyLoc() != null) {
@@ -1783,16 +1751,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Method to update the labels on the altitude tape
 	private void updateAltitudeTape() {
-
-        /* TODO move the targetalttiude indication to the for loop */
+        /* TODO move the targetaltitude indication to the for loop */
         /* TODO make the aircraft number dynamic */
-		/* Set the location of the target label on the altitude tape and check wether to 
+		/* Set the location of the target label on the altitude tape and check whether to
 		 * show the target label or not (aka is the aircraft already on target altitude?) */
-        if (Math.abs(mAircraft.get(1).getTargetAltitude() - mAircraft.get(1).getAGL()) > 0.001) {
-//            altitudeTapeFragment.setTargetLabel(mAircraft.get(1).getTargetAltitude(), mAircraft.get(1).getTargetLabelId());
-        } else {
-            altitudeTapeFragment.deleteTargetLabel(mAircraft.get(1).getTargetLabelId());
-        }
+//        if (Math.abs(mAircraft.get(1).getTargetAltitude() - mAircraft.get(1).getAGL()) > 0.001) {
+////            altitudeTapeFragment.setTargetLabel(mAircraft.get(1).getTargetAltitude(), mAircraft.get(1).getTargetLabelId());
+//        } else {
+//            altitudeTapeFragment.deleteTargetLabel(mAircraft.get(1).getTargetLabelId());
+//        }
 
         //Boolean to check if group labels are drawn and if they need to be removed from the tape
         boolean groupLabelsDrawn = false;
@@ -1803,54 +1770,39 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             for(int i=0; i< groupSelectedAircraft.size(); i++) {
                 altitudeTapeFragment.drawGroupSelection(mAircraft.get(groupSelectedAircraft.get(i)).getAGL(),mAircraft.get(groupSelectedAircraft.get(i)).getLabelCharacter(),i,groupSelectedAircraft.size(),groupSelectedAircraft.get(i));
             }
-        } else {
-            // Put the grouped red labels on the altitude tape
-            if (!conflictGroupList.isEmpty()) {
-                for (int j = 0; j < conflictGroupList.size(); j++) { //Loop over conflict groups
-                    int[] conflict = new int[conflictGroupList.get(j).length()];
-                    double altSum = 0;
-                    String characters = "";
-                    for(int h = 0; h<conflictGroupList.get(j).length();h++){//Loop over conflict group string
-                        conflict[h] = Character.getNumericValue(conflictGroupList.get(j).charAt(h));
-                        altSum = altSum + mAircraft.get(conflict[h]).getAGL();
-                        characters = characters + mAircraft.get(conflict[h]).getLabelCharacter() + " ";
-                    }
-                    characters = characters.substring(0,conflict.length+2);
-                    //Calculate the mean altitude of the aircraft that are in the group
-                    double meanAlt = altSum/conflict.length;
-                    //Draw the group label on the tape
-                    altitudeTapeFragment.drawGroupLabel(true, meanAlt, characters, conflict);
-                }
-                conflictGroupList.clear();
-                groupLabelsDrawn = true;
-            }
-
-            // Put the grouped blue labels on the altitude tape
-            if (!sameLevelGroupList.isEmpty()) {
-                for (int k = 0; k < sameLevelGroupList.size(); k++) { //Loop over conflict groups
-                    int[] conflict = new int[sameLevelGroupList.get(k).length()];
-                    double altSum = 0;
-                    String characters = "";
-                    for(int b = 0; b<sameLevelGroupList.get(k).length();b++){//Loop over conflict group string
-                        conflict[b] = Character.getNumericValue(sameLevelGroupList.get(k).charAt(b));
-                        altSum = altSum + mAircraft.get(conflict[b]).getAGL();
-                        characters = characters + mAircraft.get(conflict[b]).getLabelCharacter() + " ";
-                    }
-                    characters = characters.substring(0,conflict.length+2);
-                    //Calculate the mean altitude of the aircraft that are in the group
-                    double meanAlt = altSum/conflict.length;
-                    //Draw the group label on the tape
-                    altitudeTapeFragment.drawGroupLabel(false, meanAlt, characters, conflict);
-                }
-                sameLevelGroupList.clear();
-                groupLabelsDrawn = true;
-            }
         }
 
-        /* Put the single labels on the altitude tape.*/
+        //Put the grouped labels on the altitude tape
+        if (!groupList.isEmpty()) {
+            for (int k = 0; k < groupList.size(); k++) { //Loop over conflict groups
+                Boolean drawRedLabel = false;
+                double altSum = 0;
+                String characters = "";
+                for(int b = 0; b<groupList.get(k).size(); b++){//Loop over conflict group list
+                    altSum = altSum + mAircraft.get(groupList.get(k).get(b)).getAGL();
+                    characters = characters + mAircraft.get(groupList.get(k).get(b)).getLabelCharacter() + " ";
+                }
+
+                for(int a = 0; a<groupList.get(k).size(); a++) {
+                    if(mAircraft.get(groupList.get(k).get(a)).getConflictStatus().equals(ConflictStatus.RED)) {
+                        drawRedLabel = true;
+                        break;
+                    }
+                }
+
+                characters = characters.substring(0,groupList.get(k).size()+2);
+                //Calculate the mean altitude of the aircraft that are in the group
+                double meanAlt = altSum/groupList.get(k).size();
+                //Draw the group label on the tape
+                altitudeTapeFragment.drawGroupLabel(drawRedLabel, meanAlt, characters, groupList.get(k));
+            }
+            groupLabelsDrawn = true;
+        }
+
+        /* Put the single labels on the altitude tape (if they are not in a group).*/
         for (int i = 1; i < mAircraft.size() + 1; i++) {
-            //Check if the aircraft is in a group, if yes don show the individual label
-            if (sameLevelAircraft.contains(i) || conflictingAircraft.contains(i)) {
+            //Check if the aircraft is in a group, if so, don't show the individual label
+            if (!mAircraft.get(i).getConflictStatus().equals(ConflictStatus.GRAY)) { //If the aircraft has a "GRAY" conflict status it can be drawn as individual label
                 singleLabelVisibility = View.GONE;
             } else {
                 singleLabelVisibility = View.VISIBLE;
@@ -1859,7 +1811,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             altitudeTapeFragment.setLabel(mAircraft.get(i).getAGL(), mAircraft.get(i).getAltLabelId(), mAircraft.get(i).getLabelCharacter(), mAircraft.get(i).isSelected(), mAircraft.get(i).isLabelCreated(), i, singleLabelVisibility);
         }
 
-        //If no group labels were drawn in this iteration, remove any existing ones because ther are no groups anymore
+        //If no group labels were drawn in this iteration, remove any existing ones because there are no groups anymore
         if(!groupLabelsDrawn) {
             altitudeTapeFragment.removeGroupLabels();
         }
@@ -1897,13 +1849,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Method to make sure that none of the aircraft is selected
     public void deselectAllAircraft() {
+        //Loop over all aircraft to deselect them
         for(int i=1; i<mAircraft.size()+1; i++) {
             mAircraft.get(i).setIsSelected(false);
         }
+
+        //Set the selected aircraft number to 0 (=none)
         selectedAc = 0;
+
         //Update the mission buttons
         updateMissionButtons();
         groupSelectedAircraft.clear();
+
+        //Update the altitude tape (set all labels back to unselected)
+        updateAltitudeTape();
 
         //Set the aircraft spinner to nothing selected
         aircraftSpinner.setSelection(0);
@@ -1919,6 +1878,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             mAircraft.get(acNumbers[i]).setIsSelected(true);
             groupSelectedAircraft.add(acNumbers[i]);
         }
+
+        //Update the altitude tape
+        updateAltitudeTape();
     }
 
     //Method to register that a label is drawn on the tape to be sure not a new is created

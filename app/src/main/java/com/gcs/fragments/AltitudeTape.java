@@ -15,6 +15,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
 import android.view.Gravity;
@@ -28,6 +29,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AltitudeTape extends Fragment {
@@ -139,6 +141,7 @@ public class AltitudeTape extends Fragment {
         altitudeTape.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 //Set the group selection to null, go back to normal display of the labels
                 selectedGroup = null;
                 //Remove selected group labels from tape
@@ -158,20 +161,27 @@ public class AltitudeTape extends Fragment {
 	View.OnClickListener onLabelClick(final View tv) {
 	    return new View.OnClickListener() {
 	        public void onClick(View v) {
+                int aircraftNumber;
+
                 //If a group is selected, deselect it
                 if(groupSelected) {
+                    //Get the id of the selected aircraft and get its selection status from mainactivity
+                    aircraftNumber = groupSelectLabelList.get(v.getId());
+                    //Deselect all aircraft and reselect the clicked aircraft
+                    ((MainActivity) getActivity()).deselectAllAircraft();
+                    ((MainActivity) getActivity()).setIsSelected(aircraftNumber,true);
+
                     selectedGroup = null;
                     groupSelected = false;
                     groupSelectLabelList.clear();
                     removeGroupSelectedAircraft();
+                } else {
+                    //Get the id of the selected aircraft and get its selection status from mainactivity
+                    aircraftNumber = labelList.get(v.getId());
+                    boolean isAircraftSelected = ((MainActivity) getActivity()).isAircraftIconSelected(aircraftNumber);
+                    //Invert the selection status
+                    ((MainActivity) getActivity()).setIsSelected(aircraftNumber, !isAircraftSelected);
                 }
-
-                //Get the id of the selected aircraft and get its selection status from mainactivity
-                int aircraftNumber = labelList.get(v.getId());
-                boolean isAircraftSelected = ((MainActivity) getActivity()).isAircraftIconSelected(aircraftNumber);
-
-                //Invert the selection status
-                ((MainActivity) getActivity()).setIsSelected(aircraftNumber, !isAircraftSelected);
         	}
 	    };
 	}
@@ -180,6 +190,11 @@ public class AltitudeTape extends Fragment {
     View.OnClickListener onGroupLabelClick(final View tv) {
         return new View.OnClickListener() {
             public void onClick(View v) {
+                //Remove selected group labels from tape
+                removeGroupSelectedAircraft();
+                //Clear the list holding the id's of the group selection labels
+                groupSelectLabelList.clear();
+
                 //Set (boolean) that a group is selected and store its labelcharacter string to later check if the group label should be drawn again or if it is selected
                 groupSelected = true;
                 selectedGroup = labelIdToStringList.get(v.getId());
@@ -233,16 +248,25 @@ public class AltitudeTape extends Fragment {
                         break;
                     case DragEvent.ACTION_DRAG_LOCATION:
                         //Give the user feedback (on the altitude instrument) about the altitude of the label while dragging
-                        ((MainActivity) getActivity()).setDragAltitude(labelList.get(draggedLabel),labelLocationToAltitude(event.getY() - dragShadowVerticalOffset),false);
+                        if (groupSelectLabelList.containsKey(draggedLabel)) {   //Group selection label
+                            ((MainActivity) getActivity()).setDragAltitude(groupSelectLabelList.get(draggedLabel), labelLocationToAltitude(event.getY() - dragShadowVerticalOffset), false);
+                        } else{                                                 //Normal label
+                            ((MainActivity) getActivity()).setDragAltitude(labelList.get(draggedLabel), labelLocationToAltitude(event.getY() - dragShadowVerticalOffset), false);
+                        }
                         break;
                     case DragEvent.ACTION_DROP:
-                        //Set the altitude instrument back to normal
-                        ((MainActivity) getActivity()).setDragAltitude(labelList.get(draggedLabel),labelLocationToAltitude(event.getY() - dragShadowVerticalOffset),true);
+//                        //Set the altitude instrument back to normal
+//                        ((MainActivity) getActivity()).setDragAltitude(labelList.get(draggedLabel),labelLocationToAltitude(event.getY() - dragShadowVerticalOffset),true);
                         //Send the drop location to the method that implements the command (Note that an offset value was used to be able to see the label while dragging)
                         if (groupSelectLabelList.containsKey(draggedLabel)) {   //Group selection label
                             setTargetAltitude(groupSelectLabelList.get(draggedLabel), event.getY() - dragShadowVerticalOffset);
+                            //Set the altitude instrument back to normal
+                            /* TODO: Change this to an appropriate number or remove if the instrument is removed (only show it for drag??) */
+                            ((MainActivity) getActivity()).setDragAltitude(1, labelLocationToAltitude(event.getY() - dragShadowVerticalOffset), true);
                         } else{                                                 //Normal label
                             setTargetAltitude(labelList.get(draggedLabel), event.getY() - dragShadowVerticalOffset);
+                            //Set the altitude instrument back to normal
+                            ((MainActivity) getActivity()).setDragAltitude(labelList.get(draggedLabel), labelLocationToAltitude(event.getY() - dragShadowVerticalOffset), true);
                         }
                         break;
                     default:
@@ -337,12 +361,12 @@ public class AltitudeTape extends Fragment {
 	}
 
     //Method to draw group labels on the altitude tape
-    public void drawGroupLabel(boolean inConflict, double altitude, String labelCharacters, int[] ac) {
+    public void drawGroupLabel(boolean inConflict, double altitude, String labelCharacters, List<Integer> ac) {
 
         //Add the numbers of aircraft that are in a group to the list to avoid that they also get an individual label
-        for(int i=0; i<ac.length; i++) {
-            if(!aircraftInGroupList.contains(ac[i])) {
-                aircraftInGroupList.add(ac[i]);
+        for(int i=0; i<ac.size(); i++) {
+            if(!aircraftInGroupList.contains(ac.get(i))) {
+                aircraftInGroupList.add(ac.get(i));
             }
         }
 
@@ -408,6 +432,7 @@ public class AltitudeTape extends Fragment {
             groupSelectionLabel.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
             groupSelectionLabel.setId(labelId);
             groupSelectionLabel.setBackgroundResource(yellowLabel);
+            groupSelectionLabel.setOnClickListener(onLabelClick(groupSelectionLabel));///////////////
             groupSelectionLabel.setOnLongClickListener(onLabelLongClick(groupSelectionLabel));
             rootView.setOnDragListener(labelDragListener(groupSelectionLabel));
             framelayout.addView(groupSelectionLabel, params);
