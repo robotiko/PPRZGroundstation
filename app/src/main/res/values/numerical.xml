@@ -5,7 +5,7 @@
     <integer name="flightCeiling">100</integer>               <!-- meters -->
     <integer name="groundLevel">-3</integer>                  <!-- meters -->
     <integer name="MSA">10</integer>                          <!-- meters (minimum safe altitude)-->
-    <integer name="verticalSeparationStandard">5</integer>    <!-- tenths of meters -->
+    <integer name="verticalSeparationStandard">30</integer>    <!-- tenths of meters -->
     <integer name="horizontalSeparationStandard">50</integer> <!-- tenths of meters -->
     <integer name="surveillanceCircleRadius">50</integer>     <!-- tenths of meters -->
 
@@ -49,5 +49,30 @@
 
     <!-- Map drawing settings -->
     <integer name="flightPathOnOff">1</integer> 	        <!-- 1=ON, 0=OFF -->
+
+    <!-- SCENARIOS -->
+    <!-- Array containing initial battery values for scenario spinner. 12400 mV is max -->
+    <integer-array name="iniBatVolt_scenario1">
+        <item>12400</item>                                   <!-- ac1 milliVolt -->
+        <item>12400</item>                                   <!-- ac2 milliVolt -->
+        <item>12400</item>                                   <!-- ac3 milliVolt -->
+    </integer-array>
+    <integer-array name="batRate_scenario1">
+        <item>0</item>                                       <!-- ac1  -->
+        <item>0</item>                                       <!-- ac2  -->
+        <item>0</item>                                       <!-- ac3  -->
+    </integer-array>
+
+
+    <integer-array name="iniBatVolt_scenario2">
+        <item>12400</item>                                   <!-- ac1 milliVolt -->
+        <item>11000</item>                                   <!-- ac2 milliVolt -->
+        <item>9000</item>                                    <!-- ac3 milliVolt -->
+    </integer-array>
+    <integer-array name="batRate_scenario2">
+        <item>0</item>                                       <!-- ac1  -->
+        <item>0</item>                                     <!-- ac2  -->
+        <item>0</item>                                       <!-- ac3  -->
+    </integer-array>
     
 </resources>

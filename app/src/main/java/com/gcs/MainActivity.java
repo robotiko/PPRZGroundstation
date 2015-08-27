@@ -18,6 +18,7 @@ import com.gcs.helpers.LogHelper;
 import com.gcs.helpers.PerformanceCalcHelper;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -68,6 +69,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
@@ -116,6 +118,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private ArrayList<String>         conflictGroupList     = new ArrayList<>();
     private List<Integer>             groupSelectedAircraft = new ArrayList<>();
     private List<Circle>              relayCommCircles      = new ArrayList<>();
+    private List<Integer>             batRateList           = new ArrayList<>();
 
 	private Home home;
 
@@ -126,10 +129,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //    private int relayUAV   = 0;                     //Set to 0 if none serves as relay (yet)
     private double performanceScore = 0f;
     private int selectedWp = 0;
+    private GroundOverlay ROIOverlay;
 
     //Declaration of items needed for mission blocks display
-    private MenuItem menuBlockSpinner = null, menuAircraftSpinner = null;
-    private Spinner blockSpinner, aircraftSpinner;
+    private MenuItem menuBlockSpinner = null, menuAircraftSpinner = null, menuScenarioSpinner = null;
+    private Spinner blockSpinner, aircraftSpinner, scenarioSpinner;
     Menu menu;
 
 	@Override
@@ -169,28 +173,28 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // TEMPORARY SETTING OF HOME LOCATION
 //        LatLng homeLocation = new LatLng(51.990826, 4.378248); //AE
 //        LatLng homeLocation = new LatLng(43.563967, 1.481951); //ENAC
-//        LatLng homeLocation = new LatLng(43.46223, 1.27289); //airfield ENAC
-        LatLng homeLocation = new LatLng(52.004523, 5.894406); //Zoo
+        LatLng homeLocation = new LatLng(43.46223, 1.27289); //airfield ENAC
+//        LatLng homeLocation = new LatLng(52.004523, 5.894406); //Zoo
         home.setHomeLocation(homeLocation);
 
         //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
-//        mAircraft.put(2, new Aircraft(getApplicationContext()));
-////        mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180); //Middle
-//        mAircraft.get(2).setLlaHdg(434654440, 12767810, 0, (short) 180); //North
-////        mAircraft.get(2).setLlaHdg(434621910, 12673600, 0, (short) 180); //West
-//        mAircraft.get(2).setAGL(90);
-//        mAircraft.get(2).setBatteryState(10000, 45, 1);
-//        mAircraft.get(2).setDistanceHome(homeLocation);
-//		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
-//
-//        mAircraft.put(3, new Aircraft(getApplicationContext()));
-////		mAircraft.get(3).setLlaHdg(434651420, 12756540, 0, (short) 300);
-//		mAircraft.get(3).setLlaHdg(434666020, 12774780, 0, (short) 300);
-//		mAircraft.get(3).setAGL(90);
-//		mAircraft.get(3).setBatteryState(9000, 1, 1);
-//		mAircraft.get(3).setDistanceHome(homeLocation);
-//		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
-//
+        mAircraft.put(2, new Aircraft(getApplicationContext()));
+//        mAircraft.get(2).setLlaHdg(434622300, 12728900, 0, (short) 180); //Middle
+        mAircraft.get(2).setLlaHdg(434654440, 12767810, 0, (short) 180); //North
+//        mAircraft.get(2).setLlaHdg(434621910, 12673600, 0, (short) 180); //West
+        mAircraft.get(2).setAGL(90);
+        mAircraft.get(2).setBatteryState(10000, 45, 1);
+        mAircraft.get(2).setDistanceHome(homeLocation);
+		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
+
+        mAircraft.put(3, new Aircraft(getApplicationContext()));
+//		mAircraft.get(3).setLlaHdg(434651420, 12756540, 0, (short) 300);
+		mAircraft.get(3).setLlaHdg(434666020, 12774780, 0, (short) 300);
+		mAircraft.get(3).setAGL(50);
+		mAircraft.get(3).setBatteryState(9000, 1, 1);
+		mAircraft.get(3).setDistanceHome(homeLocation);
+		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
+
 //        mAircraft.put(4, new Aircraft(getApplicationContext()));
 //        mAircraft.get(4).setLlaHdg(434610520, 12714270, 0, (short) 180); //Inside ROI
 ////        mAircraft.get(4).setLlaHdg(434622110, 12632490, 0, (short) 180); //Outside ROI
@@ -286,6 +290,33 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Temporarily fill the aircraft spinner here
         updateAircraftSpinner();
 
+        ////////////SCENARIO SPINNER////////////
+        //Set up the spinner in the action bar for the scenarios and create a handle
+        menuScenarioSpinner = menu.findItem(R.id.scenario_spinner);
+        scenarioSpinner     = (Spinner) MenuItemCompat.getActionView(menuScenarioSpinner);
+
+        //Listener on item selection in the spinner
+        scenarioSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            //Define what should happen when an item in the spinner is selected
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                //Set the scenario (ROI location(s) and aircraft battery settings) if one is selected
+                setScenario(position);
+            }
+
+            //Define what should happen if no item is selected in the spinner
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                //Do nothing
+            }
+        });
+
+        //Fill the scenario spinner
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.scenario_array, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        scenarioSpinner.setAdapter(adapter);
+
+        ////////////////
         this.menu = menu;
         return true;
 	}
@@ -351,6 +382,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	Runnable interfaceUpdater = new Runnable() {
 	    @Override 
 	    public void run() {
+
+            //Update the battery values (reducing with app, external input should be overridden)
+            if(!batRateList.isEmpty()) {
+                for (int i = 1; i <= mAircraft.size(); i++) {
+                    mAircraft.get(i).setBatteryState(mAircraft.get(i).getBattVolt() - batRateList.get(i-1),-1,-1);
+                }
+            }
 
             //Check for aircraft relay status
             checkAircraftTaskStatus();
@@ -773,6 +811,55 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         aircraftSpinner.setAdapter(spinnerArrayAdapter);
     }
 
+    //Method to set the settings for the executed test scenario
+    private void setScenario(int scenarioNumber) {
+        //Get the location(s) of the ROI(s)
+        String[] latLng = null;
+        int[] batValues = null;
+        int[] batRates = null;
+        List<LatLng> ROIlist= new ArrayList<>();
+        List<Integer> batList= new ArrayList<>();
+        List<Integer> batRateList= new ArrayList<>();
+
+        if(scenarioNumber != 0) {
+            if(scenarioNumber == 1) {
+                latLng = getResources().getStringArray(R.array.latLng_scenario1);
+                batValues = getResources().getIntArray(R.array.iniBatVolt_scenario1);
+                batRates = getResources().getIntArray(R.array.batRate_scenario1);
+            } else if(scenarioNumber == 2) {
+                latLng = getResources().getStringArray(R.array.latLng_scenario2);
+                batValues = getResources().getIntArray(R.array.iniBatVolt_scenario2);
+                batRates = getResources().getIntArray(R.array.batRate_scenario2);
+            }
+
+            //Loop over ROIs to put the values in lists
+            for(int i=0; i < latLng.length; i++) {
+                //Parse the LatLong values in string form to a LatLng object
+                String[] latLngSeparated = latLng[i].split(",");
+                ROIlist.add(new LatLng(Double.parseDouble(latLngSeparated[0]),Double.parseDouble(latLngSeparated[1])));
+            }
+            //Loop over battery values to put in list
+            for(int j=0; j < batValues.length; j++) {
+                //Convert battery value array to a list
+                batList.add(batValues[j]);
+                batRateList.add(batRates[j]);
+            }
+        }
+
+        //Draw the Region Of Interest (ROI) on the map
+        drawROI(ROIlist);
+        //Set battery values of the aircraft
+        setBatteryScenario(batList);
+        //Set battery depletion rates aircraft
+        this.batRateList = batRateList;
+    }
+
+    //Method to set battery levels
+    private void setBatteryScenario(List<Integer> iniBatValues) {
+        for (int i = 0; i < iniBatValues.size(); i++) {
+            mAircraft.get(i+1).setBatteryState(iniBatValues.get(i), 1, 1);
+        }
+    }
 
 	////////OTHER COMMUNICATION FUNCTIONS
 	
@@ -817,7 +904,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Connect to the service on button click if no connection was established yet
     public void onButtonRequest(View view) {
     	if (!isConnected)
-    		connectToDroneClient();
+            connectToDroneClient();
 		else
 			try {
 				mServiceClient.disconnectDroneClient();
@@ -1065,8 +1152,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         /* TODO move home marker drawing to the switch for incoming data when the service sends home information */
         drawHomeMarker();
 
-        //Draw the Region Of Interest on the map (Used for test scenario)
-        drawROI();
+//        //Draw the Region Of Interest on the map (Used for test scenario)
+//        drawROI();
 	}
 
 	/* Marker listener for (de)selecttion aircraft icons, waypoint marker actions and home marker selection */
@@ -1208,7 +1295,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void onMapReady(GoogleMap map) {
 
                 //Loop over all aircraft
-                for(int aircraftNumber=1; aircraftNumber<mAircraft.size()+1; aircraftNumber++) {
+                for (int aircraftNumber = 1; aircraftNumber < mAircraft.size() + 1; aircraftNumber++) {
 
                     //Clear marker from map (if it exists)
                     if (mAircraft.get(aircraftNumber).acMarker != null) {
@@ -1248,12 +1335,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 View v = getLayoutInflater().inflate(R.layout.info_window_detail, null);
 
                                 //Get handles to the textviews
-                                TextView infoAirtime  = (TextView) v.findViewById(R.id.info_airtime);
+                                TextView infoAirtime = (TextView) v.findViewById(R.id.info_airtime);
                                 TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
-                                TextView infoAlt      = (TextView) v.findViewById(R.id.info_alt);
-                                TextView infoTask     = (TextView) v.findViewById(R.id.info_task);
-                                TextView infoMode     = (TextView) v.findViewById(R.id.info_mode);
-                                TextView infoBattery  = (TextView) v.findViewById(R.id.info_battery);
+                                TextView infoAlt = (TextView) v.findViewById(R.id.info_alt);
+                                TextView infoTask = (TextView) v.findViewById(R.id.info_task);
+                                TextView infoMode = (TextView) v.findViewById(R.id.info_mode);
+                                TextView infoBattery = (TextView) v.findViewById(R.id.info_battery);
 
                                 //Set the values in the information windows
                                 infoAirtime.setText("Airtime: " + "AIRTIME HERE!");
@@ -1261,7 +1348,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(acNumber).getAGL()) + "m");
                                 infoBattery.setText("Battery voltage: " + String.valueOf(mAircraft.get(acNumber).getBattVolt()) + "mV");
                                 //Current block
-                                if(mAircraft.get(acNumber).getCurrentBlock()==null) {
+                                if (mAircraft.get(acNumber).getCurrentBlock() == null) {
                                     infoMode.setText("Current block: " + getResources().getString(R.string.no_blocks_loaded));
                                 } else {
                                     infoMode.setText("Current block: " + mAircraft.get(acNumber).getCurrentBlock());
@@ -1282,13 +1369,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         });
 
                         //Set the marker to show the information window
-                        if(mAircraft.get(aircraftNumber).getShowInfoWindow()) {
+                        if (mAircraft.get(aircraftNumber).getShowInfoWindow()) {
                             mAircraft.get(aircraftNumber).acMarker.showInfoWindow();
                         }
                     }
 
                     ///* FLIGHT PATH  *///
-                    if(getResources().getInteger(R.integer.flightPathOnOff)==1 && !mAircraft.get(aircraftNumber).getFlightPath().isEmpty()) {
+                    if (getResources().getInteger(R.integer.flightPathOnOff) == 1 && !mAircraft.get(aircraftNumber).getFlightPath().isEmpty()) {
                         // If the flight path has been drawn before, remove it to be updated
                         if (mAircraft.get(aircraftNumber).flightTrackPoly != null) {
                             mAircraft.get(aircraftNumber).flightTrackPoly.remove();
@@ -1309,7 +1396,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                     //If the operator wants to see coverage and only for aircraft with the surveillance task status
                     if (showCoverage && mAircraft.get(aircraftNumber).getTaskStatus() == TaskStatus.SURVEILLANCE) {
-    //                    if(mAircraft.get(aircraftNumber).getCurrentSurveyLoc()!= null) {
+                        //                    if(mAircraft.get(aircraftNumber).getCurrentSurveyLoc()!= null) {
 
                         //Make dynamic (multiple aircraft)
 
@@ -1317,7 +1404,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         Bitmap baseIcon = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888);
                         Canvas circleCanvas = new Canvas(baseIcon);
                         Paint circlePaint = new Paint();
-                        if(mAircraft.get(aircraftNumber).getCommunicationSignal() > 0) {//Green color for aircraft that are within the communication range
+                        if (mAircraft.get(aircraftNumber).getCommunicationSignal() > 0) {//Green color for aircraft that are within the communication range
                             circlePaint.setColor(0x4000ff00);
                         } else { //Red color for aircraft that are out of the communication range
                             circlePaint.setColor(0x40ff0000);
@@ -1333,12 +1420,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                         GroundOverlayOptions ROI = new GroundOverlayOptions()
                                 .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
-    //                            .position(mAircraft.get(1).getCurrentSurveyLoc(), acCoverageRadius * 2, acCoverageRadius * 2); //m
-                                .position(mAircraft.get(aircraftNumber).getLatLng(), acCoverageRadius*2, acCoverageRadius*2); //m
+                                        //                            .position(mAircraft.get(1).getCurrentSurveyLoc(), acCoverageRadius * 2, acCoverageRadius * 2); //m
+                                .position(mAircraft.get(aircraftNumber).getLatLng(), acCoverageRadius * 2, acCoverageRadius * 2); //m
 
                         // Get back the relay Circle object
                         mAircraft.get(aircraftNumber).coverageCircle = map.addGroundOverlay(ROI);
-    //                    }
+                        //                    }
                     }
                 }
             }
@@ -1512,29 +1599,33 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     ///////* Indicate a region of interest on the map *///////
-    private void drawROI() {
-
+    private void drawROI(final List<LatLng> ROIlocs) {
         //Call GoogleMaps
         mapFragment.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap map) {
 
-                LatLng ROIloc = home.getHomeLocation();
+                if(ROIOverlay != null) {
+                    ROIOverlay.remove();
+                }
 
-                //Bitmap and canvas to draw a circle on
-                int circleSize = 300;
-                Bitmap baseIcon = Bitmap.createBitmap(circleSize, circleSize, Bitmap.Config.ARGB_8888);
-                Canvas circleCanvas = new Canvas(baseIcon);
-                Paint circlePaint = new Paint();
-                circlePaint.setColor(0x400099CC);
-                circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-                circleCanvas.drawCircle(circleSize / 2, circleSize / 2, circleSize / 2, circlePaint);
+                for(int n = 0; n < ROIlocs.size(); n++) {
 
-                GroundOverlayOptions ROI = new GroundOverlayOptions()
-                        .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
-                        .position(ROIloc, ROIRadius * 2, ROIRadius * 2); //m
+                    //Bitmap and canvas to draw a circle on
+                    int circleSize = 300;
+                    Bitmap baseIcon = Bitmap.createBitmap(circleSize, circleSize, Bitmap.Config.ARGB_8888);
+                    Canvas circleCanvas = new Canvas(baseIcon);
+                    Paint circlePaint = new Paint();
+                    circlePaint.setColor(0x400099CC);
+                    circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+                    circleCanvas.drawCircle(circleSize / 2, circleSize / 2, circleSize / 2, circlePaint);
 
-                map.addGroundOverlay(ROI);
+                    GroundOverlayOptions ROI = new GroundOverlayOptions()
+                            .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
+                            .position(ROIlocs.get(n), ROIRadius * 2, ROIRadius * 2); //m
+                    //TODO: enable saving multiple groundoverlays in a list
+                    ROIOverlay = map.addGroundOverlay(ROI);
+                }
             }
         });
     }
