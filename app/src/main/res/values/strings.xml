@@ -18,7 +18,7 @@
     <string name="land_button">Land</string>
     <string name="take_off_button">Take-Off</string>
     <string name="go_home_button">Go Home</string>
-    <string name="load_waypoints_button">Load\nWaypoints</string>
+    <string name="load_waypoints_button">Refresh\nWaypoints</string>
     <string name="load_blocks_button">Load\nBlocks</string>
 
     <!-- Block names -->

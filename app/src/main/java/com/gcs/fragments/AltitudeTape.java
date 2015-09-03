@@ -505,9 +505,8 @@ public class AltitudeTape extends Fragment {
         //Calculate the label location based on the length of the bar and the vertical flight range airspace
 		int lengthBar = groundLevelTape - flightCeilingTape;
 		double verticalRange = flightCeiling - groundLevel;
-		int labelLocation = (int) (groundLevelTape-((altitude/verticalRange)*lengthBar));
-		
-		return labelLocation;
+
+		return (int) (groundLevelTape-((altitude/verticalRange)*lengthBar)); //labelLocation
 	}
 	
 	//Convert label location on the tape to an altitude 
@@ -516,9 +515,8 @@ public class AltitudeTape extends Fragment {
         //Calculate the aircraft altitude based on length of the bar, label location and the vertical flight range airspace
 		int lengthBar = groundLevelTape - flightCeilingTape;
 		double verticalRange = flightCeiling - groundLevel;
-		double altitude = verticalRange*((double) groundLevelTape-labelLocation)/lengthBar;
 		
-		return altitude;
+		return verticalRange*((double) groundLevelTape-labelLocation)/lengthBar; //altitude
 	}
 
 	//Set the target altitude to the service

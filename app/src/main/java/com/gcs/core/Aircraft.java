@@ -40,10 +40,10 @@ public class Aircraft {
     private static SparseArray<Integer> AcConnectionList = new SparseArray<>();
 
     //Constructor in which the total aircraft count is updated and the label character is determined
-	public Aircraft(Context context){
+	public Aircraft(Context context, int acNumber){
 	    this.context = context;
         aircraftCount++;
-        aircraftNumber = aircraftCount;
+        aircraftNumber = acNumber;
         AcConnectionList.put(aircraftNumber, 0);
         labelCharacter = String.valueOf((char) (64 + aircraftCount));
 	}
@@ -257,8 +257,9 @@ public class Aircraft {
 	}
 	
 	public LatLng getLatLng() {
-		LatLng latLng = new LatLng(mPosition.getLat()*1e-7, mPosition.getLon()*1e-7);
-		return latLng;
+//		LatLng latLng = new LatLng(mPosition.getLat()*1e-7, mPosition.getLon()*1e-7);
+//		return latLng;
+        return new LatLng(mPosition.getLat()*1e-7, mPosition.getLon()*1e-7);
 	}
 
 //	public int getAlt() {
@@ -345,8 +346,9 @@ public class Aircraft {
 	}
 	
 	public LatLng getWpLatLng(int wpNumber) {
-		LatLng latLng = new LatLng(waypoints.get(wpNumber).getLat(),waypoints.get(wpNumber).getLon());
-		return latLng;
+//		LatLng latLng = new LatLng(waypoints.get(wpNumber).getLat(),waypoints.get(wpNumber).getLon());
+//		return latLng;
+		return new LatLng(waypoints.get(wpNumber).getLat(),waypoints.get(wpNumber).getLon());
 	}
 
     public List<LatLng> getWpLatLngList() {
@@ -544,6 +546,10 @@ public class Aircraft {
                 flightPath.add(newPoint);
             }
         }
+    }
+
+    public void clearFlightPath() {
+        flightPath.clear();
     }
 
     //////////////////////////////////////////////////////

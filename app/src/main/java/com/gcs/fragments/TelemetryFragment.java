@@ -12,8 +12,9 @@ import android.widget.TextView;
 public class TelemetryFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.telemetry, container, false);
-		return view;
+//		View view = inflater.inflate(R.layout.telemetry, container, false);
+//		return view;
+		return inflater.inflate(R.layout.telemetry, container, false);
 	}
 
 	public void setTextColor(int color) {

@@ -11,7 +11,7 @@ import com.google.android.gms.maps.model.LatLng;
 public class PerformanceCalcHelper {
 
     public static final double calcPerformance(int ROIRadius, int acCoverageRadius, LatLng ROIcenter, SparseArray<Aircraft> mAircraft) {
-
+        //TODO: add penalty for red- and completely empty battery
         return ROIcovered(ROIRadius,acCoverageRadius,ROIcenter,mAircraft)*LossOfCommunicationCheck(mAircraft)*ConflictCheck(mAircraft)*100; //Percentage;
     }
 
@@ -23,18 +23,20 @@ public class PerformanceCalcHelper {
         //Calculate the overlap between covered region by aircraft and the ROI area
         double overlapArea = 0;
 
-        for(int i = 1; i<=mAircraft.size(); i++) { //Loop over all aircraft
-            if(mAircraft.get(i).getCommunicationSignal()>0 && mAircraft.get(i).getTaskStatus() == TaskStatus.SURVEILLANCE) { //Only calculate coverage if the aircraft can communicate with the ground station and has a surveillance status (at correct altitude)
+        for(int i=0; i<mAircraft.size(); i++) { //Loop over all aircraft
+            int iKey = mAircraft.keyAt(i);
+            if(mAircraft.get(iKey).getCommunicationSignal()>0 && mAircraft.get(iKey).getTaskStatus() == TaskStatus.SURVEILLANCE) { //Only calculate coverage if the aircraft can communicate with the ground station and has a surveillance status (at correct altitude)
 
                 //Add overlap between aircraft coverage and ROI
-                double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIcenter, mAircraft.get(i).getLatLng());
+                double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIcenter, mAircraft.get(iKey).getLatLng());
                 double doubleOverlap = 0;
-    /* TODO: account for overlap by decreasing performance score in case of overlap/violation of the separation standard instead of calculating overlap */
+                /* TODO: account for overlap by decreasing performance score in case of overlap/violation of the separation standard instead of calculating overlap */
                 //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!
                 if (overlap > 0) { //If not outside the ROI
-                    for (int j = i + 1; j <= mAircraft.size(); j++) {
+                    for (int j=i+1; j<mAircraft.size(); j++) {
+                        int jKey = mAircraft.keyAt(j);
                         //Account for overlap of the two UAVs
-                        doubleOverlap += circleOverlap(acCoverageRadius, acCoverageRadius, mAircraft.get(i).getLatLng(), mAircraft.get(j).getLatLng());
+                        doubleOverlap += circleOverlap(acCoverageRadius, acCoverageRadius, mAircraft.get(iKey).getLatLng(), mAircraft.get(jKey).getLatLng());
                     }
                 }
                 //Calculate the total coverage ove the ROI
@@ -84,8 +86,9 @@ public class PerformanceCalcHelper {
         int activeAircraft = 0;
 
         //Loop over aircraft in system
-        for(int i=1; i<mAircraft.size()+1; i++) {
-            if(mAircraft.get(i).getCommunicationSignal()>0) {
+        for(int i=0; i<mAircraft.size(); i++) {
+            int acNumber = mAircraft.keyAt(i);
+            if(mAircraft.get(acNumber).getCommunicationSignal()>0) {
                 activeAircraft++;
             }
         }
@@ -98,8 +101,9 @@ public class PerformanceCalcHelper {
         int noConflictAircraft = mAircraft.size();
 
         //Loop over aircraft in system
-        for(int i=1; i<mAircraft.size()+1; i++) {
-            if(mAircraft.get(i).getConflictStatus() == ConflictStatus.RED) {
+        for(int i=0; i<mAircraft.size(); i++) {
+            int acNumber = mAircraft.keyAt(i);
+            if(mAircraft.get(acNumber).getConflictStatus() == ConflictStatus.RED) {
                 noConflictAircraft--;
             }
         }
