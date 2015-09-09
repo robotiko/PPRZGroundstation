@@ -205,21 +205,21 @@ public class Aircraft {
     }
 
     //////////// STATE ////////////
-//    public boolean isArmed() {
-//        return mState.isArmed();
-//    }
-//
-//    public boolean isFlying() {
-//        return mState.isFlying();
-//    }
-//
-//    public void setIsFlying(boolean newState) {
-//    	mState.setIsFlying(newState);
-//    }
-//
-//    public void setArmed(boolean newState) {
-//    	mState.setArmed(newState);
-//    }
+    public boolean isArmed() {
+        return mState.isArmed();
+    }
+
+    public boolean isFlying() {
+        return mState.isFlying();
+    }
+
+    public void setIsFlying(boolean newState) {
+    	mState.setIsFlying(newState);
+    }
+
+    public void setArmed(boolean newState) {
+    	mState.setArmed(newState);
+    }
 
     public void updateConflictStatus() { mState.updateConflictStatus(); }
 

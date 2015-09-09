@@ -8,6 +8,8 @@ import com.aidllib.core.model.Altitude;
 import com.aidllib.core.model.Attitude;
 import com.aidllib.core.model.Heartbeat;
 import com.aidllib.core.model.Speed;
+import com.aidllib.core.model.State;
+
 import com.aidllib.core.model.Battery;
 import com.aidllib.core.model.Position;
 import com.gcs.core.ConflictStatus;
@@ -22,7 +24,7 @@ import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-//import com.sharedlib.model.State; //TODO change this to com.aidl.core.model.State once available in the aidl lib;
+
 import com.gcs.core.Aircraft;
 import com.gcs.fragments.AltitudeTape;
 import com.gcs.fragments.MissionButtonFragment;
@@ -523,11 +525,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    			break;
 	    		}
 
-	    		/* TODO Enable the state service case once available or remove this */
-//	    		case "STATE_UPDATED": {
-//	    			updateState();
-//	    			break;
-//	    		}
+	    		case "STATE_UPDATED": {
+	    			updateState(acNumber);
+	    			break;
+	    		}
 	    		
 	    		case "WAYPOINTS_UPDATED": {
 	    			updateWaypoints(acNumber);
@@ -674,23 +675,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		});
 	}
 	
-//	/**
-//	 * This runnable object is created to update state
-//	 */
-//	private void updateState() {
-//		handler.post(new Runnable() {
-//			@Override
-//			public void run() {
-//				try {
-//					State mState = getAttribute("STATE",acNumber);
-//                    mAircraft.get(acNumber).setIsFlying(mState.isFlying());
-//                    mAircraft.get(acNumber).setArmed(mState.isArmed());
-//				} catch (Throwable t) {
-//					Log.e(TAG, "Error while updating state", t);
-//				}
-//			}
-//		});
-//	}
+	/**
+	 * This runnable object is created to update state
+	 */
+	private void updateState(final int acNumber) {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					State mState = getAttribute("STATE",acNumber);
+                    mAircraft.get(acNumber).setIsFlying(mState.isFlying());
+                    mAircraft.get(acNumber).setArmed(mState.isArmed());
+				} catch (Throwable t) {
+					Log.e(TAG, "Error while updating state", t);
+				}
+			}
+		});
+	}
 	
 	/**
 	 * This runnable object is created to update waypoints
