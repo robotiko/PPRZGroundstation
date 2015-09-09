@@ -165,10 +165,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //TODO: remove hardcoded home location once done debugging
 		// Instantiate home object
 		home = new Home();
-        home.setHomeLocation(new LatLng(43.46223, 1.27289)); //airfield ENAC
+//        home.setHomeLocation(new LatLng(43.46223, 1.27289)); //airfield ENAC
 //        home.setHomeLocation(new LatLng(51.990826, 4.378248)); //AE
 //        home.setHomeLocation(new LatLng(43.563967, 1.481951)); //ENAC
-//        home.setHomeLocation(new LatLng(52.004523, 5.894406)); //Zoo
+        home.setHomeLocation(new LatLng(52.004523, 5.894406)); //Zoo
 
         //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
 //        mAircraft.put(2, new Aircraft(getApplicationContext(),2));
@@ -180,13 +180,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //        mAircraft.get(2).setDistanceHome(home.getHomeLocation());
 //		mAircraft.get(2).setRollPitchYaw(0, 0, 180);
 
-        mAircraft.put(3, new Aircraft(getApplicationContext(),3));
-//		mAircraft.get(3).setLlaHdg(434651420, 12756540, 0, (short) 300);
-		mAircraft.get(3).setLlaHdg(434666020, 12774780, 0, (short) 300);
-		mAircraft.get(3).setAGL(50);
-		mAircraft.get(3).setBatteryState(9000, 1, 1);
-		mAircraft.get(3).setDistanceHome(home.getHomeLocation());
-		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
+//        mAircraft.put(3, new Aircraft(getApplicationContext(),3));
+////		mAircraft.get(3).setLlaHdg(434651420, 12756540, 0, (short) 300);
+//		mAircraft.get(3).setLlaHdg(434666020, 12774780, 0, (short) 300);
+//		mAircraft.get(3).setAGL(50);
+//		mAircraft.get(3).setBatteryState(9000, 1, 1);
+//		mAircraft.get(3).setDistanceHome(home.getHomeLocation());
+//		mAircraft.get(3).setRollPitchYaw(0, 0, 300);
 
 //        mAircraft.put(4, new Aircraft(getApplicationContext()));
 //        mAircraft.get(4).setLlaHdg(434610520, 12714270, 0, (short) 180); //Inside ROI
@@ -402,10 +402,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             //Update the altitude tape (if altitude is available)
             //TODO: weer aanzetten!
-//            if (isAltitudeUpdated){
-//                updateAltitudeTape();
-//                isAltitudeUpdated = false;
-//            }
+            if (isAltitudeUpdated){
+                updateAltitudeTape();
+                isAltitudeUpdated = false;
+            }
 
             //Clear the list of aircraft that are on the same level (after the altitude tape is updated)
             sameLevelAircraft.clear();
@@ -540,7 +540,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
                 case "CURRENT_BLOCK_UPDATED": {
-                    Log.d("TEST","CurrentBlockUpdated");
                     updateMissionBlocksSelection(acNumber);
                     break;
                 }
@@ -706,19 +705,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     carrier.setClassLoader(Waypoint.class.getClassLoader());
                     List<Waypoint> waypoints = carrier.getParcelableArrayList("WAYPOINTS");
 
-                    /* TODO: Filter on seq number to get the wp that is used for circling */
                     //Clear the waypoint list if the aircraft already has waypoint data
                     if (mAircraft.get(acNumber).getNumberOfWaypoints() > 0) {
                         mAircraft.get(acNumber).clearWpList();
                     }
 
-                    //Loop over the newly received waypoint list to add them individually to the list of the corresponding aircraft
-                    for (int i = 0; i < waypoints.size(); i++) {
-                        mAircraft.get(acNumber).addWaypoint(Math.toDegrees(waypoints.get(i).getLat()), Math.toDegrees(waypoints.get(i).getLon()), waypoints.get(i).getAlt(), (short) waypoints.get(i).getSeq(), waypoints.get(i).getTargetSys(), waypoints.get(i).getTargetComp());
+                    //Only take the survey waypoint (wp number 3)
+                    mAircraft.get(acNumber).addWaypoint(Math.toDegrees(waypoints.get(3).getLat()), Math.toDegrees(waypoints.get(3).getLon()), waypoints.get(3).getAlt(), (short) waypoints.get(3).getSeq(), waypoints.get(3).getTargetSys(), waypoints.get(3).getTargetComp());
 
-                        //Filter survey waypoints
-                        //If wpName contains(surveyWpName), save it in a surveyWpList in the aircraft class
-                    }
+
+                    //Loop over the newly received waypoint list to add them individually to the list of the corresponding aircraft
+//                    for (int i = 0; i < waypoints.size(); i++) {
+//                        mAircraft.get(acNumber).addWaypoint(Math.toDegrees(waypoints.get(i).getLat()), Math.toDegrees(waypoints.get(i).getLon()), waypoints.get(i).getAlt(), (short) waypoints.get(i).getSeq(), waypoints.get(i).getTargetSys(), waypoints.get(i).getTargetComp());
+//
+//                        //Filter survey waypoints
+//                        //If wpName contains(surveyWpName), save it in a surveyWpList in the aircraft class
+//                    }
 
                     //Call the method that shows the waypoints on the map
                     waypointUpdater(acNumber);
@@ -789,7 +791,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         // Get current block
                         Bundle carrier = mServiceClient.getAttribute("CURRENT_BLOCK", acNumber);
                         int currentBlock = carrier.getInt("CURRENT_BLOCK");
-
+                        Log.d("CurrentBlockUpdated",String.valueOf(currentBlock));
                         //Update the Mission block spinner selection
                         blockSpinner.setSelection(currentBlock);
 
@@ -891,11 +893,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         ArrayList<Integer> serverPortList = new ArrayList<>();
         serverPortList.add(5001);
         serverPortList.add(5002);
+        serverPortList.add(5003);
 
         //List of system ids used (in the same order as the udp ports)
         ArrayList<Integer> sysIdList = new ArrayList<>();
         sysIdList.add(1);
         sysIdList.add(2);
+        sysIdList.add(3);
 
         Bundle extraParams = new Bundle();
 
@@ -1072,13 +1076,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             Toast.makeText(getApplicationContext(), "No aircraft selected!", Toast.LENGTH_SHORT).show();
         //request takeoff if connected and the mission blocks are loaded
         } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
-            //Select the takeoff block and request the service to execute it
             try {
+                //Set launch button to active, select the takeoff block and request the service to execute it
                 Bundle carrier = new Bundle();
-                carrier.putString("TYPE","BLOCK_SELECTED");
-                carrier.putShort("SEQ",(short) mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.takeoff_block)));
-                mServiceClient.onCallback(carrier,selectedAc);
-
+                carrier.putString("TYPE", "REQUEST_TAKE_OFF");
+                carrier.putShort("SEQ", (short) mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.takeoff_block)));
+                mServiceClient.onCallback(carrier, selectedAc);
             } catch (RemoteException e) {
                 Log.e(TAG,"Error while requesting the service to execute the takeoff block");
             }
@@ -1495,11 +1498,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 markerPaint.setFakeBoldText(true);
                 markerPaint.setColor(Color.BLACK);
                 markerPaint.setTextAlign(Paint.Align.CENTER);
-//                    markerCanvas.drawText(mAircraft.get(acNumber).getLabelCharacter() + String.valueOf(i + 1), wpMarkerBitmap.getWidth() / 2, wpMarkerBitmap.getHeight() / 2 + 4, markerPaint);
-                // TODO: only show aircraft number on marker. As only one will be showed
-                markerCanvas.drawText(mAircraft.get(acNumber).getLabelCharacter() + String.valueOf(mAircraft.get(acNumber).getWpSeq(i)), wpMarkerBitmap.getWidth() / 2, wpMarkerBitmap.getHeight() / 2 + 4, markerPaint);
 
-//                    LatLng pos = new LatLng(mAircraft.get(acNumber).getWpLat(i)* 1e-7, mAircraft.get(acNumber).getWpLon(i)* 1e-7);
+                //Draw the aircraft label on the waypoint marker
+                markerCanvas.drawText(mAircraft.get(acNumber).getLabelCharacter(), wpMarkerBitmap.getWidth() / 2, wpMarkerBitmap.getHeight() / 2 + 4, markerPaint);
 
                 //Add waypoint marker to map
                 Marker wpMarker = map.addMarker(new MarkerOptions()
@@ -1507,7 +1508,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 .flat(true)
                                 .anchor((float) 0.5, (float) 0.5)
                                 .icon(BitmapDescriptorFactory.fromBitmap(wpMarkerBitmap))
-                                .snippet(String.valueOf(acNumber) + "-" + String.valueOf(mAircraft.get(acNumber).getWpSeq(i)))
+//                                .snippet(String.valueOf(acNumber) + "-" + String.valueOf(mAircraft.get(acNumber).getWpSeq(i)))
+                                .snippet(String.valueOf(acNumber) + "-" + String.valueOf(i))
                                 .draggable(true)
                 );
                 //Add the newly generated waypoint marker to the list to keep reference to it

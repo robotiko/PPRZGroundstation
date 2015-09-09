@@ -28,9 +28,10 @@ public class MissionButtonFragment extends Fragment {
         Bundle savedInstanceState) {
 		
 		// Inflate the layout for this fragment
-		rootView = inflater.inflate(R.layout.mission_buttons, container, false);
-
-        return rootView;
+//		rootView = inflater.inflate(R.layout.mission_buttons, container, false);
+//
+//        return rootView;
+        return inflater.inflate(R.layout.mission_buttons, container, false);
 	}
 
     @Override
