@@ -17,7 +17,7 @@ public class LogHelper {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    public static final void dataLogger(long initTime, String logFileName, double performanceScore, SparseArray<Aircraft> mAircraft) {
+    public static final void dataLogger(long initTime, String logFileName, int scenarioNumber, double performanceScore, SparseArray<Aircraft> mAircraft) {
 
         //Get time and date
         Calendar cal = Calendar.getInstance();
@@ -40,7 +40,7 @@ public class LogHelper {
 
             OutputStreamWriter myOutWriter = new OutputStreamWriter(f);
             //First columns are [Time, Uptime, Performance score]
-            myOutWriter.append(time + ", " + String.format("%.1f", uptime*1e-3) + ", " + performanceScore);
+            myOutWriter.append(time + ", " + String.format("%.1f", uptime*1e-3) + ", " + scenarioNumber + ", " + performanceScore);
             //Loop over all aircraft to write a line to the log file with the following data of all aircraft: [Altitude, Latitude, Longitude, Communication signal, Status/task (0=none,1=surveillance,2=relay), Conflictstatus]
             for(int i=1; i<mAircraft.size()+1; i++) {
                 /* TODO log waypoint location instead of aircraft location */

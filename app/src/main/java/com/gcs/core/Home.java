@@ -17,4 +17,10 @@ public class Home {
     public LatLng getHomeLocation() {
         return homeLocation;
     }
+
+    public void clear() {
+        homeLocation = null;
+        homeMarker = null;
+        homeCommCircle = null;
+    }
 }

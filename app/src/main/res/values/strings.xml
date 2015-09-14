@@ -45,11 +45,14 @@
 
     <!-- Locations of ROI(s)-->
     <string-array name="latLng_scenario1">
-    <item>43.46223,1.27289</item>
+    <item>52.012779,5.897388</item>
     </string-array>
 
     <string-array name="latLng_scenario2">
         <item>43.4654440,1.2767810</item>
     </string-array>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

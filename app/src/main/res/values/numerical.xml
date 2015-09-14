@@ -11,7 +11,7 @@
 
     <!-- Standard altitudes -->
     <integer name="surveillanceAltitude">50</integer>       <!-- meters -->
-    <integer name="relayAltitude">90</integer>              <!-- meters -->
+    <integer name="relayAltitude">70</integer>              <!-- meters -->
     <integer name="altitudeAccuracyDistance">2</integer>    <!-- meters -->
 
     <!-- Communication signal parameters -->
@@ -23,7 +23,7 @@
     <integer name="ROIRadius">250</integer>                 <!-- meters -->
     <integer name="acCoverageRadius">150</integer>          <!-- meters -->
 
-    <!-- ICON DRAWING -->
+    <!--****************** ICON/MAP DRAWING ******************-->
     <!-- Battery values -->
     <integer name="HalfBatteryLevel">50</integer>           <!-- percentage -->
     <integer name="LowBatteryLevel">20</integer>            <!-- percentage -->
@@ -50,7 +50,7 @@
     <!-- Map drawing settings -->
     <integer name="flightPathOnOff">1</integer> 	        <!-- 1=ON, 0=OFF -->
 
-    <!-- SCENARIOS -->
+    <!--****************** SCENARIOS ******************-->
     <!-- Array containing initial battery values for scenario spinner. 12400 mV is max -->
     <integer-array name="iniBatVolt_scenario1">
         <item>12400</item>                                   <!-- ac1 milliVolt -->
@@ -63,7 +63,6 @@
         <item>0</item>                                       <!-- ac3  -->
     </integer-array>
 
-
     <integer-array name="iniBatVolt_scenario2">
         <item>12400</item>                                   <!-- ac1 milliVolt -->
         <item>11000</item>                                   <!-- ac2 milliVolt -->
@@ -71,8 +70,23 @@
     </integer-array>
     <integer-array name="batRate_scenario2">
         <item>0</item>                                       <!-- ac1  -->
-        <item>0</item>                                     <!-- ac2  -->
+        <item>0</item>                                       <!-- ac2  -->
         <item>0</item>                                       <!-- ac3  -->
+    </integer-array>
+
+    <!--****************** CONNECTION SETTINGS ******************-->
+    <integer name="connectionType">0</integer>	            <!-- 0 = UDP connection -->
+
+    <integer-array name="udp_ports">                        <!-- udp port numbers-->
+        <item>5001</item>
+        <item>5002</item>
+        <item>5003</item>
+    </integer-array>
+
+    <integer-array name="system_ids">                       <!-- system id numbers-->
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
     </integer-array>
     
 </resources>

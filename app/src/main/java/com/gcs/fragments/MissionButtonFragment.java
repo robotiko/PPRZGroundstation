@@ -28,9 +28,6 @@ public class MissionButtonFragment extends Fragment {
         Bundle savedInstanceState) {
 		
 		// Inflate the layout for this fragment
-//		rootView = inflater.inflate(R.layout.mission_buttons, container, false);
-//
-//        return rootView;
         return inflater.inflate(R.layout.mission_buttons, container, false);
 	}
 
@@ -98,8 +95,12 @@ public class MissionButtonFragment extends Fragment {
         loadWaypointsButton.setBackgroundResource(R.drawable.wp_button_green);
     }
 
-    public void updateBlocksButton() {
-        loadBlocksButton.setBackgroundResource(R.drawable.blocks_button_green);
+    public void updateBlocksButton(boolean allBlocksLoaded) {
+        if(allBlocksLoaded) {
+            loadBlocksButton.setBackgroundResource(R.drawable.blocks_button_green);
+        } else {
+            loadBlocksButton.setBackgroundResource(R.drawable.blocks_button_blackwhite);
+        }
     }
 
     public void updateExecutedMissionButton(String currentBlock) {

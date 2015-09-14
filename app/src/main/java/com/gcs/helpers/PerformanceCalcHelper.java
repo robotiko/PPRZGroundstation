@@ -8,15 +8,17 @@ import com.gcs.core.ConflictStatus;
 import com.gcs.core.TaskStatus;
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.List;
+
 public class PerformanceCalcHelper {
 
-    public static final double calcPerformance(int ROIRadius, int acCoverageRadius, LatLng ROIcenter, SparseArray<Aircraft> mAircraft) {
+    public static final double calcPerformance(int ROIRadius, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft) {
         //TODO: add penalty for red- and completely empty battery
-        return ROIcovered(ROIRadius,acCoverageRadius,ROIcenter,mAircraft)*LossOfCommunicationCheck(mAircraft)*ConflictCheck(mAircraft)*100; //Percentage;
+        return ROIcovered(ROIRadius,acCoverageRadius,ROIList,mAircraft)*LossOfCommunicationCheck(mAircraft)*ConflictCheck(mAircraft)*100; //Percentage;
     }
 
     //Calculate the percentage of the Region of Interest (ROI) that is covered by surveillance aircraft
-    private final static double ROIcovered(int ROIRadius, int acCoverageRadius, LatLng ROIcenter, SparseArray<Aircraft> mAircraft){
+    private final static double ROIcovered(int ROIRadius, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft){
         //Region of interest parameters
         double AREA = ROIRadius*ROIRadius*Math.PI;
 
@@ -27,8 +29,9 @@ public class PerformanceCalcHelper {
             int iKey = mAircraft.keyAt(i);
             if(mAircraft.get(iKey).getCommunicationSignal()>0 && mAircraft.get(iKey).getTaskStatus() == TaskStatus.SURVEILLANCE) { //Only calculate coverage if the aircraft can communicate with the ground station and has a surveillance status (at correct altitude)
 
+                //TODO: enable multiple ROIs
                 //Add overlap between aircraft coverage and ROI
-                double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIcenter, mAircraft.get(iKey).getLatLng());
+                double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIList.get(0), mAircraft.get(iKey).getWpLatLng(0));
                 double doubleOverlap = 0;
                 /* TODO: account for overlap by decreasing performance score in case of overlap/violation of the separation standard instead of calculating overlap */
                 //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!

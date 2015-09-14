@@ -52,7 +52,7 @@ public class AltitudeTape extends Fragment {
     private boolean groupSelected = false, targetCreated = false;
     private double flightCeiling, groundLevel, MSA; //[m]
     private int draggedLabel, textGravity, backgroundImg, yellowLabel, blueLabel, grayLabel, redLabel, LargeBlueLabel, LargeRedLabel
-             ,groundLevelTape, flightCeilingTape;
+             ,groundLevelTape, flightCeilingTape, relayAltitude, surveillanceAltitude;
 
 //    //Hardcode the altitude tape endpoints
 //    private final int groundLevelTape   = 890; //0 meter
@@ -88,6 +88,9 @@ public class AltitudeTape extends Fragment {
         flightCeiling = getResources().getInteger(R.integer.flightCeiling);
         groundLevel   = getResources().getInteger(R.integer.groundLevel);
         MSA           = getResources().getInteger(R.integer.MSA);
+
+        relayAltitude        = getResources().getInteger(R.integer.relayAltitude);
+        surveillanceAltitude = getResources().getInteger(R.integer.surveillanceAltitude);
 
         //Handle to the altitude tape view
         ImageView altitudeTape = (ImageView) getView().findViewById(R.id.altitudeTapeView);
@@ -242,7 +245,6 @@ public class AltitudeTape extends Fragment {
         return new View.OnDragListener() {
             @Override
             public boolean onDrag(View v, DragEvent event) {
-
                 switch (event.getAction()) {
                     case DragEvent.ACTION_DRAG_STARTED:
                         break;
@@ -466,6 +468,23 @@ public class AltitudeTape extends Fragment {
         }
     }
 
+    public void removeSingleLabels() {
+//        if(labelList.size()!=0) {
+            for(int i=0; i<labelList.size(); i++) {
+                framelayout.removeView(getView().findViewById(labelList.get(labelList.keyAt(i))));
+            }
+            labelList.clear();
+//        }
+    }
+
+    //Method to remove all labels from the tape
+    public void clearTape() {
+        //Remove all group-, groupselected- and single labels
+        removeSingleLabels();
+        removeGroupLabels();
+        removeGroupSelectedAircraft();
+    }
+
     //Method to draw the target altitude on the altitude tape
 	public void setTargetLabel(double targetAltitude, int targetLabelId) {
 
@@ -525,15 +544,11 @@ public class AltitudeTape extends Fragment {
         //The altitude to which the user commands the aircraft to go to
 		double dropAltitude = labelLocationToAltitude(dropLocation);
 
-		//If the label is dropped outside the altitude tape, set the target altitude at the bounds.
-		if (dropAltitude < groundLevel) {
-			dropAltitude = groundLevel;
-		} else if (dropAltitude > flightCeiling) {
-			dropAltitude = flightCeiling;
-		}
-
-		/* TODO Set the target altitude to the service (change wp altitude) once this function is available */
-//		setTargetLabel(dropAltitude, 10); //Temporary setfunction to show a label
-        ((MainActivity) getActivity()).changeCurrentWpAltitude(aircraftNumber,dropAltitude);
+        //Set the new target altitude to the service
+        if(dropAltitude > ((MainActivity) getActivity()).getAircraftAltitude(aircraftNumber)) {
+            ((MainActivity) getActivity()).changeCurrentWpAltitude(aircraftNumber,relayAltitude);
+        } else {
+            ((MainActivity) getActivity()).changeCurrentWpAltitude(aircraftNumber,surveillanceAltitude);
+        }
 	}
 }

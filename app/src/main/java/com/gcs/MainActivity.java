@@ -51,6 +51,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -121,8 +122,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private List<Integer>             groupSelectedAircraft = new ArrayList<>();
     private List<Circle>              relayCommCircles      = new ArrayList<>();
     private List<Integer>             batRateList           = new ArrayList<>();
+    private List<LatLng>              ROIlist               = new ArrayList<>();
 
-	private Home home;
+	public Home home;
 
     private float verticalSeparationStandard, horizontalSeparationStandard, surveillanceCircleRadius;
     private int commMaxRange, commRelayRange, singleLabelVisibility, acCoverageRadius, ROIRadius, surveillanceAltitude, relayAltitude,altitudeAccuracyDistance;
@@ -133,6 +135,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private int selectedWp = 0;
     private GroundOverlay ROIOverlay;
     private int activeScenario = 0;
+    private LatLng origMarkerPosition;
 
     //Declaration of items needed for mission blocks display
     private MenuItem menuBlockSpinner = null, menuAircraftSpinner = null, menuScenarioSpinner = null;
@@ -170,7 +173,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 //        home.setHomeLocation(new LatLng(43.46223, 1.27289)); //airfield ENAC
 //        home.setHomeLocation(new LatLng(51.990826, 4.378248)); //AE
 //        home.setHomeLocation(new LatLng(43.563967, 1.481951)); //ENAC
-        home.setHomeLocation(new LatLng(52.004523, 5.894406)); //Zoo
+//        home.setHomeLocation(new LatLng(52.004523, 5.894406)); //Zoo
 
         //TEMPORARY DUMMY AIRCRAFT (Remove this once the service provides data of multiple aircraft)
 //        mAircraft.put(2, new Aircraft(getApplicationContext(),2));
@@ -212,7 +215,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         performanceScoreFragment = (PerformanceScoreFragment) getSupportFragmentManager().findFragmentById(R.id.performanceScoreFragment); //Battery fragment
 		altitudeTapeFragment     = (AltitudeTape) getSupportFragmentManager().findFragmentById(R.id.altitudeTapeFragment);                 //AltitudeTape fragment
 		missionButtons           = (MissionButtonFragment) getSupportFragmentManager().findFragmentById(R.id.missionButtonFragment);       //MissionButton fragment
-		
+
 		// Get the map and register for the ready callback
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -378,18 +381,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	Runnable interfaceUpdater = new Runnable() {
 	    @Override 
 	    public void run() {
-
             //Update aircraft spinner
-            if(updateAircraftSpinner && aircraftSpinner!=null) {
+            if (updateAircraftSpinner && aircraftSpinner != null) {
                 updateAircraftSpinner();
                 updateAircraftSpinner = false;
             }
 
             //Update the battery values (reducing with app values for experiment scenarios, external input should be overridden)
-            if(activeScenario!=0 && !batRateList.isEmpty()) {
+            if (activeScenario != 0 && !batRateList.isEmpty()) {
                 for (int i=0; i<mAircraft.size(); i++) {
                     int acNumber = mAircraft.keyAt(i);
-                    mAircraft.get(acNumber).setBatteryState(mAircraft.get(acNumber).getBattVolt() - batRateList.get(i-1),-1,-1);
+                    mAircraft.get(acNumber).setBatteryState(mAircraft.get(acNumber).getBattVolt() - batRateList.get(i), -1, -1);
                 }
             }
 
@@ -397,14 +399,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             checkAircraftTaskStatus();
 
             //Draw the communication range on the map
-            drawCommunicationRange(Aircraft.relayAircraft);
+            if (isConnected) {
+                drawCommunicationRange(Aircraft.relayAircraft);
+            }
 
             //check for altitude and course conflicts
             checkConflicts();
 
             //Update the altitude tape (if altitude is available)
             //TODO: weer aanzetten!
-            if (isAltitudeUpdated){
+            if (isAltitudeUpdated && isConnected) {
                 updateAltitudeTape();
                 isAltitudeUpdated = false;
             }
@@ -413,25 +417,27 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             sameLevelAircraft.clear();
 
             //Update aircraft icons and display them on the map
-            aircraftMarkerUpdater();
+            if (isConnected) {
+                aircraftMarkerUpdater();
+            }
 
             //Draw the connecting lines on the map that indicate conflicts
             drawConnectingLines();
 
             /////PERFORMANCE SCORE
             //Calculate the current performance score
-            if(home.getHomeLocation() != null) {
-                performanceScore = PerformanceCalcHelper.calcPerformance(ROIRadius, acCoverageRadius, home.getHomeLocation(), mAircraft);
+            if (ROIlist.size()!=0) {
+                performanceScore = PerformanceCalcHelper.calcPerformance(ROIRadius, acCoverageRadius, ROIlist, mAircraft);
             }
             //Set the performance score to the text view
             performanceScoreFragment.setText(String.format("%.1f", performanceScore));
 
             /////DATA LOGGING
-//            LogHelper.dataLogger(initTime, logFileName, performanceScore, mAircraft);
+//            LogHelper.dataLogger(initTime, logFileName, activeScenario, performanceScore, mAircraft);
 
             //Restart this updater after the set interval
-	    	interfaceUpdateHandler.postDelayed(interfaceUpdater, mInterval);
-	    }
+            interfaceUpdateHandler.postDelayed(interfaceUpdater, mInterval);
+        }
 	  };
 	
 	/////////////////////////COMMUNICATION/////////////////////////
@@ -602,7 +608,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     mAircraft.get(acNumber).setTargetAltitude(-mAltitude.getTargetAltitude());
 					mAircraft.get(acNumber).setAGL(-mAltitude.getAltitude());
 
-                    telemetryFragment.setText(String.format("%.1f", -mAltitude.getAltitude()));
+//                    telemetryFragment.setText(String.format("%.1f", -mAltitude.getAltitude()));
 
 					/* Set isAltitudeUpdated to true at first update of altitude (used for altitude tape updates) */
 					if(!isAltitudeUpdated) isAltitudeUpdated = true;
@@ -660,7 +666,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 				try {
 					Position mPosition = getAttribute("POSITION",acNumber);
                     mAircraft.get(acNumber).setSatVisible(mPosition.getSatVisible());
-                    mAircraft.get(acNumber).setLlaHdg(mPosition.getLat(), mPosition.getLon(), mPosition.getAlt(), (short) (mPosition.getHdg()/100));
+                    mAircraft.get(acNumber).setLlaHdg(mPosition.getLat(), mPosition.getLon(), mPosition.getAlt(), (short) (mPosition.getHdg() / 100));
                     if(home.getHomeLocation()!=null) {
                         mAircraft.get(acNumber).setDistanceHome(home.getHomeLocation());
                     }
@@ -714,21 +720,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     //Only take the survey waypoint (wp number 3)
                     mAircraft.get(acNumber).addWaypoint(Math.toDegrees(waypoints.get(3).getLat()), Math.toDegrees(waypoints.get(3).getLon()), waypoints.get(3).getAlt(), (short) waypoints.get(3).getSeq(), waypoints.get(3).getTargetSys(), waypoints.get(3).getTargetComp());
 
-
-                    //Loop over the newly received waypoint list to add them individually to the list of the corresponding aircraft
-//                    for (int i = 0; i < waypoints.size(); i++) {
-//                        mAircraft.get(acNumber).addWaypoint(Math.toDegrees(waypoints.get(i).getLat()), Math.toDegrees(waypoints.get(i).getLon()), waypoints.get(i).getAlt(), (short) waypoints.get(i).getSeq(), waypoints.get(i).getTargetSys(), waypoints.get(i).getTargetComp());
-//
-//                        //Filter survey waypoints
-//                        //If wpName contains(surveyWpName), save it in a surveyWpList in the aircraft class
-//                    }
-
                     //Call the method that shows the waypoints on the map
                     waypointUpdater(acNumber);
 
+
                     // Define the home location based on the home waypoint (standard the second waypoint)
                     if(home.getHomeLocation() == null && acNumber == 1) {
-                        LatLng newHome = new LatLng(mAircraft.get(1).getWpLat(1),mAircraft.get(1).getWpLon(1));
+                        LatLng newHome = new LatLng(Math.toDegrees(waypoints.get(1).getLat()),Math.toDegrees(waypoints.get(1).getLon()));
                         home.setHomeLocation(newHome);
                         drawHomeMarker();
                     }
@@ -737,6 +735,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     missionButtons.updateWaypointsButton();
 
                 } catch (Throwable t) {
+                    //TODO: solve catching
                     Log.e(TAG, "Error while updating waypoints", t);
                 }
             }
@@ -756,13 +755,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     mAircraft.get(acNumber).missionBlocks = carrier.getStringArrayList("BLOCKS");
 
                     //Update the blocks request button
-                    missionButtons.updateBlocksButton();
-
-                    //Update the dropdown menu with the block names
-                    //TODO: Change to current selected aircraft
-                    if(acNumber==1) {
-                        updateMissionBlocksSpinner();
-                    }
+                    missionButtons.updateBlocksButton(true);
                 } catch (RemoteException e) {
                     Log.e(TAG, "Error while updating mission blocks");
                 }
@@ -771,13 +764,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     //Method to update the mission block dropdown menu
-    private void updateMissionBlocksSpinner() {
-        //TODO: make aircraft number dynamic
-        //Create an array adapter with the mission block names
-        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mAircraft.get(1).missionBlocks);
-        spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        //Apply the array adapter to the block spinner to update the blocks in the dropdown menu
-        blockSpinner.setAdapter(spinnerArrayAdapter);
+    private void updateMissionBlocksSpinner(int acNumber) {
+//        if(!mAircraft.get(acNumber).missionBlocks.isEmpty()) {
+//            //Create an array adapter with the mission block names
+//            ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mAircraft.get(acNumber).missionBlocks);
+//            spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//            //Apply the array adapter to the block spinner to update the blocks in the dropdown menu
+//            blockSpinner.setAdapter(spinnerArrayAdapter);
+//        }
     }
 
     //Method to update the selected block in the dropdown menu to the active one
@@ -792,7 +786,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         // Get current block
                         Bundle carrier = mServiceClient.getAttribute("CURRENT_BLOCK", acNumber);
                         int currentBlock = carrier.getInt("CURRENT_BLOCK");
-                        Log.d("CurrentBlockUpdated",String.valueOf(currentBlock));
+                        Log.d("CurrentBlockUpdated", String.valueOf(currentBlock));
                         //Update the Mission block spinner selection
                         blockSpinner.setSelection(currentBlock);
 
@@ -865,6 +859,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
 
+        //Set the ROI list for performance calculation
+        if(!ROIlist.isEmpty()) {
+            this.ROIlist = ROIlist;
+        } else {
+            this.ROIlist.clear();
+        }
+
         //Draw the Region Of Interest (ROI) on the map
         drawROI(ROIlist);
         //Set battery values of the aircraft
@@ -875,35 +876,31 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Method to set battery levels
     private void setBatteryScenario(List<Integer> iniBatValues) {
-        for (int i = 0; i < iniBatValues.size(); i++) {
-            mAircraft.get(i+1).setBatteryState(iniBatValues.get(i), 1, 1);
+        if(!iniBatValues.isEmpty()) {
+            for (int i = 0; i < mAircraft.size(); i++) {
+                mAircraft.get(mAircraft.keyAt(i)).setBatteryState(iniBatValues.get(i), 1, 1);
+            }
         }
     }
 
 	////////OTHER COMMUNICATION FUNCTIONS
 	
 	private ConnectionParameter retrieveConnectionParameters() {
-		
-		/* TODO: Fetch connection type */
-		
-        final int connectionType = 0; // UDP connection
-        
-        /* TODO: Fetch server port */
+		//Fetch connection type from resources
+        final int connectionType = getResources().getInteger(R.integer.connectionType);
 
-        //List of the udp port used
-        ArrayList<Integer> serverPortList = new ArrayList<>();
-        serverPortList.add(5001);
-        serverPortList.add(5002);
-        serverPortList.add(5003);
+        //Fetch server ports and system id numbers from resources
+        ArrayList<Integer> serverPortList = new ArrayList<>(); //List of the udp port used
+        ArrayList<Integer> sysIdList = new ArrayList<>();      //List of system ids used (in the same order as the udp ports)
 
-        //List of system ids used (in the same order as the udp ports)
-        ArrayList<Integer> sysIdList = new ArrayList<>();
-        sysIdList.add(1);
-        sysIdList.add(2);
-        sysIdList.add(3);
+        int ports[] = getResources().getIntArray(R.array.udp_ports);
+        int ids[] = getResources().getIntArray(R.array.system_ids);
+        for(int i=0; i<ports.length; i++) {
+            serverPortList.add(ports[i]);
+            sysIdList.add(ids[i]);
+        }
 
         Bundle extraParams = new Bundle();
-
         ConnectionParameter connParams;
         switch (connectionType) {
             case 0:
@@ -934,16 +931,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     public void onButtonRequest(View view) {
     	if (!isConnected) {
             connectToDroneClient();
-
-            //If a flight path was tracked before, clear it
-//            for(int i=1; i<=mAircraft.size(); i++) {
-//                if(!mAircraft.get(i).getFlightPath().isEmpty()) {
-//                    mAircraft.get(i).clearFlightPath();
-//                }
-//            }
         } else
 			try {
 				mServiceClient.disconnectDroneClient();
+                deselectAllAircraft();
+//                altitudeTapeFragment.clearTape();
+                clearMap();
+                home.clear();
+                for(int i=0; i<mAircraft.size(); i++) {
+                    mAircraft.get(mAircraft.keyAt(i)).clearFlightPath();
+                }
 			} catch (RemoteException e) {
 				Log.e(TAG, "Error while disconnecting", e);
 			}
@@ -1013,8 +1010,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             case "POSITION":
             	return (T) new Position();
             	
-//            case "STATE":
-//            	return (T) new State();
+            case "STATE":
+            	return (T) new State();
             	
             default:
             	return null;
@@ -1041,8 +1038,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			case "POSITION":
 				return Position.class.getClassLoader();
 
-//			case "STATE":
-//				return State.class.getClassLoader();
+			case "STATE":
+				return State.class.getClassLoader();
 
 			default:
 				return null;
@@ -1170,7 +1167,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         /* TODO: make the initial zoom level to correspond with the Region of Interest size (so it does not fill the entire screen) */
         /* TODO: Remove this eventually, so the camera will only be moved when connected */
         //Move camera to the home location
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(home.getHomeLocation(),16.0f));
+//        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(52.004523, 5.894406), 16.0f)); //Zoo
 		
 		//Disable rotation and tilt gestures
 		map.getUiSettings().setRotateGesturesEnabled(false);
@@ -1186,7 +1183,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         map.setOnInfoWindowClickListener(this); //Click listener on infowindows
 	}
 
-	/* Marker listener for (de)selecttion aircraft icons, waypoint marker actions and home marker selection */
+	/* Marker listener for (de)selection aircraft icons, waypoint marker actions and home marker selection */
 	@Override
     public boolean onMarkerClick(final Marker marker) {
         if(marker.getSnippet().contains("-")){      //Waypoint marker clicked
@@ -1211,9 +1208,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             //Redraw the waypoints (important for selection status)
             waypointUpdater(acNumber);
-
-            //Activate the block that corresponds with the chosen waypoint
-//            executeWaypointBlock(wpNumber);
         } else if(marker.getSnippet().equals("HOME")) {                 //Home marker clicked
             //Do nothing (yet)
         } else if(!marker.getSnippet().contains("-")) {                 //Aircraft marker clicked
@@ -1232,6 +1226,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 aircraftSpinner.setSelection(acNumber);
                 //Set info window show status for next map draw iteration
                 mAircraft.get(acNumber).setShowInfoWindow(true);
+                //Update the blocks spinner
+                updateMissionBlocksSpinner(acNumber);
             } else {
                 mAircraft.get(acNumber).setIsSelected(false);
                 selectedAc = 0;
@@ -1250,7 +1246,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     /* Marker drag listener action implementations (mainly for moving waypoints) */
     @Override
     public void onMarkerDragStart(Marker marker) {
-        //Do nothing
+        //Save original position
+        origMarkerPosition = marker.getPosition();
     }
 
     @Override
@@ -1268,13 +1265,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Get the drop location
         LatLng newPosition = marker.getPosition();
 
-        try {
-            Bundle carrier = new Bundle();
-            carrier.putString("TYPE", "WRITE_WP");
-            carrier.putParcelable("WP", new Waypoint((float) Math.toRadians(newPosition.latitude), (float) Math.toRadians(newPosition.longitude), mAircraft.get(acNumber).getWpAlt(wpNumber), mAircraft.get(acNumber).getWpSeq(wpNumber), mAircraft.get(acNumber).getWpTargetSys(wpNumber), mAircraft.get(acNumber).getWpTargetComp(wpNumber)));
-            mServiceClient.onCallback(carrier,acNumber);
-        } catch(RemoteException e) {
+        if(mAircraft.get(acNumber).hasCommConnection()) {
+            try {
+                Bundle carrier = new Bundle();
+                carrier.putString("TYPE", "WRITE_WP");
+                carrier.putParcelable("WP", new Waypoint((float) Math.toRadians(newPosition.latitude), (float) Math.toRadians(newPosition.longitude), mAircraft.get(acNumber).getWpAlt(wpNumber), mAircraft.get(acNumber).getWpSeq(wpNumber), mAircraft.get(acNumber).getWpTargetSys(wpNumber), mAircraft.get(acNumber).getWpTargetComp(wpNumber)));
+                mServiceClient.onCallback(carrier, acNumber);
+            } catch (RemoteException e) {
                 Log.e(TAG, "Error while sending waypoint to the service");
+            }
+        } else {
+            marker.setPosition(origMarkerPosition);
         }
 
         /* TODO Remove these lines when the service sends the updated waypoints after setting one */
@@ -1418,44 +1419,46 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 .color(Color.WHITE));
                     }
 
-                    /* TODO: change coverage indication to waypoint location instead of aircraft */
                     ////COVERAGE INDICATION
                     //Remove the coverage circle if it was drawn before
                     if (mAircraft.get(acNumber).coverageCircle != null) {
                         mAircraft.get(acNumber).coverageCircle.remove();
                     }
+
                     //If the operator wants to see coverage and only for aircraft with the surveillance task status
                     if (showCoverage && mAircraft.get(acNumber).getTaskStatus() == TaskStatus.SURVEILLANCE) {
-                        //                    if(mAircraft.get(aircraftNumber).getCurrentSurveyLoc()!= null) {
+                        //Distance check
+                        float[] distance = new float[1];
+                        Location.distanceBetween(mAircraft.get(acNumber).getLat(), mAircraft.get(acNumber).getLon(), mAircraft.get(acNumber).getWpLat(0), mAircraft.get(acNumber).getWpLon(0), distance);
 
-                        //Make dynamic (multiple aircraft)
+                        //Detect if the distance between the aircraft and waypoint is less than the survey circle radius
+                        if(distance[0] <= acCoverageRadius) {
 
-                        //Bitmap and canvas to draw a circle on
-                        Bitmap baseIcon = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888);
-                        Canvas circleCanvas = new Canvas(baseIcon);
-                        Paint circlePaint = new Paint();
-                        if (mAircraft.get(acNumber).getCommunicationSignal() > 0) {//Green color for aircraft that are within the communication range
-                            circlePaint.setColor(0x4000ff00);
-                        } else { //Red color for aircraft that are out of the communication range
-                            circlePaint.setColor(0x40ff0000);
+                            //Bitmap and canvas to draw a circle on
+                            Bitmap baseIcon = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888);
+                            Canvas circleCanvas = new Canvas(baseIcon);
+                            Paint circlePaint = new Paint();
+                            if (mAircraft.get(acNumber).getCommunicationSignal() > 0) {//Green color for aircraft that are within the communication range
+                                circlePaint.setColor(0x4000ff00);
+                            } else { //Red color for aircraft that are out of the communication range
+                                circlePaint.setColor(0x40ff0000);
+                            }
+                            circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+                            //Circle fill
+                            circleCanvas.drawCircle(200, 200, 200, circlePaint);
+
+                            //Circle stroke
+                            circlePaint.setStyle(Paint.Style.STROKE);
+                            circlePaint.setColor(Color.BLACK);
+                            circleCanvas.drawCircle(200, 200, 200, circlePaint);
+
+                            GroundOverlayOptions ROI = new GroundOverlayOptions()
+                                    .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
+                                    .position(mAircraft.get(acNumber).getWpLatLng(0), acCoverageRadius * 2, acCoverageRadius * 2); //m
+
+                            // Get back the relay Circle object
+                            mAircraft.get(acNumber).coverageCircle = map.addGroundOverlay(ROI);
                         }
-                        circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-                        //Circle fill
-                        circleCanvas.drawCircle(200, 200, 200, circlePaint);
-
-                        //Circle stroke
-                        circlePaint.setStyle(Paint.Style.STROKE);
-                        circlePaint.setColor(Color.BLACK);
-                        circleCanvas.drawCircle(200, 200, 200, circlePaint);
-
-                        GroundOverlayOptions ROI = new GroundOverlayOptions()
-                                .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
-                                        //                            .position(mAircraft.get(1).getCurrentSurveyLoc(), acCoverageRadius * 2, acCoverageRadius * 2); //m
-                                .position(mAircraft.get(acNumber).getLatLng(), acCoverageRadius * 2, acCoverageRadius * 2); //m
-
-                        // Get back the relay Circle object
-                        mAircraft.get(acNumber).coverageCircle = map.addGroundOverlay(ROI);
-                        //                    }
                     }
                 }
             }
@@ -1536,6 +1539,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 .draggable(false)
                 );
 
+                /* TODO: make the initial zoom level to correspond with the Region of Interest size (so it does not fill the entire screen) */
                 //Move camera to the home location
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(home.getHomeLocation(),16.0f));
             }
@@ -1644,6 +1648,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     //TODO: enable saving multiple groundoverlays in a list
                     ROIOverlay = map.addGroundOverlay(ROI);
                 }
+            }
+        });
+    }
+
+    private void clearMap() {
+        //Call GoogleMaps
+        mapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap map) {
+                map.clear();
             }
         });
     }
@@ -1837,26 +1851,32 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Method to determine if a couple of aircraft needs to get conflict status
     private boolean isOnconflictCourse(int ac1, int ac2) {
-
-        boolean isInconflictcourse = false;
-
-        /* TODO make sure the conflict status is given for small coverage overlaps (separation between waypoints should be more than 4 times the surveillance circle radius) */
         /*Steps taken:
         * Check if both aircraft have active surveillance waypoints
         * If yes, the distance should be more than 4 times the surveillance circle radius
         * If not, the distance between the aircraft should be more than 2 times the circle radius
         */
 
-//        if(mAircraft.get(ac1).getCurrentSurveyLoc() != null && mAircraft.get(ac2).getCurrentSurveyLoc() != null) {
-//
-//            //Calculate the distance between the two survey waypoints
-//            float[] distance = new float[1];
-//            Location.distanceBetween(mAircraft.get(ac1).getCurrentSurveyLoc().latitude, mAircraft.get(ac1).getCurrentSurveyLoc().longitude, mAircraft.get(ac2).getCurrentSurveyLoc().latitude, mAircraft.get(ac2).getCurrentSurveyLoc().longitude, distance);
-//
-//            //Detect conflict if the distance between the waypoints is less than the survey circle diameter + the horizontal separation standard
-//            if(distance[0] <= (surveillanceCircleRadius*2 + horizontalSeparationStandard)) { isInconflictcourse = true; };
-//        }
+        boolean isInconflictcourse = false;
 
+        if(!mAircraft.get(ac1).getWpLatLngList().isEmpty() && !mAircraft.get(ac2).getWpLatLngList().isEmpty()) {
+            LatLng wp1 = mAircraft.get(ac1).getWpLatLng(0);
+            LatLng wp2 = mAircraft.get(ac2).getWpLatLng(0);
+
+            //Calculate the distance between the two survey waypoints
+            float[] distance = new float[1];
+            Location.distanceBetween(wp1.latitude, wp1.longitude, wp2.latitude, wp2.longitude, distance);
+
+            //Detect conflict if the distance between the waypoints is less than the survey circle diameter + the horizontal separation standard
+            if(distance[0] <= (4*surveillanceCircleRadius)) { isInconflictcourse = true; };
+        } else {
+            //Calculate the distance between the two aircraft
+            float[] distance = new float[1];
+            Location.distanceBetween(mAircraft.get(ac1).getLat(), mAircraft.get(ac1).getLon(), mAircraft.get(ac2).getLat(), mAircraft.get(ac2).getLon(), distance);
+
+            //Detect conflict if the distance between the waypoints is less than the survey circle diameter + the horizontal separation standard
+            if(distance[0] <= (2*surveillanceCircleRadius)) { isInconflictcourse = true; };
+        }
         return isInconflictcourse;
     }
 
@@ -1949,6 +1969,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             aircraftSpinner.setSelection(0);
         }
 
+        //Update the blocks spinner
+        updateMissionBlocksSpinner(aircraftNumber);
+
         //Update the mission buttons
         updateMissionButtons();
 
@@ -2015,42 +2038,28 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Show the altitude of a dragged label on the altitude instrument
     public void setDragAltitude(int acNumber, double altitude, boolean endDrag) {
         if(endDrag) {
-            telemetryFragment.setTextColor(Color.WHITE);
-            telemetryFragment.setText(String.format("%.1f",mAircraft.get(acNumber).getAGL()));
+            telemetryFragment.setVisible(false);
+//            telemetryFragment.setTextColor(Color.WHITE);
+//            telemetryFragment.setText(String.format("%.1f",mAircraft.get(acNumber).getAGL()));
         } else {
+            telemetryFragment.setVisible(true);
             telemetryFragment.setTextColor(Color.YELLOW);
             telemetryFragment.setText(String.format("%.1f", altitude));
         }
     }
 
-    //////////////////////////MISSION COMMANDS/////////////////////////
-    //Method used to execute a block corresponding to a selected waypoint
-    private void executeWaypointBlock(int wpNumber){
-        //Continue only if the selected aircraft has blocks available
-        if(mAircraft.get(selectedAc).missionBlocks != null) {
-            //Determine the name of the block that belongs to the clicked waypoint and get the corresponding index number from the list
-            String blockName = getResources().getString(R.string.survey_block) + String.valueOf(wpNumber + 1); //"SURV"
-            int blockIndex = mAircraft.get(selectedAc).missionBlocks.indexOf(blockName);
-
-            //Request execution of the block
-//            try {
-//                Bundle carrier = new Bundle();
-//                carrier.putString("TYPE","BLOCK_SELECTED");
-//                carrier.putShort("SEQ",(short) blockIndex);
-//                mServiceClient.onCallback(carrier,selectedAc);
-//
-//            } catch (RemoteException e) {
-//                Log.e(TAG, "Error while sending mission block selection to the service");
-//            }
-        }
+    public double getAircraftAltitude(int acNumber) {
+        return mAircraft.get(acNumber).getAltitude();
     }
 
+    //////////////////////////MISSION COMMANDS/////////////////////////
     //Method used by the altitude tape fragment to change the altitude of a waypoint (send to service)
     public void changeCurrentWpAltitude(int acNumber, double AGL) {
-        if(selectedWp!=0) {
+        if(mAircraft.get(acNumber).hasCommConnection() && mAircraft.get(acNumber).getWpLatLngList().isEmpty()) {
             double groundLevel = mAircraft.get(acNumber).getAltitude() - mAircraft.get(acNumber).getAGL();
             double wpAltitude = groundLevel + AGL;
-            int wpNumber = selectedWp - 1;
+            //TODO: make wp number dynamic
+            int wpNumber = 0;
 
             Toast.makeText(getApplicationContext(), "Altitude of WP " + String.valueOf(wpNumber) + " to " + String.format("%.1f", wpAltitude) + " m", Toast.LENGTH_SHORT).show();
 
@@ -2058,8 +2067,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             try {
                 Bundle carrier = new Bundle();
                 carrier.putString("TYPE", "WRITE_WP");
-                carrier.putParcelable("WP", new Waypoint((float) Math.toRadians(mAircraft.get(acNumber).getWpLat(wpNumber)), (float) Math.toRadians(mAircraft.get(acNumber).getWpLon(wpNumber)), (float) (wpAltitude), mAircraft.get(acNumber).getWpSeq(wpNumber), mAircraft.get(acNumber).getWpTargetSys(wpNumber), mAircraft.get(acNumber).getWpTargetComp(wpNumber)));
-                mServiceClient.onCallback(carrier,acNumber);
+                carrier.putParcelable("WP", new Waypoint((float) Math.toRadians(mAircraft.get(acNumber).getWpLat(wpNumber)), (float) Math.toRadians(mAircraft.get(acNumber).getWpLon(wpNumber)), (float) (wpAltitude + 14), mAircraft.get(acNumber).getWpSeq(wpNumber), mAircraft.get(acNumber).getWpTargetSys(wpNumber), mAircraft.get(acNumber).getWpTargetComp(wpNumber)));
+                mServiceClient.onCallback(carrier, acNumber);
             } catch (RemoteException e) {
                 Log.e(TAG, "Error while sending waypoint to the service");
             }
@@ -2071,8 +2080,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             mAircraft.get(acNumber).setWpUpdating(wpNumber);
             //Update the waypoints again
             waypointUpdater(acNumber);
-        } else {
-            Toast.makeText(getApplicationContext(), "No waypoint selected!", Toast.LENGTH_SHORT).show();
         }
     }
 }

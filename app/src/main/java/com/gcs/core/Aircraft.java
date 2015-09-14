@@ -45,7 +45,7 @@ public class Aircraft {
         aircraftCount++;
         aircraftNumber = acNumber;
         AcConnectionList.put(aircraftNumber, 0);
-        labelCharacter = String.valueOf((char) (64 + aircraftCount));
+        labelCharacter = String.valueOf((char) (64 + aircraftNumber));
 	}
 
     //Instantiation of class attributes
@@ -74,8 +74,9 @@ public class Aircraft {
     private boolean showInfoWindow      = true;
     private float distanceHome          = 0f;
     private String currentBlock;
-    private int currentSurveyWp         = 0;
+    private int currentSurveyWp         = -1;
     private int connectedTo             = 0; //0 is home, higher numbers are aircraft
+//    private boolean commConnection      = false;
 //    private LatLng currentSurveyLoc;
 
     //////////// HEARTBEAT ////////////
@@ -115,6 +116,8 @@ public class Aircraft {
     public boolean isConnectionAlive() {
         return mHeartbeat.heartbeatState != Heartbeat.HeartbeatState.LOST_HEARTBEAT;
     }
+
+    public boolean hasCommConnection() { return mState.hasCommConnection(); }
 
     //////////// ATTITUDE ////////////
 	public void setRollPitchYaw(double roll, double pitch, double yaw) {
@@ -257,13 +260,11 @@ public class Aircraft {
 	}
 	
 	public LatLng getLatLng() {
-//		LatLng latLng = new LatLng(mPosition.getLat()*1e-7, mPosition.getLon()*1e-7);
-//		return latLng;
         return new LatLng(mPosition.getLat()*1e-7, mPosition.getLon()*1e-7);
 	}
 
 //	public int getAlt() {
-//		return mPosition.getAlt();
+//		return mPosition.getAlt();all objects of type
 //	}
 	
 	public int getHdg() {
@@ -346,8 +347,6 @@ public class Aircraft {
 	}
 	
 	public LatLng getWpLatLng(int wpNumber) {
-//		LatLng latLng = new LatLng(waypoints.get(wpNumber).getLat(),waypoints.get(wpNumber).getLon());
-//		return latLng;
 		return new LatLng(waypoints.get(wpNumber).getLat(),waypoints.get(wpNumber).getLon());
 	}
 
@@ -524,7 +523,9 @@ public class Aircraft {
 
     public String getCurrentBlock() {return currentBlock; }
 
-    public int getCurrentSurveyWp() { return currentSurveyWp; }
+    public LatLng getCurrentSurveyLoc() {
+        return new LatLng(waypoints.get(currentSurveyWp).getLat(),waypoints.get(currentSurveyWp).getLon());
+    }
 
     public void setShowInfoWindow(boolean showInfoWindow) {this.showInfoWindow = showInfoWindow;}
 
@@ -564,10 +565,11 @@ public class Aircraft {
 
     private int circleColor = Color.WHITE;
 
-    Paint circlePaint     = new Paint();
-    Paint labelFillPaint  = new Paint();
-    Paint labelFramePaint = new Paint();
-    Paint labelTextPaint  = new Paint();
+    Paint circlePaint       = new Paint();
+    Paint circleBorderPaint = new Paint();
+    Paint labelFillPaint    = new Paint();
+    Paint labelFramePaint   = new Paint();
+    Paint labelTextPaint    = new Paint();
 
     // Matrix for rotation of an aircraft icon
     Matrix rotationMatrix = new Matrix();
@@ -666,6 +668,13 @@ public class Aircraft {
         //Draw the circle on the canvas
         circleCanvas.drawCircle(resolution/2, resolution/2, resolution/2, circlePaint);
 
+        circleBorderPaint.setStyle(Paint.Style.STROKE);
+        circleBorderPaint.setStrokeWidth(1.5f);
+        circleBorderPaint.setColor(Color.BLACK);
+        circleBorderPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+
+        circleCanvas.drawCircle(resolution/2, resolution/2, resolution/2, circleBorderPaint);
+
         //Place the heading indicating arrow on the circle
         iconArrow.setBounds(sideOffsetArrow, sideOffsetArrow, resolution - sideOffsetArrow, resolution - sideOffsetArrow);
         iconArrow.draw(circleCanvas);
@@ -699,15 +708,19 @@ public class Aircraft {
         int communicationSignal = getCommunicationSignal();
         if (communicationSignal > halfComm) { //High signal strength
             communicationIcon = commFull;
+            mState.setHasCommConnection(true);
         }
         else if (halfComm >= communicationSignal && communicationSignal > lowComm) { //Middle signal strength
             communicationIcon = commMid;
+            mState.setHasCommConnection(true);
         }
         else if (lowComm >= communicationSignal && communicationSignal > NoComm) { //Low signal strength
             communicationIcon = commLow;
+            mState.setHasCommConnection(true);
         }
         else { //No signal
             communicationIcon = commEmpty;
+            mState.setHasCommConnection(false);
         }
 
 ////////////////////////////////////////////////
