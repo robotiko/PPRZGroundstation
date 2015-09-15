@@ -2068,7 +2068,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //////////////////////////MISSION COMMANDS/////////////////////////
     //Method used by the altitude tape fragment to change the altitude of a waypoint (send to service)
     public void changeCurrentWpAltitude(int acNumber, double AGL) {
-        if(mAircraft.get(acNumber).hasCommConnection() && mAircraft.get(acNumber).getWpLatLngList().isEmpty()) {
+        if(mAircraft.get(acNumber).hasCommConnection() && !mAircraft.get(acNumber).getWpLatLngList().isEmpty()) {
             double groundLevel = mAircraft.get(acNumber).getAltitude() - mAircraft.get(acNumber).getAGL();
             double wpAltitude = groundLevel + AGL;
             //TODO: make wp number dynamic
