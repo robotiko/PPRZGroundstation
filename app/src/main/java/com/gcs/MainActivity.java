@@ -541,6 +541,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    			break;
 	    		}
 
+                case "WAYPOINT_RECEIVED": {
+                    if (isConnected) {
+                        try {
+                            Bundle carrier = new Bundle();
+                            carrier.putString("TYPE", "REQUEST_WP_LIST");
+                            mServiceClient.onCallback(carrier,acNumber);
+                        } catch (RemoteException e) {
+                            Log.e(TAG, "Error while requesting individual waypoint list");
+                        }
+                    }
+                    break;
+                }
+
                 case "MISSION_BLOCKS_UPDATED": {
                     updateMissionBlocks(acNumber);
                     break;
@@ -765,13 +778,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Method to update the mission block dropdown menu
     private void updateMissionBlocksSpinner(int acNumber) {
-//        if(!mAircraft.get(acNumber).missionBlocks.isEmpty()) {
-//            //Create an array adapter with the mission block names
-//            ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mAircraft.get(acNumber).missionBlocks);
-//            spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//            //Apply the array adapter to the block spinner to update the blocks in the dropdown menu
-//            blockSpinner.setAdapter(spinnerArrayAdapter);
-//        }
+        if(mAircraft.get(acNumber).missionBlocks != null) {
+            //Create an array adapter with the mission block names
+            ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mAircraft.get(acNumber).missionBlocks);
+            spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            //Apply the array adapter to the block spinner to update the blocks in the dropdown menu
+            blockSpinner.setAdapter(spinnerArrayAdapter);
+        }
     }
 
     //Method to update the selected block in the dropdown menu to the active one
@@ -1132,7 +1145,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if (isConnected) {
             try {
                 Bundle carrier = new Bundle();
-                carrier.putString("TYPE", "REQUEST_WP_LIST");
+                carrier.putString("TYPE", "REQUEST_ALL_WP_LISTS");
                 mServiceClient.onCallback(carrier,-1); //acNumber input is set to -1 as no specific input is needed: waypointlists of all aircraft will be sent
 
                 Toast.makeText(getApplicationContext(), "Refreshing Waypoints.", Toast.LENGTH_SHORT).show();
