@@ -84,7 +84,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Declaration of handlers and definition of time and time steps
 	private Handler handler, interfaceUpdateHandler;
 	private final int mInterval        = 1000;                       // milliseconds
-//    private final int blockUpdateDelay = 500;                        // milliseconds
     private final long initTime        = System.currentTimeMillis(); // milliseconds
 
     //Logging
@@ -230,38 +229,38 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 
-        //TODO: make aircraft number dynamic in spinner
-        //Temporary setting of aircraft number
-        final int acNumber = 1;
+//        //TODO: make aircraft number dynamic in spinner
+//        //Temporary setting of aircraft number
+//        final int acNumber = 1;
 
-        ////////////BLOCKS SPINNER////////////
-        //Set up the spinner in the action bar for the mission block which can be loaded from the service and create a handle
-        menuBlockSpinner = menu.findItem(R.id.menu_block_spinner);
-        blockSpinner = (Spinner) MenuItemCompat.getActionView(menuBlockSpinner);
-
-        //Listener on item selection in the block spinner
-        blockSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-
-            //Define what should happen when an item in the spinner is selected
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                try {
-                    //Take the selected block index and send it to the service
-                    Bundle carrier = new Bundle();
-                    carrier.putString("TYPE", "BLOCK_SELECTED");
-                    carrier.putShort("SEQ",(short)position);
-                    mServiceClient.onCallback(carrier,acNumber);
-                } catch (RemoteException e) {
-                    Log.e(TAG,"Error while sending mission block spinner selection to the service");
-                }
-            }
-
-            //Define what should happen if no item is selected in the spinner
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                //Do nothing
-            }
-        });
+//        ////////////BLOCKS SPINNER////////////
+//        //Set up the spinner in the action bar for the mission block which can be loaded from the service and create a handle
+//        menuBlockSpinner = menu.findItem(R.id.menu_block_spinner);
+//        blockSpinner = (Spinner) MenuItemCompat.getActionView(menuBlockSpinner);
+//
+//        //Listener on item selection in the block spinner
+//        blockSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//
+//            //Define what should happen when an item in the spinner is selected
+//            @Override
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                try {
+//                    //Take the selected block index and send it to the service
+//                    Bundle carrier = new Bundle();
+//                    carrier.putString("TYPE", "BLOCK_SELECTED");
+//                    carrier.putShort("SEQ",(short)position);
+//                    mServiceClient.onCallback(carrier,acNumber);
+//                } catch (RemoteException e) {
+//                    Log.e(TAG,"Error while sending mission block spinner selection to the service");
+//                }
+//            }
+//
+//            //Define what should happen if no item is selected in the spinner
+//            @Override
+//            public void onNothingSelected(AdapterView<?> parent) {
+//                //Do nothing
+//            }
+//        });
 
         ////////////AIRCRAFT SPINNER////////////
         //Set up the spinner in the action bar for the aircraft and create a handle
@@ -1067,12 +1066,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Notify the user that no aircraft is selected
             Toast.makeText(getApplicationContext(), "No aircraft selected!", Toast.LENGTH_SHORT).show();
             //request to land if connected and the mission blocks are loaded
-        } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
+//        } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
+        } else if(isConnected) {
             //Select the land block and request the service to execute it
             try {
                 Bundle carrier = new Bundle();
                 carrier.putString("TYPE", "BLOCK_SELECTED");
-                carrier.putShort("SEQ", (short) mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.land_block)));
+//                carrier.putShort("SEQ", (short) mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.land_block)));
+                carrier.putShort("SEQ", (short) 6);
                 mServiceClient.onCallback(carrier,selectedAc);
             } catch (RemoteException e) {
                 Log.e(TAG, "Error while requesting the service to execute the land block");
@@ -1086,12 +1087,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Notify the user that no aircraft is selected
             Toast.makeText(getApplicationContext(), "No aircraft selected!", Toast.LENGTH_SHORT).show();
         //request takeoff if connected and the mission blocks are loaded
-        } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
+//        } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
+        } else if(isConnected) {
             try {
                 //Set launch button to active, select the takeoff block and request the service to execute it
                 Bundle carrier = new Bundle();
                 carrier.putString("TYPE", "REQUEST_TAKE_OFF");
-                carrier.putShort("SEQ", (short) mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.takeoff_block)));
+//                carrier.putShort("SEQ", (short) mAircraft.get(selectedAc).missionBlocks.indexOf(getResources().getString(R.string.takeoff_block)));
+                carrier.putShort("SEQ", (short) 3);
                 mServiceClient.onCallback(carrier, selectedAc);
             } catch (RemoteException e) {
                 Log.e(TAG,"Error while requesting the service to execute the takeoff block");
@@ -1106,7 +1109,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Notify the user that no aircraft is selected
             Toast.makeText(getApplicationContext(), "No aircraft selected!", Toast.LENGTH_SHORT).show();
             //request to go home if connected and the mission blocks are loaded
-        } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
+//        } else if(isConnected && mAircraft.get(selectedAc).missionBlocks != null) {
+        } else if(isConnected) {
+            //Block 9
             //Select the go home block and request the service to execute it
 //            try {
 //                Bundle carrier = new Bundle();
@@ -2068,13 +2073,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //////////////////////////MISSION COMMANDS/////////////////////////
     //Method used by the altitude tape fragment to change the altitude of a waypoint (send to service)
     public void changeCurrentWpAltitude(int acNumber, double AGL) {
-        if(mAircraft.get(acNumber).hasCommConnection() && mAircraft.get(acNumber).getWpLatLngList().isEmpty()) {
+        if(mAircraft.get(acNumber).hasCommConnection() && !mAircraft.get(acNumber).getWpLatLngList().isEmpty()) {
             double groundLevel = mAircraft.get(acNumber).getAltitude() - mAircraft.get(acNumber).getAGL();
             double wpAltitude = groundLevel + AGL;
             //TODO: make wp number dynamic
             int wpNumber = 0;
 
             Toast.makeText(getApplicationContext(), "Altitude of WP " + String.valueOf(wpNumber) + " to " + String.format("%.1f", wpAltitude) + " m", Toast.LENGTH_SHORT).show();
+
+            //Change wp altitude locally
+//            mAircraft.get(acNumber).setWpAlt((float) (wpAltitude + 14),wpNumber);
 
             //Send update waypoint data to the service (same location, different altitude)
             try {
