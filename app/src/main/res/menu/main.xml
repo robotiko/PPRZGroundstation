@@ -26,14 +26,14 @@
         android:orderInCategory="10"
         android:showAsAction="always"
         android:title="Communication range"/>
-
+<!--
     <item
         android:id="@+id/menu_block_spinner"
         android:showAsAction="always"
         android:orderInCategory="11"
         android:title="block_spinner"
         android:actionViewClass="android.widget.Spinner" />
-
+-->
     <item
         android:id="@+id/aircraft_selection_spinner"
         android:showAsAction="always"

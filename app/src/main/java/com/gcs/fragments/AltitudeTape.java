@@ -15,7 +15,6 @@ import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
 import android.view.Gravity;
@@ -53,10 +52,6 @@ public class AltitudeTape extends Fragment {
     private double flightCeiling, groundLevel, MSA; //[m]
     private int draggedLabel, textGravity, backgroundImg, yellowLabel, blueLabel, grayLabel, redLabel, LargeBlueLabel, LargeRedLabel
              ,groundLevelTape, flightCeilingTape, relayAltitude, surveillanceAltitude;
-
-//    //Hardcode the altitude tape endpoints
-//    private final int groundLevelTape   = 890; //0 meter
-//    private final int flightCeilingTape = 0;  //20 m
 
     //Define the size of the labels and the dragshadow offset
     private static final Point smallLabelDimensions = new Point (80,70);
@@ -257,14 +252,11 @@ public class AltitudeTape extends Fragment {
                         }
                         break;
                     case DragEvent.ACTION_DROP:
-//                        //Set the altitude instrument back to normal
-//                        ((MainActivity) getActivity()).setDragAltitude(labelList.get(draggedLabel),labelLocationToAltitude(event.getY() - dragShadowVerticalOffset),true);
                         //Send the drop location to the method that implements the command (Note that an offset value was used to be able to see the label while dragging)
                         if (groupSelectLabelList.containsKey(draggedLabel)) {   //Group selection label
                             setTargetAltitude(groupSelectLabelList.get(draggedLabel), event.getY() - dragShadowVerticalOffset);
                             //Set the altitude instrument back to normal
-                            /* TODO: Change this to an appropriate number or remove if the instrument is removed (only show it for drag??) */
-                            ((MainActivity) getActivity()).setDragAltitude(1, labelLocationToAltitude(event.getY() - dragShadowVerticalOffset), true);
+                            ((MainActivity) getActivity()).setDragAltitude(groupSelectLabelList.get(draggedLabel), labelLocationToAltitude(event.getY() - dragShadowVerticalOffset), true);
                         } else{                                                 //Normal label
                             setTargetAltitude(labelList.get(draggedLabel), event.getY() - dragShadowVerticalOffset);
                             //Set the altitude instrument back to normal

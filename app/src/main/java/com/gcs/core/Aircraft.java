@@ -13,12 +13,10 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
-import android.util.Log;
 import android.util.SparseArray;
 import android.widget.TextView;
 
 import com.gcs.R;
-import com.google.android.gms.gcm.Task;
 import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -76,8 +74,6 @@ public class Aircraft {
     private String currentBlock;
     private int currentSurveyWp         = -1;
     private int connectedTo             = 0; //0 is home, higher numbers are aircraft
-//    private boolean commConnection      = false;
-//    private LatLng currentSurveyLoc;
 
     //////////// HEARTBEAT ////////////
     public byte getSysid() {
@@ -262,10 +258,6 @@ public class Aircraft {
 	public LatLng getLatLng() {
         return new LatLng(mPosition.getLat()*1e-7, mPosition.getLon()*1e-7);
 	}
-
-//	public int getAlt() {
-//		return mPosition.getAlt();all objects of type
-//	}
 	
 	public int getHdg() {
 		return mPosition.getHdg();
@@ -351,7 +343,7 @@ public class Aircraft {
 	}
 
     public List<LatLng> getWpLatLngList() {
-        List<LatLng> points  = new ArrayList<LatLng>();
+        List<LatLng> points  = new ArrayList<>();
 
         for (int i = 0; i < getNumberOfWaypoints(); i++) {
             points.add(getWpLatLng(i));
@@ -510,13 +502,12 @@ public class Aircraft {
             String surveyBlockName = context.getResources().getString(R.string.survey_block);
             if(currentBlock.contains(surveyBlockName)) {
                 //Generate the waypoint name that corresponds to the survey block
-                String wpName = "WP" + currentBlock.substring(4);
+//                String wpName = "WP" + currentBlock.substring(4);
                 //Get the waypoint
                 currentSurveyWp = Integer.parseInt(currentBlock.substring(4));
 //                currentSurveyLoc = getWpLatLng(missionBlocks.indexOf(currentBlock));
             } else {
                 currentSurveyWp = 0;
-//                currentSurveyLoc = null;
             }
         }
     }
@@ -574,7 +565,7 @@ public class Aircraft {
     // Matrix for rotation of an aircraft icon
     Matrix rotationMatrix = new Matrix();
 
-    // Method that is called the first time the icon generation method is called to obtain valuies and drawables from resources
+    // Method that is called the first time the icon generation method is called to obtain values and drawables from resources
     private void setIconDrawingSettings() {
         resolution          = context.getResources().getInteger(R.integer.IconResolution);
         protectedZoneAlpha  = context.getResources().getInteger(R.integer.IconAlpha);

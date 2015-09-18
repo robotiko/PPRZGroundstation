@@ -11,12 +11,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class TelemetryFragment extends Fragment {
-    LinearLayout linearLayout;
+    private LinearLayout linearLayout;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         linearLayout = (LinearLayout) inflater.inflate(R.layout.telemetry, container, false);
-//		return inflater.inflate(R.layout.telemetry, container, false);
 		return linearLayout;
 	}
 
