@@ -25,11 +25,12 @@
     <string name="takeoff_block">Takeoff</string>
     <string name="land_block">land</string>
     <string name="survey_block">SURV</string>
+    <string name="go_home_block">HOME</string>
 
     <!-- Waypoint names -->
     <string name="survey_wp">WP</string>
 
-    <string name="no_blocks_loaded">No blocks loaded</string>
+    <string name="no_current_block_loaded">No active block</string>
     <string name="blocks_loaded">Blocks loaded</string>
 
     <!-- Spinner values -->
@@ -45,14 +46,12 @@
 
     <!-- Locations of ROI(s)-->
     <string-array name="latLng_scenario1">
-    <item>52.012779,5.897388</item>
+        <item>52.012779,5.897388</item>
+        <item>52.015242,5.922059</item>
     </string-array>
 
     <string-array name="latLng_scenario2">
-        <item>43.4654440,1.2767810</item>
+        <item>52.015242,5.922059</item>
     </string-array>
-
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>
