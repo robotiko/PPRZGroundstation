@@ -72,7 +72,6 @@ public class Aircraft {
     private boolean showInfoWindow      = true;
     private float distanceHome          = 0f;
     private String currentBlock;
-    private int currentSurveyWp         = -1;
     private int connectedTo             = 0; //0 is home, higher numbers are aircraft
 
     //////////// HEARTBEAT ////////////
@@ -495,28 +494,12 @@ public class Aircraft {
     }
 
     public void setCurrentBlock(int currentSelection) {
-        if(!missionBlocks.isEmpty()) {
+        if(missionBlocks!=null) {
             currentBlock = missionBlocks.get(currentSelection);
-
-            //If the block is a survey block
-            String surveyBlockName = context.getResources().getString(R.string.survey_block);
-            if(currentBlock.contains(surveyBlockName)) {
-                //Generate the waypoint name that corresponds to the survey block
-//                String wpName = "WP" + currentBlock.substring(4);
-                //Get the waypoint
-                currentSurveyWp = Integer.parseInt(currentBlock.substring(4));
-//                currentSurveyLoc = getWpLatLng(missionBlocks.indexOf(currentBlock));
-            } else {
-                currentSurveyWp = 0;
-            }
         }
     }
 
     public String getCurrentBlock() {return currentBlock; }
-
-    public LatLng getCurrentSurveyLoc() {
-        return new LatLng(waypoints.get(currentSurveyWp).getLat(),waypoints.get(currentSurveyWp).getLon());
-    }
 
     public void setShowInfoWindow(boolean showInfoWindow) {this.showInfoWindow = showInfoWindow;}
 

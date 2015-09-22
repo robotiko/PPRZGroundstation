@@ -15,6 +15,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
 import android.view.Gravity;
@@ -28,6 +29,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -102,6 +104,8 @@ public class AltitudeTape extends Fragment {
         int horOffset   = (int)(0.2*outerWidth);
 
         int MSAheight = (int)((1-(float)MSA/(flightCeiling-groundLevel))*outerHeight);
+        int relayHeight = (int)((1-(float)relayAltitude/(flightCeiling-groundLevel))*outerHeight);
+        int surveyHeight = (int)((1-(float)surveillanceAltitude/(flightCeiling-groundLevel))*outerHeight);
 
         Bitmap bitmap = Bitmap.createBitmap(100,outerHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
@@ -125,7 +129,10 @@ public class AltitudeTape extends Fragment {
         textPaint.setTextSize(20);
         textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
         textPaint.setTextAlign(Paint.Align.CENTER);
-        canvas.drawText("MSA", outerWidth/2, MSAheight, textPaint);
+        canvas.drawText("MSA", outerWidth / 2, MSAheight, textPaint);
+        textPaint.setTextSize(18);
+        canvas.drawText("RELAY", outerWidth/2, relayHeight, textPaint);
+        canvas.drawText("SURV", outerWidth/2, surveyHeight, textPaint);
 
         BitmapDrawable drawable = new BitmapDrawable(getResources(), bitmap);
         altitudeTape.setBackground(drawable);
@@ -160,19 +167,17 @@ public class AltitudeTape extends Fragment {
 	    return new View.OnClickListener() {
 	        public void onClick(View v) {
                 int aircraftNumber;
-
                 //If a group is selected, deselect it
                 if(groupSelected) {
                     //Get the id of the selected aircraft and get its selection status from mainactivity
-                    aircraftNumber = groupSelectLabelList.get(v.getId());
+                    if(labelList.get(v.getId())!=null) {
+                        aircraftNumber = labelList.get(v.getId()); //Unselected individual label clicked
+                    } else {
+                        aircraftNumber = groupSelectLabelList.get(v.getId()); //Label from groupselection clicked
+                    }
                     //Deselect all aircraft and reselect the clicked aircraft
-                    ((MainActivity) getActivity()).deselectAllAircraft();
+                    deselectGroup();
                     ((MainActivity) getActivity()).setIsSelected(aircraftNumber,true);
-
-                    selectedGroup = null;
-                    groupSelected = false;
-                    groupSelectLabelList.clear();
-                    removeGroupSelectedAircraft();
                 } else {
                     //Get the id of the selected aircraft and get its selection status from mainactivity
                     aircraftNumber = labelList.get(v.getId());
@@ -255,8 +260,10 @@ public class AltitudeTape extends Fragment {
                         //Send the drop location to the method that implements the command (Note that an offset value was used to be able to see the label while dragging)
                         if (groupSelectLabelList.containsKey(draggedLabel)) {   //Group selection label
                             setTargetAltitude(groupSelectLabelList.get(draggedLabel), event.getY() - dragShadowVerticalOffset);
-                            //Set the altitude instrument back to normal
+                            //Set the altitude value instrument back to normal
                             ((MainActivity) getActivity()).setDragAltitude(groupSelectLabelList.get(draggedLabel), labelLocationToAltitude(event.getY() - dragShadowVerticalOffset), true);
+                            //Set tape back to unselected labels
+                            deselectGroup();
                         } else{                                                 //Normal label
                             setTargetAltitude(labelList.get(draggedLabel), event.getY() - dragShadowVerticalOffset);
                             //Set the altitude instrument back to normal
@@ -290,8 +297,16 @@ public class AltitudeTape extends Fragment {
     //Method to draw individual labels on the altitude tape
 	public void setLabel(double altitude, int labelId, String labelCharacter, boolean isAircraftIconSelected, boolean labelCreated, int acNumber, int visibility){
         //Determine if a certain label(id) is already present in the list  that keeps track of all individual labels
-        if (labelList.get(labelId) == null) {
+        if (labelList.get(labelId)==null) {
             labelList.put(labelId, acNumber);
+        }
+        //Check if the aircraft number is present in the group list. If so remove it.
+        if(aircraftInGroupList.contains(acNumber) && visibility==View.VISIBLE) {
+////            aircraftInGroupList.clear();
+//            Log.d("TEST",String.valueOf(acNumber));
+//            Log.d("TEST",String.valueOf(aircraftInGroupList));
+//            Log.d("TEST",String.valueOf(aircraftInGroupList.indexOf(acNumber)));
+            aircraftInGroupList.remove(aircraftInGroupList.indexOf(acNumber));
         }
 
         //If the aircraft is selected, use a yellow label, otherwise a label based on the conflict status should be used
@@ -356,6 +371,38 @@ public class AltitudeTape extends Fragment {
 
     //Method to draw group labels on the altitude tape
     public void drawGroupLabel(boolean inConflict, double altitude, String labelCharacters, List<Integer> ac) {
+        //Check for labels that do still exist but should be deleted because an aircraft has been added or has has left a group
+
+        String[] labelArr = labelCharacters.split(" ");
+        outerloop:
+        for (String key : stringToLabelIdList.keySet()) {
+            String[] keyArr = key.split(" ");
+            if (!labelArr.equals(keyArr)) {
+                if (labelArr.length > keyArr.length) {
+                    for (int i = 0; i < keyArr.length; i++) {
+                        if(!Arrays.asList(labelArr).contains(keyArr[i])) {
+                            break;
+                        }
+                        if(i==keyArr.length-1) {
+                            framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
+                            stringToLabelIdList.remove(key);
+                            break outerloop;
+                        }
+                    }
+                } else {
+                    for (int j = 0; j < labelArr.length; j++) {
+                        if(!Arrays.asList(keyArr).contains(labelArr[j])) {
+                            break;
+                        }
+                        if(j==labelArr.length-1) {
+                            framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
+                            stringToLabelIdList.remove(key);
+                            break outerloop;
+                        }
+                    }
+                }
+            }
+        }
 
         //Add the numbers of aircraft that are in a group to the list to avoid that they also get an individual label
         for(int i=0; i<ac.size(); i++) {
@@ -364,7 +411,7 @@ public class AltitudeTape extends Fragment {
             }
         }
 
-        //If no group is selected or it does not involve the a group that was already drawn
+        //If no group is selected or it does not involve a group that was already drawn
         if(selectedGroup == null || !selectedGroup.equals(labelCharacters)) {
             //Use a red label for conflict groups, else a blue one
             if (inConflict) {
@@ -438,6 +485,15 @@ public class AltitudeTape extends Fragment {
         }
     }
 
+    //Method to select all groups
+    private void deselectGroup() {
+        selectedGroup = null;
+        groupSelected = false;
+        groupSelectLabelList.clear();
+        removeGroupSelectedAircraft();
+        ((MainActivity) getActivity()).deselectAllAircraft();
+    }
+
     //Method to remove the labels of a group selection
     private void removeGroupSelectedAircraft() {
         for (String key : groupSelectionIdList.keySet()) {
@@ -479,8 +535,6 @@ public class AltitudeTape extends Fragment {
 
     //Method to draw the target altitude on the altitude tape
 	public void setTargetLabel(double targetAltitude, int targetLabelId) {
-
-		/* TODO make a better indicating icon/bug for the target altitude */
         //Set the parameters of the label (size, vertical location on the tape and its horizontal location)
 		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(smallLabelDimensions.x,smallLabelDimensions.y);
         params.topMargin = altitudeToLabelLocation(targetAltitude);
@@ -512,7 +566,6 @@ public class AltitudeTape extends Fragment {
 	
 	//Convert altitude to a label location on the tape
 	private int altitudeToLabelLocation(double altitude) {
-
         //Calculate the label location based on the length of the bar and the vertical flight range airspace
 		int lengthBar = groundLevelTape - flightCeilingTape;
 		double verticalRange = flightCeiling - groundLevel;
@@ -522,7 +575,6 @@ public class AltitudeTape extends Fragment {
 	
 	//Convert label location on the tape to an altitude 
 	private double labelLocationToAltitude(float labelLocation) {
-
         //Calculate the aircraft altitude based on length of the bar, label location and the vertical flight range airspace
 		int lengthBar = groundLevelTape - flightCeilingTape;
 		double verticalRange = flightCeiling - groundLevel;
@@ -532,15 +584,14 @@ public class AltitudeTape extends Fragment {
 
 	//Set the target altitude to the service
 	private void setTargetAltitude(int aircraftNumber,float dropLocation) {
-
         //The altitude to which the user commands the aircraft to go to
 		double dropAltitude = labelLocationToAltitude(dropLocation);
 
         //Set the new target altitude to the service
-        if(dropAltitude > ((MainActivity) getActivity()).getAircraftAltitude(aircraftNumber)) {
-            ((MainActivity) getActivity()).changeCurrentWpAltitude(aircraftNumber,relayAltitude);
-        } else {
+        if(Math.abs(dropAltitude-surveillanceAltitude)<Math.abs(dropAltitude - relayAltitude)) {
             ((MainActivity) getActivity()).changeCurrentWpAltitude(aircraftNumber,surveillanceAltitude);
+        } else {
+            ((MainActivity) getActivity()).changeCurrentWpAltitude(aircraftNumber,relayAltitude);
         }
 	}
 }

@@ -47,6 +47,7 @@ public class MissionButtonFragment extends Fragment {
         //Nothing
 	}
 
+
 	public void onWaypointsRequest(View v) {
         //Nothing
     }
