@@ -59,8 +59,6 @@ import android.os.Parcelable;
 import android.os.RemoteException;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.MenuItemCompat;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Menu;
@@ -74,11 +72,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback, OnMarkerClickListener, OnInfoWindowClickListener, OnMarkerDragListener {
-	
+
 	private static final String TAG = MainActivity.class.getSimpleName();
 
     //Declaration of handlers and definition of time and time steps
@@ -97,6 +96,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private boolean isAltitudeUpdated = false;
     private boolean aircraftSelected  = false;
     private boolean showCommRange     = false;
+    private boolean showMinCommRange  = false;
     private boolean showCoverage      = false;
     private boolean updateAircraftSpinner = true;
 
@@ -127,7 +127,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private double performanceScore = 0f;
     private int selectedWp = 0;
     private int activeScenario = 0;
+    private int noAircraftScenario = 0;
     private LatLng origMarkerPosition;
+    private Circle flightPath, surveillanceBound;
 
     //Declaration of items needed for mission blocks display
     private MenuItem menuBlockSpinner = null, menuAircraftSpinner = null, menuScenarioSpinner = null;
@@ -291,6 +293,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     commTextView.setTextColor(Color.WHITE);
                 }
                 return true;
+            case R.id.show_min_comm_range:
+                //Show/hide the minimum communication range on screen
+                showMinCommRange = !showMinCommRange;
+                //Change button appearance for status indication
+                TextView minCommTextView = (TextView)findViewById(item.getItemId());
+                if(showMinCommRange) {
+                    minCommTextView.setTextColor(getResources().getColor(R.color.green));
+                } else {
+                    minCommTextView.setTextColor(Color.WHITE);
+                }
+                return true;
             case R.id.show_coverage:
                 showCoverage = !showCoverage;
                 //Change button appearance for status indication
@@ -304,7 +317,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
 		return super.onOptionsItemSelected(item);
 	}
-	
+
 	@Override
     public void onStart() {
         super.onStart();
@@ -341,11 +354,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		}
     	unbindService(serviceConnection);
     }
-	
+
 	////////////INTERFACE UPDATER//////////
-	
+
 	Runnable interfaceUpdater = new Runnable() {
-	    @Override 
+	    @Override
 	    public void run() {
             //Update aircraft spinner
             if (updateAircraftSpinner && aircraftSpinner != null) {
@@ -391,7 +404,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             /////PERFORMANCE SCORE
             //Calculate the current performance score
-            if (ROIlist.size()!=0) {
+            if (ROIlist.size()!=0 && isConnected) {
                 performanceScore = PerformanceCalcHelper.calcPerformance(ROIRadius, acCoverageRadius, ROIlist, mAircraft);
             }
             //Set the performance score to the text view
@@ -404,11 +417,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             interfaceUpdateHandler.postDelayed(interfaceUpdater, mInterval);
         }
 	  };
-	
+
 	/////////////////////////COMMUNICATION/////////////////////////
-	
+
 	////////SERVICE CONNECTION
-	
+
     ServiceConnection serviceConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder serviceClient) {
@@ -424,7 +437,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			}
 			Log.i(TAG, "Service connection established.");
 		}
-		
+
         @Override
         public void onServiceDisconnected(ComponentName name) {
         	Log.i(TAG, "Service connection lost.");
@@ -437,7 +450,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		public void onConnectionFailed() {
     		Toast.makeText(getApplicationContext(), "Connection Failed!", Toast.LENGTH_SHORT).show();
     	}
-    	
+
     	@Override
         public void onEvent(String type, int acNumber) {
             //Instantiate a new aircraft object if the aircraft
@@ -543,7 +556,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
     	}
     };
-    
+
     ////////UPDATE METHODS FOR AIRCRAFT DATA
 
     /**
@@ -594,7 +607,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 	}
-	
+
 	/**
 	 * This runnable object is created to update the altitude
 	 */
@@ -618,7 +631,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 	}
-	
+
 	/**
 	 * This runnable object is created to update the ground- and airspeeds
 	 */
@@ -653,7 +666,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 	}
-	
+
 	/**
 	 * This runnable object is created to update position
 	 */
@@ -674,7 +687,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 	}
-	
+
 	/**
 	 * This runnable object is created to update state
 	 */
@@ -692,7 +705,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 			}
 		});
 	}
-	
+
 	/**
 	 * This runnable object is created to update waypoints
 	 */
@@ -789,7 +802,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     Log.d("CURRENT_BLOCK", String.valueOf(currentBlock));
 
                     //Update the Mission block spinner selection
-    //                    blockSpinner.setSelection(currentBlock);
+                    //                    blockSpinner.setSelection(currentBlock);
 
                     //Set current block to aircraft
                     mAircraft.get(acNumber).setCurrentBlock(currentBlock);
@@ -843,6 +856,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 latLng = getResources().getStringArray(R.array.latLng_scenario2);
                 batValues = getResources().getIntArray(R.array.iniBatVolt_scenario2);
                 batRates = getResources().getIntArray(R.array.batRate_scenario2);
+            } else if(scenarioNumber == 3) {
+                latLng = getResources().getStringArray(R.array.latLng_scenario3);
+                batValues = getResources().getIntArray(R.array.iniBatVolt_scenario3);
+                batRates = getResources().getIntArray(R.array.batRate_scenario3);
             }
 
             //Loop over ROIs to put the values in lists
@@ -857,6 +874,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 batList.add(batValues[j]);
                 batRateList.add(batRates[j]);
             }
+            //Set the number of aircraft in the scenario
+            int[] noAircraft = getResources().getIntArray(R.array.noAircraftInScenario);
+            noAircraftScenario = noAircraft[scenarioNumber-1];
+        } else {
+            noAircraftScenario = 0;
         }
 
         //Set the ROI list for performance calculation
@@ -884,7 +906,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 	////////OTHER COMMUNICATION FUNCTIONS
-	
+
 	private ConnectionParameter retrieveConnectionParameters() {
 		//Fetch connection type from resources
         final int connectionType = getResources().getInteger(R.integer.connectionType);
@@ -893,8 +915,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         ArrayList<Integer> serverPortList = new ArrayList<>(); //List of the udp port used
         ArrayList<Integer> sysIdList = new ArrayList<>();      //List of system ids used (in the same order as the udp ports)
 
-        int ports[] = getResources().getIntArray(R.array.udp_ports);
-        int ids[] = getResources().getIntArray(R.array.system_ids);
+        Log.d("TEST",String.valueOf(noAircraftScenario));
+
+        int ports[] =  Arrays.copyOfRange(getResources().getIntArray(R.array.udp_ports), 0, noAircraftScenario);
+        int ids[] = Arrays.copyOfRange(getResources().getIntArray(R.array.system_ids), 0, noAircraftScenario);
         for(int i=0; i<ports.length; i++) {
             serverPortList.add(ports[i]);
             sysIdList.add(ids[i]);
@@ -908,7 +932,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 extraParams.putIntegerArrayList("sysIds", sysIdList);
                 connParams = new ConnectionParameter(connectionType, extraParams);
                 break;
-                
+
             default:
             	connParams = null;
                 break;
@@ -916,7 +940,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         return connParams;
     }
-	
+
 	public void connectToDroneClient(){
         final ConnectionParameter connParams = retrieveConnectionParameters();
         if (!(connParams == null)) {
@@ -929,23 +953,29 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
     //Connect to the service on button click if no connection was established yet
     public void onButtonRequest(View view) {
-    	if (!isConnected) {
-            connectToDroneClient();
-        } else
-			try {
-				mServiceClient.disconnectDroneClient();
-                deselectAllAircraft();
-                //TODO: enable clear tape
+        if(activeScenario>0) {
+            if (!isConnected) {
+                connectToDroneClient();
+            } else {
+                try {
+                    mServiceClient.disconnectDroneClient();
+                    deselectAllAircraft();
+                    noAircraftScenario = 0;
+                    //TODO: enable clear tape
 //                altitudeTapeFragment.clearTape();
-                clearMap();
-                home.clear();
-                for(int i=0; i<mAircraft.size(); i++) {
-                    mAircraft.get(mAircraft.keyAt(i)).clearFlightPath();
+                    clearMap();
+                    home.clear();
+                    for (int i = 0; i < mAircraft.size(); i++) {
+                        mAircraft.get(mAircraft.keyAt(i)).clearFlightPath();
+                    }
+                    missionButtons.deactivateButtons();
+                } catch (RemoteException e) {
+                    Log.e(TAG, "Error while disconnecting", e);
                 }
-                missionButtons.deactivateButtons();
-			} catch (RemoteException e) {
-				Log.e(TAG, "Error while disconnecting", e);
-			}
+            }
+        } else {
+            Toast.makeText(getApplicationContext(), "Please select a scenario!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -1244,12 +1274,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMarkerDrag(Marker marker) {
-        //Do nothing
+        //Show a circle that indicates the path the aircraft will follow
+        drawSurveillancePath(marker.getPosition(), false);
     }
 
     //Action implementation on end of marker (waypoint) drag
     @Override
     public void onMarkerDragEnd(Marker marker) {
+        //Hide the flight path circle
+        drawSurveillancePath(marker.getPosition(),true);
         //Get the marker snippet to extract the aircraft- and waypoint number
         String[] numbers = marker.getSnippet().split("-");
         int acNumber = Integer.parseInt(numbers[0]);
@@ -1405,40 +1438,33 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         mAircraft.get(acNumber).coverageCircle.remove();
                     }
 
-                    //If the operator wants to see coverage and only for aircraft with the surveillance task status
-                    if (showCoverage && mAircraft.get(acNumber).getTaskStatus() == TaskStatus.SURVEILLANCE) {
-                        //Distance check
-                        float[] distance = new float[1];
-                        Location.distanceBetween(mAircraft.get(acNumber).getLat(), mAircraft.get(acNumber).getLon(), mAircraft.get(acNumber).getWpLat(0), mAircraft.get(acNumber).getWpLon(0), distance);
-
-                        //Detect if the distance between the aircraft and waypoint is less than the survey circle radius
-                        if(distance[0] <= acCoverageRadius) {
-
-                            //Bitmap and canvas to draw a circle on
-                            Bitmap baseIcon = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888);
-                            Canvas circleCanvas = new Canvas(baseIcon);
-                            Paint circlePaint = new Paint();
-                            if (mAircraft.get(acNumber).getCommunicationSignal() > 0) {//Green color for aircraft that are within the communication range
-                                circlePaint.setColor(0x4000ff00);
-                            } else { //Red color for aircraft that are out of the communication range
-                                circlePaint.setColor(0x40ff0000);
-                            }
-                            circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-                            //Circle fill
-                            circleCanvas.drawCircle(200, 200, 200, circlePaint);
-
-                            //Circle stroke
-                            circlePaint.setStyle(Paint.Style.STROKE);
-                            circlePaint.setColor(Color.BLACK);
-                            circleCanvas.drawCircle(200, 200, 200, circlePaint);
-
-                            GroundOverlayOptions ROI = new GroundOverlayOptions()
-                                    .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
-                                    .position(mAircraft.get(acNumber).getWpLatLng(0), acCoverageRadius * 2, acCoverageRadius * 2); //m
-
-                            // Get back the relay Circle object
-                            mAircraft.get(acNumber).coverageCircle = map.addGroundOverlay(ROI);
+                    //If the operator wants to see coverage, only for aircraft with the surveillance task status
+                    // and detect if the distance between the aircraft and waypoint is less than the survey circle radius
+                    if (showCoverage && mAircraft.get(acNumber).getTaskStatus() == TaskStatus.SURVEILLANCE && mAircraft.get(acNumber).getDistanceToWaypoint() <= acCoverageRadius) {
+                        //Bitmap and canvas to draw a circle on
+                        Bitmap baseIcon = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888);
+                        Canvas circleCanvas = new Canvas(baseIcon);
+                        Paint circlePaint = new Paint();
+                        if (mAircraft.get(acNumber).getCommunicationSignal() > 0) {//Green color for aircraft that are within the communication range
+                            circlePaint.setColor(getResources().getColor(R.color.coverageGreen));
+                        } else { //Red color for aircraft that are out of the communication range
+                            circlePaint.setColor(getResources().getColor(R.color.coverageRed));
                         }
+                        circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+                        //Circle fill
+                        circleCanvas.drawCircle(200, 200, 200, circlePaint);
+
+                        //Circle stroke
+                        circlePaint.setStyle(Paint.Style.STROKE);
+                        circlePaint.setColor(Color.BLACK);
+                        circleCanvas.drawCircle(200, 200, 200, circlePaint);
+
+                        GroundOverlayOptions ROI = new GroundOverlayOptions()
+                                .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
+                                .position(mAircraft.get(acNumber).getWpLatLng(0), acCoverageRadius * 2, acCoverageRadius * 2); //m
+
+                        // Get back the relay Circle object
+                        mAircraft.get(acNumber).coverageCircle = map.addGroundOverlay(ROI);
                     }
                 }
             }
@@ -1455,7 +1481,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //If the waypoints are already initiated, remove them from the map and clear the list that holds them
             if (!mAircraft.get(acNumber).wpMarkers.isEmpty()) {
                 //Remove markers from map
-                for (int i = 0; i < mAircraft.get(acNumber).getNumberOfWaypoints(); i++) {
+                for (int i = 0; i < mAircraft.get(acNumber).wpMarkers.size(); i++) {
                     mAircraft.get(acNumber).wpMarkers.get(i).remove();
                 }
 
@@ -1550,8 +1576,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     //Add the home communication range circle to the map
                     CircleOptions homeCircleOptions = new CircleOptions()
                             .center(home.getHomeLocation())
-                            .strokeWidth(5)
-                            .strokeColor(0x5500ff00)
+                            .strokeWidth(getResources().getInteger(R.integer.circleStrokeWidth))
+                            .strokeColor(getResources().getColor(R.color.commRange))
                             .radius(commMaxRange); // In meters
 
                     // Get back the home Circle object
@@ -1560,16 +1586,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     //If one or more relay UAVs are active
                     if (!relayAc.isEmpty()) {
                         for (int i = 0; i < relayAc.size(); i++) {
-                            // Draw the relay commincation range circle
-                            CircleOptions relayCircleOptions = new CircleOptions()
-                                    .center(mAircraft.get(relayAc.get(i)).getLatLng())
-                                    .strokeWidth(5)
-                                    .strokeColor(0x5500ff00)
-                                    .radius(commRelayRange); // In meters
-
-                            // Get back the relay Circle object
-                            Circle relayCommCircle = map.addCircle(relayCircleOptions);
-                            relayCommCircles.add(relayCommCircle);
+                            if(mAircraft.get(relayAc.get(i)).getDistanceToWaypoint() <= acCoverageRadius) {
+                                // Draw the relay communication range circle
+                                CircleOptions relayCircleOptions = new CircleOptions()
+                                        .strokeWidth(getResources().getInteger(R.integer.circleStrokeWidth))
+                                        .strokeColor(getResources().getColor(R.color.commRange));
+                                if (showMinCommRange) {
+                                    relayCircleOptions.center(mAircraft.get(relayAc.get(i)).getWpLatLng(0));     //Around waypoint
+                                    relayCircleOptions.radius(commRelayRange - (surveillanceCircleRadius));  // In meters
+                                } else {
+                                    relayCircleOptions.center(mAircraft.get(relayAc.get(i)).getLatLng()); //Around aircraft
+                                    relayCircleOptions.radius(commRelayRange); // In meters
+                                }
+                                // Get back the relay Circle object
+                                Circle relayCommCircle = map.addCircle(relayCircleOptions);
+                                relayCommCircles.add(relayCommCircle);
+                            }
                         }
                     }
                 }
@@ -1617,7 +1649,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     Bitmap baseIcon = Bitmap.createBitmap(circleSize, circleSize, Bitmap.Config.ARGB_8888);
                     Canvas circleCanvas = new Canvas(baseIcon);
                     Paint circlePaint = new Paint();
-                    circlePaint.setColor(0x400099CC);
+                    circlePaint.setColor(getResources().getColor(R.color.regionOfInterest));
                     circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
                     circleCanvas.drawCircle(circleSize / 2, circleSize / 2, circleSize / 2, circlePaint);
 
@@ -1627,6 +1659,45 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     GroundOverlay ROIOverlay = map.addGroundOverlay(ROI);
                     //Save groundoverlay in a list
                     ROIOverlayList.add(ROIOverlay);
+                }
+            }
+        });
+    }
+
+    ///////* Indicate a region of interest on the map *///////
+    private void drawSurveillancePath(final LatLng location, final boolean endDraw) {
+        //Call GoogleMaps
+        mapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap map) {
+                //Remove circles
+                if(flightPath != null) {
+                    flightPath.remove();
+                    flightPath = null;
+                }
+                if(surveillanceBound != null) {
+                    surveillanceBound.remove();
+                    surveillanceBound = null;
+                }
+                //Draw circles
+                if(!endDraw) {
+                    CircleOptions flightPathOptions = new CircleOptions()
+                            .center(location)
+                            .strokeWidth(getResources().getInteger(R.integer.circleStrokeWidth))
+                            .strokeColor(getResources().getColor(R.color.surveillancePath))
+                            .radius(surveillanceCircleRadius+2); // In meters
+
+                    // Get back the relay Circle object
+                    flightPath = map.addCircle(flightPathOptions);
+
+                    CircleOptions boundOptions = new CircleOptions()
+                            .center(location)
+                            .strokeWidth(getResources().getInteger(R.integer.circleStrokeWidth))
+                            .strokeColor(getResources().getColor(R.color.surveillancePath))
+                            .radius(acCoverageRadius+2); // In meters
+
+                    // Get back the relay Circle object
+                    surveillanceBound = map.addCircle(boundOptions);
                 }
             }
         });
@@ -1829,29 +1900,29 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean isOnconflictCourse(int ac1, int ac2) {
         /*Steps taken:
         * Check if both aircraft have active surveillance waypoints
-        * If yes, the distance should be more than 4 times the surveillance circle radius
-        * If not, the distance between the aircraft should be more than 2 times the circle radius
+        * If yes, the distance should be more than 2 times the surveillance circle radius
+        * If not, the distance between the aircraft should be more than the horizontal separation standard
         */
 
         boolean isInconflictcourse = false;
 
-        if(!mAircraft.get(ac1).getWpLatLngList().isEmpty() && !mAircraft.get(ac2).getWpLatLngList().isEmpty()) {
+        if(!mAircraft.get(ac1).getWpLatLngList().isEmpty() && !mAircraft.get(ac2).getWpLatLngList().isEmpty() && (mAircraft.get(ac1).getTaskStatus()==TaskStatus.SURVEILLANCE || mAircraft.get(ac1).getTaskStatus()==TaskStatus.RELAY)
+        && (mAircraft.get(ac2).getTaskStatus()==TaskStatus.SURVEILLANCE || mAircraft.get(ac2).getTaskStatus()==TaskStatus.RELAY )) {
             LatLng wp1 = mAircraft.get(ac1).getWpLatLng(0);
             LatLng wp2 = mAircraft.get(ac2).getWpLatLng(0);
 
             //Calculate the distance between the two survey waypoints
             float[] distance = new float[1];
             Location.distanceBetween(wp1.latitude, wp1.longitude, wp2.latitude, wp2.longitude, distance);
-
             //Detect conflict if the distance between the waypoints is less than the survey circle diameter + the horizontal separation standard
-            if(distance[0] <= (4*surveillanceCircleRadius)) { isInconflictcourse = true; }
+            if(distance[0] <= (2*acCoverageRadius)) isInconflictcourse = true;
         } else {
             //Calculate the distance between the two aircraft
             float[] distance = new float[1];
             Location.distanceBetween(mAircraft.get(ac1).getLat(), mAircraft.get(ac1).getLon(), mAircraft.get(ac2).getLat(), mAircraft.get(ac2).getLon(), distance);
 
             //Detect conflict if the distance between the waypoints is less than the survey circle diameter + the horizontal separation standard
-            if(distance[0] <= (2*surveillanceCircleRadius)) { isInconflictcourse = true; }
+            if(distance[0] <= horizontalSeparationStandard) isInconflictcourse = true;
         }
         return isInconflictcourse;
     }
@@ -2022,7 +2093,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if(mAircraft.get(acNumber).hasCommConnection() && !mAircraft.get(acNumber).getWpLatLngList().isEmpty()) {
             double groundLevel = mAircraft.get(acNumber).getAltitude() - mAircraft.get(acNumber).getAGL();
             double wpAltitude = groundLevel + AGL;
-            //TODO: make wp number dynamic
             int wpNumber = 0;
 
             Toast.makeText(getApplicationContext(), "Altitude of WP " + String.valueOf(wpNumber) + " to " + String.format("%.1f", wpAltitude) + " m", Toast.LENGTH_SHORT).show();

@@ -42,15 +42,20 @@
         <item>Select a scenario</item>
         <item>Scenario 1</item>
         <item>Scenario 2</item>
+        <item>Scenario 3</item>
     </string-array>
 
     <!-- Locations of ROI(s)-->
     <string-array name="latLng_scenario1">
-        <item>52.012779,5.897388</item>
-        <item>52.015242,5.922059</item>
+        <item>52.002490,5.892861</item>     <!-- Region inside home comm range -->
     </string-array>
 
     <string-array name="latLng_scenario2">
+        <item>52.008870,5.892628</item>     <!-- Region partly inside home comm range -->
+    </string-array>
+
+    <string-array name="latLng_scenario3">
+        <item>52.012779,5.897388</item>
         <item>52.015242,5.922059</item>
     </string-array>
 

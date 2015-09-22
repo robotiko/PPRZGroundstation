@@ -6,8 +6,8 @@
     <integer name="groundLevel">-3</integer>                  <!-- meters -->
     <integer name="MSA">10</integer>                          <!-- meters (minimum safe altitude)-->
     <integer name="verticalSeparationStandard">30</integer>    <!-- tenths of meters -->
-    <integer name="horizontalSeparationStandard">50</integer> <!-- tenths of meters -->
-    <integer name="surveillanceCircleRadius">50</integer>     <!-- tenths of meters -->
+    <integer name="horizontalSeparationStandard">1500</integer> <!-- tenths of meters -->
+    <integer name="surveillanceCircleRadius">750</integer>     <!-- tenths of meters -->
 
     <!-- Standard altitudes -->
     <integer name="surveillanceAltitude">50</integer>       <!-- meters -->
@@ -49,29 +49,44 @@
 
     <!-- Map drawing settings -->
     <integer name="flightPathOnOff">1</integer> 	        <!-- 1=ON, 0=OFF -->
+    <integer name="circleStrokeWidth">5</integer> 	        <!--screen pixels -->
 
     <!--****************** SCENARIOS ******************-->
     <!-- Array containing initial battery values for scenario spinner. 12400 mV is max -->
+    <integer name="noAircraftInScenario1">5</integer> 	        <!--screen pixels -->
     <integer-array name="iniBatVolt_scenario1">
         <item>12400</item>                                   <!-- ac1 milliVolt -->
         <item>12400</item>                                   <!-- ac2 milliVolt -->
-        <item>12400</item>                                   <!-- ac3 milliVolt -->
     </integer-array>
     <integer-array name="batRate_scenario1">
         <item>0</item>                                       <!-- ac1  -->
         <item>0</item>                                       <!-- ac2  -->
-        <item>0</item>                                       <!-- ac3  -->
     </integer-array>
 
     <integer-array name="iniBatVolt_scenario2">
         <item>12400</item>                                   <!-- ac1 milliVolt -->
-        <item>11000</item>                                   <!-- ac2 milliVolt -->
-        <item>9000</item>                                    <!-- ac3 milliVolt -->
+        <item>12400</item>                                   <!-- ac2 milliVolt -->
     </integer-array>
     <integer-array name="batRate_scenario2">
         <item>0</item>                                       <!-- ac1  -->
         <item>0</item>                                       <!-- ac2  -->
+    </integer-array>
+
+    <integer-array name="iniBatVolt_scenario3">
+        <item>12400</item>                                   <!-- ac1 milliVolt -->
+        <item>11000</item>                                   <!-- ac2 milliVolt -->
+        <item>9000</item>                                    <!-- ac3 milliVolt -->
+    </integer-array>
+    <integer-array name="batRate_scenario3">
+        <item>0</item>                                       <!-- ac1  -->
+        <item>0</item>                                       <!-- ac2  -->
         <item>0</item>                                       <!-- ac3  -->
+    </integer-array>
+
+    <integer-array name="noAircraftInScenario">
+        <item>2</item>                                       <!-- ac1  -->
+        <item>2</item>                                       <!-- ac2  -->
+        <item>3</item>                                       <!-- ac3  -->
     </integer-array>
 
     <!--****************** CONNECTION SETTINGS ******************-->
@@ -81,12 +96,14 @@
         <item>5001</item>
         <item>5002</item>
         <item>5003</item>
+        <item>5004</item>
     </integer-array>
 
     <integer-array name="system_ids">                       <!-- system id numbers-->
         <item>1</item>
         <item>2</item>
         <item>3</item>
+        <item>4</item>
     </integer-array>
     
 </resources>

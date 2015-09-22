@@ -1,6 +1,7 @@
 package com.gcs.helpers;
 
 import android.location.Location;
+import android.util.Log;
 import android.util.SparseArray;
 
 import com.gcs.core.Aircraft;
@@ -27,23 +28,22 @@ public class PerformanceCalcHelper {
 
         for(int i=0; i<mAircraft.size(); i++) { //Loop over all aircraft
             int iKey = mAircraft.keyAt(i);
-            if(mAircraft.get(iKey).getCommunicationSignal()>0 && mAircraft.get(iKey).getTaskStatus() == TaskStatus.SURVEILLANCE) { //Only calculate coverage if the aircraft can communicate with the ground station and has a surveillance status (at correct altitude)
+            if(mAircraft.get(iKey).getCommunicationSignal()>0 && mAircraft.get(iKey).getTaskStatus() == TaskStatus.SURVEILLANCE && mAircraft.get(iKey).getDistanceToWaypoint() <= acCoverageRadius) { //Only calculate coverage if the aircraft can communicate with the ground station, has a surveillance status (at correct altitude) and the distance between aircraft and waypoint is less than the survey circle radius
 
-                //TODO: enable multiple ROIs
-                //Add overlap between aircraft coverage and ROI
-                double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIList.get(0), mAircraft.get(iKey).getWpLatLng(0));
-                double doubleOverlap = 0;
-                /* TODO: account for overlap by decreasing performance score in case of overlap/violation of the separation standard instead of calculating overlap */
-                //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!
-                if (overlap > 0) { //If not outside the ROI
-                    for (int j=i+1; j<mAircraft.size(); j++) {
-                        int jKey = mAircraft.keyAt(j);
-                        //Account for overlap of the two UAVs
-                        doubleOverlap += circleOverlap(acCoverageRadius, acCoverageRadius, mAircraft.get(iKey).getLatLng(), mAircraft.get(jKey).getLatLng());
-                    }
+            //TODO: enable multiple ROIs
+            //Add overlap between aircraft coverage and ROI
+            double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIList.get(0), mAircraft.get(iKey).getWpLatLng(0));
+            double doubleOverlap = 0;
+            //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!
+            if (overlap > 0) { //If not outside the ROI
+                for (int j=i+1; j<mAircraft.size(); j++) {
+                    int jKey = mAircraft.keyAt(j);
+                    //Account for overlap of the two UAVs
+                    doubleOverlap += circleOverlap(acCoverageRadius, acCoverageRadius, mAircraft.get(iKey).getWpLatLng(0), mAircraft.get(jKey).getWpLatLng(0));
                 }
-                //Calculate the total coverage ove the ROI
-                overlapArea += overlap - doubleOverlap;
+            }
+            //Calculate the total coverage ove the ROI
+            overlapArea += overlap - doubleOverlap;
             }
         }
         //Coverage percentage

@@ -75,9 +75,7 @@ public class Aircraft {
     private int connectedTo             = 0; //0 is home, higher numbers are aircraft
 
     //////////// HEARTBEAT ////////////
-    public byte getSysid() {
-        return mHeartbeat.getSysid();
-    }
+    public byte getSysid() { return mHeartbeat.getSysid(); }
 
     public byte getCompid() {
         return mHeartbeat.getCompid();
@@ -104,13 +102,9 @@ public class Aircraft {
         mHeartbeat.setMavlinkVersion(mavlinkVersion);
     }
 
-    public boolean hasHeartbeat() {
-        return mHeartbeat.heartbeatState != Heartbeat.HeartbeatState.FIRST_HEARTBEAT;
-    }
+    public boolean hasHeartbeat() { return mHeartbeat.heartbeatState != Heartbeat.HeartbeatState.FIRST_HEARTBEAT; }
 
-    public boolean isConnectionAlive() {
-        return mHeartbeat.heartbeatState != Heartbeat.HeartbeatState.LOST_HEARTBEAT;
-    }
+    public boolean isConnectionAlive() { return mHeartbeat.heartbeatState != Heartbeat.HeartbeatState.LOST_HEARTBEAT; }
 
     public boolean hasCommConnection() { return mState.hasCommConnection(); }
 
@@ -119,9 +113,7 @@ public class Aircraft {
     	mAttitude.setRollPitchYaw(roll, pitch, yaw);
     }
 	
-	public double getRoll() {
-    	return mAttitude.getRoll();
-    }
+	public double getRoll() { return mAttitude.getRoll(); }
     
     public double getPitch() {
     	return mAttitude.getPitch();
@@ -203,9 +195,7 @@ public class Aircraft {
     }
 
     //////////// STATE ////////////
-    public boolean isArmed() {
-        return mState.isArmed();
-    }
+    public boolean isArmed() { return mState.isArmed(); }
 
     public boolean isFlying() {
         return mState.isFlying();
@@ -225,9 +215,7 @@ public class Aircraft {
         mState.setConflictStatusNew(NewStatus);
     }
 
-    public ConflictStatus getConflictStatus() {
-        return mState.getConflictStatus();
-    }
+    public ConflictStatus getConflictStatus() { return mState.getConflictStatus(); }
 
     public void setTaskStatus(TaskStatus taskStatus) {
         mState.setTaskStatus(taskStatus);
@@ -246,9 +234,7 @@ public class Aircraft {
 		return mPosition.getTimeStamp();
 	}
 
-	public double getLat() {
-		return mPosition.getLat()*1e-7;
-	}
+	public double getLat() { return mPosition.getLat()*1e-7; }
 	
 	public double getLon() {
 		return mPosition.getLon()*1e-7;
@@ -329,17 +315,11 @@ public class Aircraft {
         waypoints.set(wpNumber, wp);
     }
 
-	public double getWpLat(int wpNumber) {
-		return waypoints.get(wpNumber).getLat();
-	}
+	public double getWpLat(int wpNumber) { return waypoints.get(wpNumber).getLat(); }
 	
-	public double getWpLon(int wpNumber) {
-		return waypoints.get(wpNumber).getLon();
-	}
+	public double getWpLon(int wpNumber) { return waypoints.get(wpNumber).getLon(); }
 	
-	public LatLng getWpLatLng(int wpNumber) {
-		return new LatLng(waypoints.get(wpNumber).getLat(),waypoints.get(wpNumber).getLon());
-	}
+	public LatLng getWpLatLng(int wpNumber) { return new LatLng(waypoints.get(wpNumber).getLat(),waypoints.get(wpNumber).getLon()); }
 
     public List<LatLng> getWpLatLngList() {
         List<LatLng> points  = new ArrayList<>();
@@ -350,9 +330,7 @@ public class Aircraft {
         return points;
     }
     
-    public float getWpAlt(int wpNumber) {
-		return waypoints.get(wpNumber).getAlt();
-	}
+    public float getWpAlt(int wpNumber) { return waypoints.get(wpNumber).getAlt(); }
     
     public short getWpSeq(int wpNumber) {
     	return waypoints.get(wpNumber).getSeq();
@@ -370,9 +348,7 @@ public class Aircraft {
 
 	public void clearWpList() { waypoints.clear();}
 
-    public boolean isWpSelected(int wpNumber) {
-        return waypoints.get(wpNumber).isSelected();
-    }
+    public boolean isWpSelected(int wpNumber) { return waypoints.get(wpNumber).isSelected(); }
 
     public boolean isWpUpdating(int wpNumber) {
         return waypoints.get(wpNumber).isUpdating();
@@ -489,6 +465,16 @@ public class Aircraft {
         return distanceHome;
     }
 
+    public float getDistanceToWaypoint() {
+        float wpDistance = 2*context.getResources().getInteger(R.integer.acCoverageRadius);;
+        if(waypoints.size()>0) {
+            float[] distance = new float[1];
+            Location.distanceBetween(getLat(), getLon(), getWpLat(0), getWpLon(0), distance);
+            wpDistance =  distance[0];
+        }
+        return wpDistance;
+    }
+
     public int getAircraftCount() {
         return aircraftCount;
     }
@@ -531,6 +517,7 @@ public class Aircraft {
     ////////////////////// ICON //////////////////////////
     //////////////////////////////////////////////////////
     private Bitmap AC_Icon, baseIcon;
+    private int iconHeight = 0;
     private static BitmapDrawable  arrowRed, arrowBlue, arrowGray, batteryGreen, batteryYellow, batteryRed, commFull, commMid, commLow, commEmpty;
     private static int resolution, protectedZoneAlpha, sideOffsetArrow, batteryVertLocation, batteryHorLocation, batteryScaling, commVertLocation,
                        commHorLocation, commScaling, halfBat, lowBat, halfComm, lowComm, NoComm, colorRED, colorBLUE, colorGRAY, colorYELLOW;
@@ -759,6 +746,7 @@ public class Aircraft {
 
         //Update with the newly generated icon
         AC_Icon = baseIcon;
+        iconHeight = baseIcon.getHeight();
     }
 
     //Get and set methods for the icon
@@ -767,7 +755,7 @@ public class Aircraft {
     }
 
     //Method that provides information about the bound offset of the icon (used for information window positioning because the marker is a square bitmap that is rotated)
-    public float getIconBoundOffset() { return ((AC_Icon.getHeight()-resolution)/2.0f)/AC_Icon.getHeight(); }
+    public float getIconBoundOffset() { return ((iconHeight-resolution)/2.0f)/iconHeight; }
 
     public void setCircleColor(int color) {
         circleColor = color;

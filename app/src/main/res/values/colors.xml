@@ -16,5 +16,16 @@
     <item name="blueTape" type="color">#003EFF</item>
 
     <item name="brownTape" type="color">#5C3317</item>
- 
+
+    <item name="commRange" type="color">0x5500ff00</item>
+
+    <item name="coverageGreen" type="color">0x4000ff00</item>
+
+    <item name="coverageRed" type="color">0x40ff0000</item>
+
+    <!--<item name="surveillancePath" type="color">0x900099CC</item>-->
+    <item name="surveillancePath" type="color">0x90ffdd00</item>
+
+    <item name="regionOfInterest" type="color">0x400099CC</item>
+
 </resources> 

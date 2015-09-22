@@ -26,6 +26,12 @@
         android:orderInCategory="10"
         android:showAsAction="always"
         android:title="Communication range"/>
+
+    <item
+        android:id="@+id/show_min_comm_range"
+        android:orderInCategory="10"
+        android:showAsAction="always"
+        android:title="Comm guaranteed"/>
 <!--
     <item
         android:id="@+id/menu_block_spinner"
