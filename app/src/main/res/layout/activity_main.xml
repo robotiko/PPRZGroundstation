@@ -29,6 +29,16 @@
         android:layout_alignParentLeft="true"
     	android:layout_marginLeft="10dp" 
     	android:layout_marginTop="100dp"/>
+
+    <fragment
+        android:id="@+id/scenarioTimeFragment"
+        android:name="com.gcs.fragments.ScenarioTimeFragment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="190dp"/>
     
     <fragment
         android:id="@+id/connectionFragment"
@@ -55,5 +65,13 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
     	android:layout_marginBottom="20dp"/>
+
+    <fragment
+        android:id="@+id/scenarioEndFragment"
+        android:name="com.gcs.fragments.ScenarioEndFragment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+         />
     
 </RelativeLayout>

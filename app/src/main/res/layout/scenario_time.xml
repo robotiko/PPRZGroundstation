@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scenarioTimeVerticalLayout"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" 
+    android:background="@drawable/circle"
+    android:gravity="center" >
+    
+    <LinearLayout
+        android:id="@+id/scenarioTimeHorizontalLayout"
+       	android:orientation="horizontal"
+       	android:layout_width="fill_parent"
+    	android:layout_height="fill_parent" 
+    	android:gravity="center" >
+		
+	    <TextView
+	        android:id="@+id/scenarioTimeValue"
+	        style="@style/telemetryText"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"  
+	        android:text="@string/scenario_time_value" />
+
+	    <TextView
+	        android:id="@+id/scenarioTimeUnitLabel"
+	        style="@style/telemetryText"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_marginLeft="-3dp"
+	        android:text="@string/scenario_time_unit" />
+	    
+    </LinearLayout>
+</LinearLayout>

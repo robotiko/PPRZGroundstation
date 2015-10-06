@@ -10,8 +10,8 @@
     <integer name="surveillanceCircleRadius">750</integer>     <!-- tenths of meters -->
 
     <!-- Standard altitudes -->
-    <integer name="surveillanceAltitude">50</integer>       <!-- meters -->
-    <integer name="relayAltitude">70</integer>              <!-- meters -->
+    <integer name="surveillanceAltitude">30</integer>       <!-- meters -->
+    <integer name="relayAltitude">50</integer>              <!-- meters -->
     <integer name="altitudeAccuracyDistance">2</integer>    <!-- meters -->
 
     <!-- Communication signal parameters -->
@@ -52,8 +52,15 @@
     <integer name="circleStrokeWidth">5</integer> 	        <!--screen pixels -->
 
     <!--****************** SCENARIOS ******************-->
+    <integer name="scenarioRuntime">15</integer> 	         <!--time in seconds -->
+    <integer name="orangeTime">60</integer> 	             <!--time in seconds -->
+    <integer name="redTime">30</integer> 	                 <!--time in seconds -->
+
+    <integer name="surveillanceBatRate">10</integer> 	             <!-- milliVolt/second -->
+    <integer name="relayBatRate">15</integer> 	             <!-- milliVolt/second -->
+
     <!-- Array containing initial battery values for scenario spinner. 12400 mV is max -->
-    <integer name="noAircraftInScenario1">5</integer> 	        <!--screen pixels -->
+    <integer name="noAircraftInScenario1">5</integer> 	     <!--screen pixels -->
     <integer-array name="iniBatVolt_scenario1">
         <item>12400</item>                                   <!-- ac1 milliVolt -->
         <item>12400</item>                                   <!-- ac2 milliVolt -->
@@ -84,10 +91,24 @@
     </integer-array>
 
     <integer-array name="noAircraftInScenario">
-        <item>2</item>                                       <!-- ac1  -->
-        <item>2</item>                                       <!-- ac2  -->
-        <item>3</item>                                       <!-- ac3  -->
+        <item>2</item>                                       <!-- scenario 1 -->
+        <item>2</item>                                       <!-- scenario 2 -->
+        <item>3</item>                                       <!-- scenario 3 -->
     </integer-array>
+
+    <integer-array name="batteryFailureTime">   <!-- 0=not applicable  -->
+        <item>0</item>                                       <!-- scenario 1 -->
+        <item>0</item>                                       <!-- scenario 2 -->
+        <item>0</item>                                       <!-- scenario 3 -->
+    </integer-array>
+
+    <integer-array name="batteryFailureAircraft">   <!-- 0=none -->
+        <item>0</item>                                       <!-- scenario 1 -->
+        <item>0</item>                                       <!-- scenario 2 -->
+        <item>0</item>                                       <!-- scenario 3 -->
+    </integer-array>
+
+    <integer name="batteryFailureVoltage">9200</integer>     <!--milliVolt -->
 
     <!--****************** CONNECTION SETTINGS ******************-->
     <integer name="connectionType">0</integer>	            <!-- 0 = UDP connection -->

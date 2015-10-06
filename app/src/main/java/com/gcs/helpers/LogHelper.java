@@ -23,6 +23,20 @@ public class LogHelper {
         Calendar cal=Calendar.getInstance(); //Note that January is 0 in JAVA
         logFileName = "log" + String.format("%4d%02d%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH)+1 ,cal.get(Calendar.DAY_OF_MONTH))
                 + String.format("%02d%02d", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE)) + ".txt";
+        //Write header line
+        try{
+            File sdCard = Environment.getExternalStorageDirectory();
+            File dir = new File (sdCard.getAbsolutePath() + "/gcsData");
+            dir.mkdirs();
+            File file = new File(dir, logFileName);
+            FileOutputStream f = new FileOutputStream(file, true);
+
+            OutputStreamWriter myOutWriter = new OutputStreamWriter(f);
+            //Write header to log file
+            myOutWriter.append("#The colums represent the following data: [Time, Uptime, Performance score] + [Aircraft number, Altitude, Latitude, Longitude, wpLatitude, wpLongitude, Communication signal, Status/task (0=none,1=surveillance,2=relay), Conflictstatus, batVoltage]");
+        } catch(IOException e) {
+            Log.e(TAG, "Error while writing headerline to logfile");
+        }
     }
 
     public static final void dataLogger(long initTime, int scenarioNumber, double performanceScore, SparseArray<Aircraft> mAircraft) {
@@ -48,9 +62,10 @@ public class LogHelper {
             OutputStreamWriter myOutWriter = new OutputStreamWriter(f);
             //First columns are [Time, Uptime, Performance score]
             myOutWriter.append(time + ", " + String.format("%.1f", uptime*1e-3) + ", " + scenarioNumber + ", " + performanceScore);
-            //Loop over all aircraft to write a line to the log file with the following data of all aircraft: [Altitude, Latitude, Longitude, wpLatitude, wpLongitude, Communication signal, Status/task (0=none,1=surveillance,2=relay), Conflictstatus]
-            for(int i=1; i<mAircraft.size()+1; i++) {
-//                myOutWriter.append(", " + mAircraft.get(i).getAGL() + ", " + mAircraft.get(i).getLat() + ", " + mAircraft.get(i).getLon() + ", " + mAircraft.get(i).getWpLat(0) + ", " + mAircraft.get(i).getWpLon(0) + ", " + mAircraft.get(i).getCommunicationSignal() + ", "  + mAircraft.get(i).getTaskStatus().getValue() + ", "  + mAircraft.get(i).getConflictStatus().getValue());
+            //Loop over all aircraft to write a line to the log file with the following data of all aircraft: [Aircraft number ,Altitude, Latitude, Longitude, wpLatitude, wpLongitude, Communication signal, Status/task (0=none,1=surveillance,2=relay), Conflictstatus, batVoltage]
+            for(int i=0; i<mAircraft.size(); i++) {
+                int acNumber = mAircraft.keyAt(i);
+                myOutWriter.append(", " + acNumber + ", " + mAircraft.get(acNumber).getAGL() + ", " + mAircraft.get(acNumber).getLat() + ", " + mAircraft.get(acNumber).getLon() + ", " + mAircraft.get(acNumber).getWpLat(0) + ", " + mAircraft.get(acNumber).getWpLon(0) + ", " + mAircraft.get(acNumber).getCommunicationSignal() + ", "  + mAircraft.get(acNumber).getTaskStatus().getValue() + ", "  + mAircraft.get(acNumber).getConflictStatus().getValue() + ", " + mAircraft.get(acNumber).getBattVolt());
             }
             //End the line and close the file
             myOutWriter.append("\r\n");

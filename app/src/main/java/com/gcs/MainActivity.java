@@ -16,8 +16,11 @@ import com.gcs.core.ConflictStatus;
 import com.gcs.core.Home;
 import com.gcs.core.TaskStatus;
 import com.gcs.fragments.PerformanceScoreFragment;
+import com.gcs.fragments.ScenarioEndFragment;
+import com.gcs.fragments.ScenarioTimeFragment;
 import com.gcs.helpers.LogHelper;
 import com.gcs.helpers.PerformanceCalcHelper;
+import com.google.android.gms.gcm.Task;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.GroundOverlay;
@@ -52,6 +55,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.location.Location;
+import android.opengl.Visibility;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -61,6 +65,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.MenuItemCompat;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -84,6 +89,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private Handler handler, interfaceUpdateHandler;
 	private final int mInterval        = 1000;                       // milliseconds
     private final long initTime        = System.currentTimeMillis(); // milliseconds
+    private long timeLeft;
+    private long scenarioStartTime;
 
     //Declaration of the service client
 	IMavLinkServiceClient mServiceClient;
@@ -99,13 +106,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean showMinCommRange  = false;
     private boolean showCoverage      = false;
     private boolean updateAircraftSpinner = true;
+    private boolean allWpsLoaded      = false;
 
     //Declaration of the fragments
 	private TelemetryFragment        telemetryFragment;
 	private PerformanceScoreFragment performanceScoreFragment;
+	private ScenarioTimeFragment     scenarioTimeFragment;
 	private AltitudeTape             altitudeTapeFragment;
     private SupportMapFragment       mapFragment;
     private MissionButtonFragment    missionButtons;
+    private ScenarioEndFragment      scenarioEndFragment;
 
     //Declaration of the lists/arrays that are used
     private SparseArray<Aircraft>     mAircraft             = new SparseArray<>();
@@ -128,6 +138,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private int selectedWp = 0;
     private int activeScenario = 0;
     private int noAircraftScenario = 0;
+    private int batteryFailureTime = 0;
+    private int batteryFailureAircraft = 0;
+    private int scenarioRuntime = 0;
     private LatLng origMarkerPosition;
     private Circle flightPath, surveillanceBound;
 
@@ -163,15 +176,21 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         relayAltitude = getResources().getInteger(R.integer.relayAltitude);                                                   //meters
         altitudeAccuracyDistance = getResources().getInteger(R.integer.altitudeAccuracyDistance);               //meters
 
-        //TODO: remove hardcoded home location once done debugging
-		// Instantiate home object
+        		// Instantiate home object
 		home = new Home();
 
 		//Create a handles to the fragments
 		telemetryFragment        = (TelemetryFragment) getSupportFragmentManager().findFragmentById(R.id.telemetryFragment);               //Telemetry fragment
-        performanceScoreFragment = (PerformanceScoreFragment) getSupportFragmentManager().findFragmentById(R.id.performanceScoreFragment); //Battery fragment
+        performanceScoreFragment = (PerformanceScoreFragment) getSupportFragmentManager().findFragmentById(R.id.performanceScoreFragment); //Performance score fragment
+        scenarioTimeFragment     = (ScenarioTimeFragment) getSupportFragmentManager().findFragmentById(R.id.scenarioTimeFragment);         //Scenario time fragment
 		altitudeTapeFragment     = (AltitudeTape) getSupportFragmentManager().findFragmentById(R.id.altitudeTapeFragment);                 //AltitudeTape fragment
 		missionButtons           = (MissionButtonFragment) getSupportFragmentManager().findFragmentById(R.id.missionButtonFragment);       //MissionButton fragment
+        scenarioEndFragment      = (ScenarioEndFragment) getSupportFragmentManager().findFragmentById(R.id.scenarioEndFragment);               //MissionButton fragment
+
+        //Set timer
+        scenarioRuntime = getResources().getInteger(R.integer.scenarioRuntime);
+        timeLeft = scenarioRuntime;
+        scenarioTimeFragment.setTimeLeft(timeLeft);
 
 		// Get the map and register for the ready callback
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -360,6 +379,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	Runnable interfaceUpdater = new Runnable() {
 	    @Override
 	    public void run() {
+            //Calculate the runtime left for the experiment
+            if(isConnected) {
+                timeLeft = scenarioRuntime - ((System.currentTimeMillis() - scenarioStartTime) / 1000);
+            }
+
+            //Show scenario runtime that is left on interface
+            scenarioTimeFragment.setTimeLeft(timeLeft);
+
             //Update aircraft spinner
             if (updateAircraftSpinner && aircraftSpinner != null) {
                 updateAircraftSpinner();
@@ -368,9 +395,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             //Update the battery values (reducing with app values for experiment scenarios, external input should be overridden)
             if (activeScenario != 0 && !batRateList.isEmpty()) {
-                for (int i=0; i<mAircraft.size(); i++) {
+                for (int i = 0; i < mAircraft.size(); i++) {
                     int acNumber = mAircraft.keyAt(i);
-                    mAircraft.get(acNumber).setBatteryState(mAircraft.get(acNumber).getBattVolt() - batRateList.get(i), -1, -1);
+                    int batRate=0;
+                    if(mAircraft.get(acNumber).getTaskStatus().equals(TaskStatus.SURVEILLANCE)) {
+                        batRate = getResources().getInteger(R.integer.surveillanceBatRate);
+                    } else if (mAircraft.get(acNumber).getTaskStatus().equals(TaskStatus.RELAY)) {
+                        batRate = getResources().getInteger(R.integer.relayBatRate);
+                    }
+                    mAircraft.get(acNumber).setBatteryState(mAircraft.get(acNumber).getBattVolt() - batRate, -1, -1);
+                }
+
+                //Timed malfunction of the battery of a certain aircraft
+                if (timeLeft == batteryFailureTime && batteryFailureAircraft != 0) {
+                    mAircraft.get(batteryFailureAircraft).setBatteryState(getResources().getInteger(R.integer.batteryFailureVoltage), -1, -1);
                 }
             }
 
@@ -404,17 +442,25 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             /////PERFORMANCE SCORE
             //Calculate the current performance score
-            if (ROIlist.size()!=0 && isConnected) {
+            if (ROIlist.size() != 0 && allWpsLoaded && isConnected) {
                 performanceScore = PerformanceCalcHelper.calcPerformance(ROIRadius, acCoverageRadius, ROIlist, mAircraft);
             }
             //Set the performance score to the text view
             performanceScoreFragment.setText(String.format("%.1f", performanceScore));
 
             /////DATA LOGGING
-//            LogHelper.dataLogger(initTime, activeScenario, performanceScore, mAircraft);
+//            if(mAircraft.size()!=0 && mAircraft.get(1).getWpLatLngList().size()!=0) {
+            if (allWpsLoaded) {
+                LogHelper.dataLogger(initTime, activeScenario, performanceScore, mAircraft);
+            }
 
-            //Restart this updater after the set interval
-            interfaceUpdateHandler.postDelayed(interfaceUpdater, mInterval);
+            //Restart this updater after the set interval (only if scenario time is left)
+            if (timeLeft > 0) {
+                interfaceUpdateHandler.postDelayed(interfaceUpdater, mInterval);
+            } else if (timeLeft <= 0) {
+                //Show dialog that scenario is finished
+                scenarioEndFragment.setVisibility(View.VISIBLE);
+            }
         }
 	  };
 
@@ -467,6 +513,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     case "CONNECTED": {
                         isConnected = true;
                         updateConnectButton();
+                        //Set the scenario start time
+                        scenarioStartTime = System.currentTimeMillis();
                         break;
                     }
 
@@ -745,7 +793,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     for(int i=0; i<mAircraft.size(); i++) {
                         int key = mAircraft.keyAt(i);
                         if(mAircraft.get(key).getWpLatLngList().isEmpty()) break;
-                        if(i==mAircraft.size()-1) missionButtons.updateWaypointsButton(true);
+                        if(i==mAircraft.size()-1) {
+                            missionButtons.updateWaypointsButton(true);
+                            allWpsLoaded = true;
+                        }
                     }
                 } catch (Throwable t) {
                     Log.e(TAG, "Error while updating waypoints", t);
@@ -842,7 +893,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Get the location(s) of the ROI(s)
         String[] latLng = null;
         int[] batValues = null;
-        int[] batRates = null;
+        int[] batRates  = null;
         List<LatLng> ROIlist= new ArrayList<>();
         List<Integer> batList= new ArrayList<>();
         List<Integer> batRateList= new ArrayList<>();
@@ -874,6 +925,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 batList.add(batValues[j]);
                 batRateList.add(batRates[j]);
             }
+
+            //Set battery failure time (0=no failure)
+            int[] batFailTime = getResources().getIntArray(R.array.batteryFailureTime);
+            batteryFailureTime = batFailTime[scenarioNumber-1];
+            //Set battery failure aircraft (0=none)
+            int[] batFailAc = getResources().getIntArray(R.array.batteryFailureAircraft);
+            batteryFailureAircraft = batFailAc[scenarioNumber-1];
+
             //Set the number of aircraft in the scenario
             int[] noAircraft = getResources().getIntArray(R.array.noAircraftInScenario);
             noAircraftScenario = noAircraft[scenarioNumber-1];
@@ -914,8 +973,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Fetch server ports and system id numbers from resources
         ArrayList<Integer> serverPortList = new ArrayList<>(); //List of the udp port used
         ArrayList<Integer> sysIdList = new ArrayList<>();      //List of system ids used (in the same order as the udp ports)
-
-        Log.d("TEST",String.valueOf(noAircraftScenario));
 
         int ports[] =  Arrays.copyOfRange(getResources().getIntArray(R.array.udp_ports), 0, noAircraftScenario);
         int ids[] = Arrays.copyOfRange(getResources().getIntArray(R.array.system_ids), 0, noAircraftScenario);
