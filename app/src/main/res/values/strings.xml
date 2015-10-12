@@ -40,13 +40,14 @@
     <!-- Spinner values -->
     <string name="no_aircraft_selected">No aircraft selected</string>
 
-    <!-- SCENARIOS -->
+    <!-- //////////// SCENARIO SETTINGS //////////// -->
     <!-- Array containing strings for scenario spinner -->
     <string-array name="scenario_array">
         <item>Select a scenario</item>
         <item>Scenario 1</item>
         <item>Scenario 2</item>
         <item>Scenario 3</item>
+        <item>Scenario 4</item>
     </string-array>
 
     <!-- Locations of ROI(s)-->
@@ -60,6 +61,10 @@
 
     <string-array name="latLng_scenario3">
         <item>52.006383,5.884803</item>    <!-- Region partly inside home comm range -->
+    </string-array>
+
+    <string-array name="latLng_scenario4">
+        <item>52.007150,5.879244</item>    <!-- Region outside home comm range -->
     </string-array>
 
 </resources>

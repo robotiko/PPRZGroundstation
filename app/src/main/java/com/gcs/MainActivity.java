@@ -96,16 +96,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private Button connectButton;
 
     //Declaration of booleans
-	private boolean isConnected       = false;
-	private boolean isAltitudeUpdated = false;
-    private boolean aircraftSelected  = false;
-    private boolean showCommRange     = false;
-    private boolean showMinCommRange  = false;
-    private boolean showCoverage      = false;
+	private boolean isConnected           = false;
+	private boolean isAltitudeUpdated     = false;
+    private boolean aircraftSelected      = false;
+    private boolean showCommRange         = false;
+    private boolean showMinCommRange      = false;
+    private boolean showCoverage          = false;
     private boolean updateAircraftSpinner = true;
-    private boolean allWpsLoaded      = false;
+    private boolean allWpsLoaded          = false;
     private boolean batteryFailureOccured = false;
-    private boolean scenarioStarted   = false;
+    private boolean scenarioStarted       = false;
 
     //Declaration of the fragments
 	private TelemetryFragment        telemetryFragment;
@@ -125,13 +125,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private List<Integer>             groupSelectedAircraft = new ArrayList<>();
     private List<Circle>              relayCommCircles      = new ArrayList<>();
     private List<LatLng>              ROIlist               = new ArrayList<>();
+    private List<Integer>             ROIradiiList          = new ArrayList<>();
     private List<GroundOverlay>       ROIOverlayList        = new ArrayList<>();
     private List<Integer>             initialBatList        = new ArrayList<>();
 
 	public Home home;
 
     private float verticalSeparationStandard, horizontalSeparationStandard, surveillanceCircleRadius;
-    private int commMaxRange, commRelayRange, singleLabelVisibility, acCoverageRadius, ROIRadius, surveillanceAltitude, relayAltitude,altitudeAccuracyDistance;
+    private int commMaxRange, commRelayRange, singleLabelVisibility, acCoverageRadius, surveillanceAltitude, relayAltitude,altitudeAccuracyDistance;
     private int selectedAc = 0;                     //Set to 0 if none serves as relay (yet)
     private double performanceScore = 0f;
     private int selectedWp = 0;
@@ -385,9 +386,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	    @Override
 	    public void run() {
             //Calculate the runtime left for the experiment
-            if(isConnected) {
+            if(isConnected && allWpsLoaded) {
+                if(!scenarioStarted) {
+                    //Set the scenario start time
+                    scenarioStartTime = System.currentTimeMillis();
+                    scenarioStarted = true;
+                }
+
                 timeLeft = scenarioRuntime - ((System.currentTimeMillis() - scenarioStartTime) / 1000);
-                scenarioStarted = true;
             }
 
             //Show scenario runtime that is left on interface
@@ -441,13 +447,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             /////PERFORMANCE SCORE
             //Calculate the current performance score
             if (ROIlist.size() != 0 && allWpsLoaded && isConnected) {
-                performanceScore = PerformanceCalcHelper.calcPerformance(ROIRadius, acCoverageRadius, ROIlist, mAircraft, surveyCountScore);
+                performanceScore = PerformanceCalcHelper.calcPerformance(ROIradiiList, acCoverageRadius, ROIlist, mAircraft, surveyCountScore);
             }
             //Set the performance score to the text view
             performanceScoreFragment.setText(String.format("%.1f", performanceScore));
 
             /////DATA LOGGING
-            if (allWpsLoaded && (timeLeft < scenarioRuntime || !scenarioStarted)) {
+            if (allWpsLoaded && (timeLeft < scenarioRuntime)) {
                 LogHelper.dataLogger(initTime, timeLeft, scenarioRuntime, activeScenario, performanceScore, mAircraft);
             }
 
@@ -512,8 +518,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     case "CONNECTED": {
                         isConnected = true;
                         updateConnectButton();
-                        //Set the scenario start time
-                        scenarioStartTime = System.currentTimeMillis();
                         break;
                     }
 
@@ -912,6 +916,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 latLng    = getResources().getStringArray(R.array.latLng_scenario3);
                 batValues = getResources().getIntArray(R.array.iniBatVolt_scenario3);
                 ROIradii  = getResources().getIntArray(R.array.ROIRadii_scenario3);
+            } else if(scenarioNumber == 4) {
+                latLng    = getResources().getStringArray(R.array.latLng_scenario4);
+                batValues = getResources().getIntArray(R.array.iniBatVolt_scenario4);
+                ROIradii  = getResources().getIntArray(R.array.ROIRadii_scenario4);
+            } else if(scenarioNumber == 5) {
+
             }
 
             //Loop over ROIs to put the values in lists
@@ -942,8 +952,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             surveyCountScore = surveyCountScores[scenarioNumber-1];
 
             //TODO: enable mulitple ROIs
-            //Set the radii of the Regions of Interest
-            ROIRadius = ROIradii[0];
+            //Loop over ROI radii to put in list
+            for(int k=0; k < ROIradii.length; k++) {
+                //Convert ROI radii array to a list
+                ROIradiiList.add(ROIradii[k]);
+            }
+//            ROIRadius = ROIradii[0];
         } else {
             noAircraftScenario = 0;
         }
@@ -1712,7 +1726,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     GroundOverlayOptions ROI = new GroundOverlayOptions()
                             .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
-                            .position(ROIlocs.get(n), ROIRadius * 2, ROIRadius * 2); //m
+                            .position(ROIlocs.get(n), ROIradiiList.get(n) * 2, ROIradiiList.get(n) * 2); //m
                     GroundOverlay ROIOverlay = map.addGroundOverlay(ROI);
                     //Save groundoverlay in a list
                     ROIOverlayList.add(ROIOverlay);

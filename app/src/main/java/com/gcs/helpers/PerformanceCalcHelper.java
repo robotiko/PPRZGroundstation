@@ -1,7 +1,6 @@
 package com.gcs.helpers;
 
 import android.location.Location;
-import android.util.Log;
 import android.util.SparseArray;
 
 import com.gcs.core.Aircraft;
@@ -13,15 +12,14 @@ import java.util.List;
 
 public class PerformanceCalcHelper {
 
-    public static final double calcPerformance(int ROIRadius, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft, int surveyCountScore) {
+    public static final double calcPerformance(List<Integer> ROIradiiList, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft, int surveyCountScore) {
         //TODO: add penalty for red- and completely empty battery
-        return ROIcovered(ROIRadius,acCoverageRadius,ROIList,mAircraft,surveyCountScore)*LossOfCommunicationCheck(mAircraft)*ConflictCheck(mAircraft)*100; //Percentage;
+        return ROIcovered(ROIradiiList,acCoverageRadius,ROIList,mAircraft,surveyCountScore)*LossOfCommunicationCheck(mAircraft)*ConflictCheck(mAircraft)*100; //Percentage;
     }
 
     //Calculate the percentage of the Region of Interest (ROI) that is covered by surveillance aircraft
-    private final static double ROIcovered(int ROIRadius, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft, int surveyCountScore){
-        //Region of interest parameters
-//        double AREA      = ROIRadius*ROIRadius*Math.PI;
+    private final static double ROIcovered(List<Integer> ROIradiiList, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft, int surveyCountScore){
+        //Area that can be covered by an aircraft
         double coverArea = acCoverageRadius*acCoverageRadius*Math.PI;
 
         //Calculate the overlap between covered region by aircraft and the ROI area
@@ -37,27 +35,26 @@ public class PerformanceCalcHelper {
                     loc1 = mAircraft.get(iKey).getLatLng();
                 }
 
-                //TODO: enable multiple ROIs
                 //Add overlap between aircraft coverage and ROI
-//                double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIList.get(0), mAircraft.get(iKey).getWpLatLng(0));
-                double overlap = circleOverlap(ROIRadius, acCoverageRadius, ROIList.get(0), loc1);
-                double doubleOverlap = 0;
-                //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!
-                if (overlap > 0) { //If not outside the ROI
-                    for (int j=i+1; j<mAircraft.size(); j++) {
-                        int jKey = mAircraft.keyAt(j);
-                        if(mAircraft.get(jKey).getDistanceToWaypoint() <= acCoverageRadius) {
-                            loc2 = mAircraft.get(jKey).getWpLatLng(0);
-                        } else {
-                            loc2 = mAircraft.get(jKey).getLatLng();
+                for (int k=0; k< ROIradiiList.size(); k++) {
+                    double overlap = circleOverlap(ROIradiiList.get(k), acCoverageRadius, ROIList.get(k), loc1);
+                    double doubleOverlap = 0;
+                    //NOTE THAT THE OVERLAP OF 3+ CIRCLES IS NOT COVERED!!
+                    if (overlap > 0) { //If not outside the ROI
+                        for (int j = i + 1; j < mAircraft.size(); j++) {
+                            int jKey = mAircraft.keyAt(j);
+                            if (mAircraft.get(jKey).getDistanceToWaypoint() <= acCoverageRadius) {
+                                loc2 = mAircraft.get(jKey).getWpLatLng(0);
+                            } else {
+                                loc2 = mAircraft.get(jKey).getLatLng();
+                            }
+                            //Account for overlap of the two UAVs
+                            doubleOverlap += circleOverlap(acCoverageRadius, acCoverageRadius, loc1, loc2);
                         }
-                        //Account for overlap of the two UAVs
-//                        doubleOverlap += circleOverlap(acCoverageRadius, acCoverageRadius, mAircraft.get(iKey).getWpLatLng(0), mAircraft.get(jKey).getWpLatLng(0));
-                        doubleOverlap += circleOverlap(acCoverageRadius, acCoverageRadius, loc1, loc2);
                     }
+                    //Calculate the total coverage ove the ROI
+                    overlapArea += overlap - doubleOverlap;
                 }
-                //Calculate the total coverage ove the ROI
-                overlapArea += overlap - doubleOverlap;
             }
         }
         //Coverage percentage (percentage of area that is maximally possible to be covered)

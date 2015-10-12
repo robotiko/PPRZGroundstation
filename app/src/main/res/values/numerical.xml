@@ -20,7 +20,7 @@
     <integer name="commRelayRange">500</integer>            <!-- meters -->
 
     <!-- Area coverage parameters -->
-    <!--<integer name="ROIRadius">250</integer>-->                 <!-- meters -->
+    <!-- TODO: Set surveillance radius to a realistic one (half swath width) -->
     <integer name="acCoverageRadius">150</integer>          <!-- meters -->
 
     <!--****************** ICON/MAP DRAWING ******************-->
@@ -30,7 +30,7 @@
     <integer name="HalfBatteryVoltage">11100</integer>      <!-- milliVolt -->
     <integer name="LowBatteryVoltage">9300</integer>        <!-- milliVolt -->
     <integer name="CriticalBatteryVoltage">9000</integer>   <!-- milliVolt -->
-    <!-- TODO:change the critical battery value to a correct one -->
+    <!-- TODO: Change the critical battery voltage to a correct one -->
 
     <!-- Communication values -->
     <integer name="HalfCommunicationSignal">60</integer>    <!-- percentage -->
@@ -78,7 +78,7 @@
         <item>12400</item>                                   <!-- ac2 milliVolt -->
     </integer-array>
     <integer-array name="ROIRadii_scenario2"><!-- meters -->
-        <item>300</item>                                     <!-- ROI 2 -->
+        <item>305</item>                                     <!-- ROI 2 -->
     </integer-array>
 
     <!-- Scenario 3 -->
@@ -90,30 +90,44 @@
         <item>250</item>                                     <!-- ROI 3 -->
     </integer-array>
 
+    <!-- Scenario 4 -->
+    <integer-array name="iniBatVolt_scenario4"><!-- 12400 mV is max -->
+        <item>12400</item>                                   <!-- ac1 milliVolt -->
+        <item>12400</item>                                   <!-- ac2 milliVolt -->
+        <item>12400</item>                                   <!-- ac3 milliVolt -->
+    </integer-array>
+    <integer-array name="ROIRadii_scenario4"><!-- meters -->
+        <item>250</item>                                     <!-- ROI 3 -->
+    </integer-array>
+
 
     <!-- //////////// SCENARIO LIST SETTINGS //////////// -->
     <integer-array name="noAircraftInScenario">
         <item>1</item>                                       <!-- scenario 1 -->
         <item>2</item>                                       <!-- scenario 2 -->
         <item>2</item>                                       <!-- scenario 3 -->
+        <item>3</item>                                       <!-- scenario 4 -->
     </integer-array>
 
     <integer-array name="batteryFailureTime">   <!--Time before end of scenario, 0=not applicable  -->
         <item>0</item>                                       <!-- scenario 1 -->
         <item>0</item>                                       <!-- scenario 2 -->
         <item>0</item>                                       <!-- scenario 3 -->
+        <item>0</item>                                       <!-- scenario 4 -->
     </integer-array>
 
     <integer-array name="batteryFailureAircraft">   <!-- 0=none -->
         <item>0</item>                                       <!-- scenario 1 -->
         <item>0</item>                                       <!-- scenario 2 -->
         <item>0</item>                                       <!-- scenario 3 -->
+        <item>0</item>                                       <!-- scenario 4 -->
     </integer-array>
 
     <integer-array name="surveyCountScoreScenario">
         <item>1</item>                                       <!-- scenario 1 -->
         <item>2</item>                                       <!-- scenario 2 -->
         <item>1</item>                                       <!-- scenario 3 -->
+        <item>1</item>                                       <!-- scenario 4 -->
     </integer-array>
 
     <!--****************** CONNECTION SETTINGS ******************-->
