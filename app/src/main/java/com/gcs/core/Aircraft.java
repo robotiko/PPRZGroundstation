@@ -65,14 +65,16 @@ public class Aircraft {
 	public Polyline flightTrackPoly;
     private List<LatLng> flightPath = new ArrayList<>();
 	
-	private final int AltitudeLabelId   = TextView.generateViewId();
-	private final int targetLabelId     = TextView.generateViewId();
-	private boolean isSelected          = false;
-    private boolean isLabelCreated      = false;
-    private boolean showInfoWindow      = true;
-    private float distanceHome          = 0f;
+	private final int AltitudeLabelId    = TextView.generateViewId();
+	private final int targetLabelId      = TextView.generateViewId();
+	private boolean isSelected           = false;
+    private boolean isLabelCreated       = false;
+    private boolean showInfoWindow       = true;
+    private boolean batteryCriticalState = false;
+    private float distanceHome           = 0f;
     private String currentBlock;
-    private int connectedTo             = 0; //0 is home, higher numbers are aircraft
+    private int connectedTo              = 0; //0 is home, higher numbers are aircraft
+    private int commLossBatteryLoss      = 0;
 
     //////////// HEARTBEAT ////////////
     public byte getSysid() { return mHeartbeat.getSysid(); }
@@ -194,36 +196,36 @@ public class Aircraft {
     	mBattery.setBatteryState(battVolt,battLevel,battCurrent);
     }
 
+    public void setCommLossBattery(int increment) { commLossBatteryLoss += increment; }
+
+    public void resetCommLossBattery() { commLossBatteryLoss = 0; }
+
+    public int getCommLossBatteryLoss() {
+        return commLossBatteryLoss;
+    }
+
     //////////// STATE ////////////
     public boolean isArmed() { return mState.isArmed(); }
 
-    public boolean isFlying() {
-        return mState.isFlying();
-    }
+    public boolean isFlying() { return mState.isFlying(); }
 
-    public void setIsFlying(boolean newState) {
-    	mState.setIsFlying(newState);
-    }
+    public void setIsFlying(boolean newState) { mState.setIsFlying(newState); }
 
-    public void setArmed(boolean newState) {
-    	mState.setArmed(newState);
-    }
+    public void setArmed(boolean newState) { mState.setArmed(newState); }
 
     public void updateConflictStatus() { mState.updateConflictStatus(); }
 
-    public void setConflictStatusNew(ConflictStatus NewStatus) {
-        mState.setConflictStatusNew(NewStatus);
-    }
+    public void setConflictStatusNew(ConflictStatus NewStatus) { mState.setConflictStatusNew(NewStatus); }
 
     public ConflictStatus getConflictStatus() { return mState.getConflictStatus(); }
 
-    public void setTaskStatus(TaskStatus taskStatus) {
-        mState.setTaskStatus(taskStatus);
-    }
+    public void setTaskStatus(TaskStatus taskStatus) { mState.setTaskStatus(taskStatus); }
 
-    public TaskStatus getTaskStatus() {
-        return mState.getTaskStatus();
-    }
+    public TaskStatus getTaskStatus() { return mState.getTaskStatus(); }
+
+    public void setBatteryCriticalState() { batteryCriticalState = true; }
+
+    public boolean getBatteryCriticalState() { return batteryCriticalState; }
 
     //////////// POSITION ////////////
     public byte getSatVisible() {

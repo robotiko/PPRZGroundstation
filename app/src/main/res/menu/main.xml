@@ -9,10 +9,10 @@
         android:title="@string/action_settings"/>
 
     <item
-        android:id="@+id/scenario_spinner"
+        android:id="@+id/aircraft_selection_spinner"
         android:showAsAction="always"
         android:orderInCategory="8"
-        android:title="scenario_spinner"
+        android:title="aircraft_spinner"
         android:actionViewClass="android.widget.Spinner" />
 
     <item
@@ -40,11 +40,12 @@
         android:title="block_spinner"
         android:actionViewClass="android.widget.Spinner" />
 -->
+
     <item
-        android:id="@+id/aircraft_selection_spinner"
+        android:id="@+id/scenario_spinner"
         android:showAsAction="always"
         android:orderInCategory="12"
-        android:title="aircraft_spinner"
+        android:title="scenario_spinner"
         android:actionViewClass="android.widget.Spinner" />
 
 </menu>

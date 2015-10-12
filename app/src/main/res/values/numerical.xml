@@ -2,7 +2,7 @@
 <resources>
 
     <!-- Airspace parameters -->
-    <integer name="flightCeiling">100</integer>               <!-- meters -->
+    <integer name="flightCeiling">60</integer>               <!-- meters -->
     <integer name="groundLevel">-3</integer>                  <!-- meters -->
     <integer name="MSA">10</integer>                          <!-- meters (minimum safe altitude)-->
     <integer name="verticalSeparationStandard">30</integer>    <!-- tenths of meters -->
@@ -20,7 +20,7 @@
     <integer name="commRelayRange">500</integer>            <!-- meters -->
 
     <!-- Area coverage parameters -->
-    <integer name="ROIRadius">250</integer>                 <!-- meters -->
+    <!--<integer name="ROIRadius">250</integer>-->                 <!-- meters -->
     <integer name="acCoverageRadius">150</integer>          <!-- meters -->
 
     <!--****************** ICON/MAP DRAWING ******************-->
@@ -29,7 +29,9 @@
     <integer name="LowBatteryLevel">20</integer>            <!-- percentage -->
     <integer name="HalfBatteryVoltage">11100</integer>      <!-- milliVolt -->
     <integer name="LowBatteryVoltage">9300</integer>        <!-- milliVolt -->
-    
+    <integer name="CriticalBatteryVoltage">9000</integer>   <!-- milliVolt -->
+    <!-- TODO:change the critical battery value to a correct one -->
+
     <!-- Communication values -->
     <integer name="HalfCommunicationSignal">60</integer>    <!-- percentage -->
     <integer name="LowCommunicationSignal">30</integer>     <!-- percentage -->
@@ -44,7 +46,7 @@
     <integer name="BatteryScaling">30</integer>	            <!-- percent of the original image -->
     
     <integer name="CommVertLocation">75</integer>	        <!-- percent of radius from center -->
-    <integer name="CommHorLocation">18</integer>	        <!-- percent of radiusfrom center  -->
+    <integer name="CommHorLocation">18</integer>	        <!-- percent of radius from center  -->
     <integer name="CommScaling">40</integer>	            <!-- percent of the original image -->
 
     <!-- Map drawing settings -->
@@ -52,51 +54,51 @@
     <integer name="circleStrokeWidth">5</integer> 	        <!--screen pixels -->
 
     <!--****************** SCENARIOS ******************-->
-    <integer name="scenarioRuntime">15</integer> 	         <!--time in seconds -->
+    <integer name="scenarioRuntime">240</integer> 	         <!--time in seconds -->
     <integer name="orangeTime">60</integer> 	             <!--time in seconds -->
     <integer name="redTime">30</integer> 	                 <!--time in seconds -->
 
-    <integer name="surveillanceBatRate">10</integer> 	             <!-- milliVolt/second -->
+    <integer name="surveillanceBatRate">10</integer> 	     <!-- milliVolt/second -->
     <integer name="relayBatRate">15</integer> 	             <!-- milliVolt/second -->
 
-    <!-- Array containing initial battery values for scenario spinner. 12400 mV is max -->
-    <integer name="noAircraftInScenario1">5</integer> 	     <!--screen pixels -->
-    <integer-array name="iniBatVolt_scenario1">
+    <integer name="batteryFailureVoltage">9200</integer>     <!--milliVolt -->
+
+    <!-- //////////// PER SCENARIO SETTINGS //////////// -->
+    <!-- Scenario 1 -->
+    <integer-array name="iniBatVolt_scenario1"><!-- 12400 mV is max -->
+        <item>12400</item>                                   <!-- ac1 milliVolt -->
+    </integer-array>
+    <integer-array name="ROIRadii_scenario1"><!-- meters -->
+        <item>250</item>                                     <!-- ROI 1 -->
+    </integer-array>
+
+    <!-- Scenario 2 -->
+    <integer-array name="iniBatVolt_scenario2"><!-- 12400 mV is max -->
         <item>12400</item>                                   <!-- ac1 milliVolt -->
         <item>12400</item>                                   <!-- ac2 milliVolt -->
     </integer-array>
-    <integer-array name="batRate_scenario1">
-        <item>0</item>                                       <!-- ac1  -->
-        <item>0</item>                                       <!-- ac2  -->
+    <integer-array name="ROIRadii_scenario2"><!-- meters -->
+        <item>300</item>                                     <!-- ROI 2 -->
     </integer-array>
 
-    <integer-array name="iniBatVolt_scenario2">
+    <!-- Scenario 3 -->
+    <integer-array name="iniBatVolt_scenario3"><!-- 12400 mV is max -->
         <item>12400</item>                                   <!-- ac1 milliVolt -->
         <item>12400</item>                                   <!-- ac2 milliVolt -->
     </integer-array>
-    <integer-array name="batRate_scenario2">
-        <item>0</item>                                       <!-- ac1  -->
-        <item>0</item>                                       <!-- ac2  -->
+    <integer-array name="ROIRadii_scenario3"><!-- meters -->
+        <item>250</item>                                     <!-- ROI 3 -->
     </integer-array>
 
-    <integer-array name="iniBatVolt_scenario3">
-        <item>12400</item>                                   <!-- ac1 milliVolt -->
-        <item>11000</item>                                   <!-- ac2 milliVolt -->
-        <item>9000</item>                                    <!-- ac3 milliVolt -->
-    </integer-array>
-    <integer-array name="batRate_scenario3">
-        <item>0</item>                                       <!-- ac1  -->
-        <item>0</item>                                       <!-- ac2  -->
-        <item>0</item>                                       <!-- ac3  -->
-    </integer-array>
 
+    <!-- //////////// SCENARIO LIST SETTINGS //////////// -->
     <integer-array name="noAircraftInScenario">
-        <item>2</item>                                       <!-- scenario 1 -->
+        <item>1</item>                                       <!-- scenario 1 -->
         <item>2</item>                                       <!-- scenario 2 -->
-        <item>3</item>                                       <!-- scenario 3 -->
+        <item>2</item>                                       <!-- scenario 3 -->
     </integer-array>
 
-    <integer-array name="batteryFailureTime">   <!-- 0=not applicable  -->
+    <integer-array name="batteryFailureTime">   <!--Time before end of scenario, 0=not applicable  -->
         <item>0</item>                                       <!-- scenario 1 -->
         <item>0</item>                                       <!-- scenario 2 -->
         <item>0</item>                                       <!-- scenario 3 -->
@@ -108,7 +110,11 @@
         <item>0</item>                                       <!-- scenario 3 -->
     </integer-array>
 
-    <integer name="batteryFailureVoltage">9200</integer>     <!--milliVolt -->
+    <integer-array name="surveyCountScoreScenario">
+        <item>1</item>                                       <!-- scenario 1 -->
+        <item>2</item>                                       <!-- scenario 2 -->
+        <item>1</item>                                       <!-- scenario 3 -->
+    </integer-array>
 
     <!--****************** CONNECTION SETTINGS ******************-->
     <integer name="connectionType">0</integer>	            <!-- 0 = UDP connection -->

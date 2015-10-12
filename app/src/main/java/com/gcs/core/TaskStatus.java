@@ -1,7 +1,7 @@
 package com.gcs.core;
 
 public enum TaskStatus {
-    NONE(0), SURVEILLANCE(1), RELAY(2);
+    NONE(0), SURVEILLANCE(1), RELAY(2), SURVEILLOSTCOMM(3);
 
     private final int value;
 
