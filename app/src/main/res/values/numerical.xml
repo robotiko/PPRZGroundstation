@@ -2,35 +2,33 @@
 <resources>
 
     <!-- Airspace parameters -->
-    <integer name="flightCeiling">60</integer>               <!-- meters -->
+    <integer name="flightCeiling">70</integer>               <!-- meters -->
     <integer name="groundLevel">-3</integer>                  <!-- meters -->
     <integer name="MSA">10</integer>                          <!-- meters (minimum safe altitude)-->
     <integer name="verticalSeparationStandard">30</integer>    <!-- tenths of meters -->
     <integer name="horizontalSeparationStandard">1500</integer> <!-- tenths of meters -->
-    <integer name="surveillanceCircleRadius">750</integer>     <!-- tenths of meters -->
+    <integer name="surveillanceCircleRadius">500</integer>     <!-- tenths of meters -->
 
     <!-- Standard altitudes -->
-    <integer name="surveillanceAltitude">30</integer>       <!-- meters -->
-    <integer name="relayAltitude">50</integer>              <!-- meters -->
+    <integer name="surveillanceAltitude">40</integer>       <!-- meters -->
+    <integer name="relayAltitude">60</integer>              <!-- meters -->
     <integer name="altitudeAccuracyDistance">2</integer>    <!-- meters -->
 
     <!-- Communication signal parameters -->
     <integer name="boundaryLevel">1</integer>               <!-- percentage -->
-    <integer name="commMaxRange">500</integer>              <!-- meters -->
-    <integer name="commRelayRange">500</integer>            <!-- meters -->
+    <integer name="commMaxRange">1000</integer>             <!-- meters -->
+    <integer name="commRelayRange">1000</integer>           <!-- meters -->
 
     <!-- Area coverage parameters -->
-    <!-- TODO: Set surveillance radius to a realistic one (half swath width) -->
-    <integer name="acCoverageRadius">150</integer>          <!-- meters -->
+    <integer name="acCoverageRadius">100</integer>          <!-- meters -->
 
     <!--****************** ICON/MAP DRAWING ******************-->
     <!-- Battery values -->
     <integer name="HalfBatteryLevel">50</integer>           <!-- percentage -->
     <integer name="LowBatteryLevel">20</integer>            <!-- percentage -->
     <integer name="HalfBatteryVoltage">11100</integer>      <!-- milliVolt -->
-    <integer name="LowBatteryVoltage">9300</integer>        <!-- milliVolt -->
-    <integer name="CriticalBatteryVoltage">9000</integer>   <!-- milliVolt -->
-    <!-- TODO: Change the critical battery voltage to a correct one -->
+    <integer name="LowBatteryVoltage">10000</integer>       <!-- milliVolt -->
+    <integer name="CriticalBatteryVoltage">9600</integer>   <!-- milliVolt -->
 
     <!-- Communication values -->
     <integer name="HalfCommunicationSignal">60</integer>    <!-- percentage -->
@@ -58,8 +56,8 @@
     <integer name="orangeTime">60</integer> 	             <!--time in seconds -->
     <integer name="redTime">30</integer> 	                 <!--time in seconds -->
 
-    <integer name="surveillanceBatRate">10</integer> 	     <!-- milliVolt/second -->
-    <integer name="relayBatRate">15</integer> 	             <!-- milliVolt/second -->
+    <integer name="surveillanceBatRate">5</integer> 	     <!-- milliVolt/second -->
+    <integer name="relayBatRate">10</integer> 	             <!-- milliVolt/second -->
 
     <integer name="batteryFailureVoltage">9200</integer>     <!--milliVolt -->
 
@@ -69,7 +67,7 @@
         <item>12400</item>                                   <!-- ac1 milliVolt -->
     </integer-array>
     <integer-array name="ROIRadii_scenario1"><!-- meters -->
-        <item>250</item>                                     <!-- ROI 1 -->
+        <item>120</item>                                     <!-- ROI 1 -->
     </integer-array>
 
     <!-- Scenario 2 -->
@@ -78,7 +76,7 @@
         <item>12400</item>                                   <!-- ac2 milliVolt -->
     </integer-array>
     <integer-array name="ROIRadii_scenario2"><!-- meters -->
-        <item>305</item>                                     <!-- ROI 2 -->
+        <item>205</item>                                     <!-- ROI 1 -->
     </integer-array>
 
     <!-- Scenario 3 -->
@@ -87,7 +85,7 @@
         <item>12400</item>                                   <!-- ac2 milliVolt -->
     </integer-array>
     <integer-array name="ROIRadii_scenario3"><!-- meters -->
-        <item>250</item>                                     <!-- ROI 3 -->
+        <item>205</item>                                     <!-- ROI 1 -->
     </integer-array>
 
     <!-- Scenario 4 -->
@@ -97,7 +95,27 @@
         <item>12400</item>                                   <!-- ac3 milliVolt -->
     </integer-array>
     <integer-array name="ROIRadii_scenario4"><!-- meters -->
-        <item>250</item>                                     <!-- ROI 3 -->
+        <item>120</item>                                     <!-- ROI 1 -->
+    </integer-array>
+
+    <!-- Scenario 5 -->
+    <integer-array name="iniBatVolt_scenario5"><!-- 12400 mV is max -->
+        <item>11100</item>                                   <!-- ac1 milliVolt -->
+        <item>12400</item>                                   <!-- ac2 milliVolt -->
+    </integer-array>
+    <integer-array name="ROIRadii_scenario5"><!-- meters -->
+        <item>120</item>                                     <!-- ROI 1 -->
+    </integer-array>
+
+    <!-- Scenario 5 -->
+    <integer-array name="iniBatVolt_scenario6"><!-- 12400 mV is max -->
+        <item>11100</item>                                   <!-- ac1 milliVolt -->
+        <item>12400</item>                                   <!-- ac2 milliVolt -->
+        <item>12400</item>                                   <!-- ac3 milliVolt -->
+    </integer-array>
+    <integer-array name="ROIRadii_scenario6"><!-- meters -->
+        <item>120</item>                                     <!-- ROI 1 -->
+        <item>120</item>                                     <!-- ROI 2 -->
     </integer-array>
 
 
@@ -107,6 +125,8 @@
         <item>2</item>                                       <!-- scenario 2 -->
         <item>2</item>                                       <!-- scenario 3 -->
         <item>3</item>                                       <!-- scenario 4 -->
+        <item>2</item>                                       <!-- scenario 5 -->
+        <item>3</item>                                       <!-- scenario 6 -->
     </integer-array>
 
     <integer-array name="batteryFailureTime">   <!--Time before end of scenario, 0=not applicable  -->
@@ -114,6 +134,8 @@
         <item>0</item>                                       <!-- scenario 2 -->
         <item>0</item>                                       <!-- scenario 3 -->
         <item>0</item>                                       <!-- scenario 4 -->
+        <item>0</item>                                       <!-- scenario 5 -->
+        <item>180</item>                                     <!-- scenario 6 -->
     </integer-array>
 
     <integer-array name="batteryFailureAircraft">   <!-- 0=none -->
@@ -121,6 +143,8 @@
         <item>0</item>                                       <!-- scenario 2 -->
         <item>0</item>                                       <!-- scenario 3 -->
         <item>0</item>                                       <!-- scenario 4 -->
+        <item>0</item>                                       <!-- scenario 5 -->
+        <item>2</item>                                       <!-- scenario 6 -->
     </integer-array>
 
     <integer-array name="surveyCountScoreScenario">
@@ -128,6 +152,17 @@
         <item>2</item>                                       <!-- scenario 2 -->
         <item>1</item>                                       <!-- scenario 3 -->
         <item>1</item>                                       <!-- scenario 4 -->
+        <item>1</item>                                       <!-- scenario 5 -->
+        <item>2</item>                                       <!-- scenario 6 -->
+    </integer-array>
+
+    <integer-array name="initialZoomLevels"> <!-- value = zoomlevel*10-->
+        <item>150</item>                                     <!-- scenario 1 -->
+        <item>150</item>                                     <!-- scenario 2 -->
+        <item>150</item>                                     <!-- scenario 3 -->
+        <item>145</item>                                     <!-- scenario 4 -->
+        <item>150</item>                                     <!-- scenario 5 -->
+        <item>150</item>                                     <!-- scenario 6 -->
     </integer-array>
 
     <!--****************** CONNECTION SETTINGS ******************-->

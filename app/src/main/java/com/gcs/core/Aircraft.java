@@ -34,7 +34,7 @@ public class Aircraft {
     public final int aircraftNumber;
     private final String labelCharacter;
     private static int aircraftCount = 0;
-    private static final int maxFlightPathSize = 25;
+    private static final int maxFlightPathSize = 20;
     private static SparseArray<Integer> AcConnectionList = new SparseArray<>();
 
     //Constructor in which the total aircraft count is updated and the label character is determined
@@ -71,6 +71,7 @@ public class Aircraft {
     private boolean isLabelCreated       = false;
     private boolean showInfoWindow       = true;
     private boolean batteryCriticalState = false;
+    public boolean missionAborted        = false;
     private float distanceHome           = 0f;
     private String currentBlock;
     private int connectedTo              = 0; //0 is home, higher numbers are aircraft

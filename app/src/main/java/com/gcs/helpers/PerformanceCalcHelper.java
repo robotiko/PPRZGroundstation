@@ -1,6 +1,7 @@
 package com.gcs.helpers;
 
 import android.location.Location;
+import android.util.Log;
 import android.util.SparseArray;
 
 import com.gcs.core.Aircraft;
@@ -12,9 +13,13 @@ import java.util.List;
 
 public class PerformanceCalcHelper {
 
-    public static final double calcPerformance(List<Integer> ROIradiiList, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft, int surveyCountScore) {
-        //TODO: add penalty for red- and completely empty battery
-        return ROIcovered(ROIradiiList,acCoverageRadius,ROIList,mAircraft,surveyCountScore)*LossOfCommunicationCheck(mAircraft)*ConflictCheck(mAircraft)*100; //Percentage;
+    public static final double calcPerformance(List<Integer> ROIradiiList, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft, int surveyCountScore, int halfBatteryVoltage, int lowBatteryVoltage) {
+        float coverageWeight = 50;
+        float CommWeight     = 30;
+        float conflictWeight = 20;
+        float batteryWeight  = 0;
+
+        return ROIcovered(ROIradiiList,acCoverageRadius,ROIList,mAircraft,surveyCountScore)*coverageWeight + LossOfCommunicationCheck(mAircraft)*CommWeight + ConflictCheck(mAircraft)*conflictWeight + BatteryScore(mAircraft,halfBatteryVoltage,lowBatteryVoltage)*batteryWeight; //Percentage;
     }
 
     //Calculate the percentage of the Region of Interest (ROI) that is covered by surveillance aircraft
@@ -113,16 +118,40 @@ public class PerformanceCalcHelper {
 
     //Calculate the percentage of aircraft that have conflict
     private final static double ConflictCheck(SparseArray<Aircraft> mAircraft) {
-        float numberOfAircraft = mAircraft.size();
         int noConflictAircraft = mAircraft.size();
 
         //Loop over aircraft in system
         for(int i=0; i<mAircraft.size(); i++) {
             int acNumber = mAircraft.keyAt(i);
-            if(mAircraft.get(acNumber).getConflictStatus() == ConflictStatus.RED) {
+            if(mAircraft.get(acNumber).getConflictStatus() != ConflictStatus.RED) {
                 noConflictAircraft--;
             }
         }
-        return noConflictAircraft/numberOfAircraft;
+        double conflictScore = 1.0;
+        if (noConflictAircraft>0) conflictScore = 0;
+        return conflictScore;
+    }
+
+    private final static double BatteryScore(SparseArray<Aircraft> mAircraft,int halfBatteryVoltage, int lowBatteryVoltage) {
+        double batteryScore = 1.0;
+        int halfCount = 0;
+        int lowCount  = 0;
+
+        for(int i=0; i<mAircraft.size(); i++) {
+            int acNumber = mAircraft.keyAt(i);
+            if(mAircraft.get(acNumber).getBattVolt() <= lowBatteryVoltage) {
+                lowCount++;
+            } else if(mAircraft.get(acNumber).getBattVolt() <= halfBatteryVoltage) {
+                halfCount++;
+            }
+        }
+
+        if (lowCount>0) {
+            batteryScore = 0.5;
+        } else if (halfCount>0) {
+            batteryScore = 0.0;
+        }
+
+        return batteryScore;
     }
 }

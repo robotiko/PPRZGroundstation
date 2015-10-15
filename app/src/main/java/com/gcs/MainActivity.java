@@ -132,7 +132,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	public Home home;
 
     private float verticalSeparationStandard, horizontalSeparationStandard, surveillanceCircleRadius;
-    private int commMaxRange, commRelayRange, singleLabelVisibility, acCoverageRadius, surveillanceAltitude, relayAltitude,altitudeAccuracyDistance;
+    private int commMaxRange, commRelayRange, singleLabelVisibility, acCoverageRadius, surveillanceAltitude, relayAltitude,altitudeAccuracyDistance, halfBatteryVoltage, lowBatteryVoltage;
     private int selectedAc = 0;                     //Set to 0 if none serves as relay (yet)
     private double performanceScore = 0f;
     private int selectedWp = 0;
@@ -142,6 +142,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private int batteryFailureAircraft = 0;
     private int scenarioRuntime = 0;
     private int surveyCountScore = 0;
+    private float initialZoomLevel = 16.0f;
     private LatLng origMarkerPosition;
     private Circle flightPath, surveillanceBound;
 
@@ -175,6 +176,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         surveillanceAltitude = getResources().getInteger(R.integer.surveillanceAltitude);                                            //meters
         relayAltitude = getResources().getInteger(R.integer.relayAltitude);                                                   //meters
         altitudeAccuracyDistance = getResources().getInteger(R.integer.altitudeAccuracyDistance);               //meters
+        halfBatteryVoltage = getResources().getInteger(R.integer.HalfBatteryVoltage);
+        lowBatteryVoltage = getResources().getInteger(R.integer.LowBatteryVoltage);
 
         // Instantiate home object
 		home = new Home();
@@ -411,7 +414,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Check if aircraft is landing to force final approach
             for (int i = 0; i < mAircraft.size(); i++) {
                 int acNumber = mAircraft.keyAt(i);
-                if (mAircraft.get(acNumber).getCurrentBlock() != null && mAircraft.get(acNumber).getCurrentBlock().equals(getResources().getString(R.string.land_block)) && mAircraft.get(acNumber).getAltitude()<16 && (mAircraft.get(acNumber).getLat()-52.0031640)<0) {
+                //Update current block every 10 seconds
+                if (timeLeft%10==0) {
+                    updateMissionBlocksSelection(acNumber);
+                }
+
+                if (mAircraft.get(acNumber).getCurrentBlock() != null && mAircraft.get(acNumber).getCurrentBlock().equals(getResources().getString(R.string.land_block)) && mAircraft.get(acNumber).getAltitude()<16 && (mAircraft.get(acNumber).getLat()-51.9715828)<0) {
                     forceFinal(acNumber);
                 }
             }
@@ -447,7 +455,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             /////PERFORMANCE SCORE
             //Calculate the current performance score
             if (ROIlist.size() != 0 && allWpsLoaded && isConnected) {
-                performanceScore = PerformanceCalcHelper.calcPerformance(ROIradiiList, acCoverageRadius, ROIlist, mAircraft, surveyCountScore);
+                performanceScore = PerformanceCalcHelper.calcPerformance(ROIradiiList, acCoverageRadius, ROIlist, mAircraft, surveyCountScore,halfBatteryVoltage,lowBatteryVoltage);
             }
             //Set the performance score to the text view
             performanceScoreFragment.setText(String.format("%.1f", performanceScore));
@@ -865,7 +873,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     mAircraft.get(acNumber).setCurrentBlock(currentBlock);
 
                     //Update the status of the mission buttons
-                    missionButtons.updateExecutedMissionButton(mAircraft.get(acNumber).missionBlocks.get(currentBlock));
+                    if(mAircraft.get(acNumber).missionBlocks != null) missionButtons.updateExecutedMissionButton(mAircraft.get(acNumber).missionBlocks.get(currentBlock));
                 } catch (RemoteException e) {
                     Log.e(TAG, "Error while trying to update the mission block selection in the spinner");
                 }
@@ -921,7 +929,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 batValues = getResources().getIntArray(R.array.iniBatVolt_scenario4);
                 ROIradii  = getResources().getIntArray(R.array.ROIRadii_scenario4);
             } else if(scenarioNumber == 5) {
-
+                latLng    = getResources().getStringArray(R.array.latLng_scenario5);
+                batValues = getResources().getIntArray(R.array.iniBatVolt_scenario5);
+                ROIradii  = getResources().getIntArray(R.array.ROIRadii_scenario5);
+            } else if (scenarioNumber == 6) {
+                latLng    = getResources().getStringArray(R.array.latLng_scenario6);
+                batValues = getResources().getIntArray(R.array.iniBatVolt_scenario6);
+                ROIradii  = getResources().getIntArray(R.array.ROIRadii_scenario6);
             }
 
             //Loop over ROIs to put the values in lists
@@ -951,13 +965,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             int[] surveyCountScores = getResources().getIntArray(R.array.surveyCountScoreScenario);
             surveyCountScore = surveyCountScores[scenarioNumber-1];
 
-            //TODO: enable mulitple ROIs
+            //Set the initial zoom level
+            int[] zoomLevels = getResources().getIntArray(R.array.initialZoomLevels);
+            initialZoomLevel = zoomLevels[scenarioNumber-1]/10.0f;
+
             //Loop over ROI radii to put in list
             for(int k=0; k < ROIradii.length; k++) {
-                //Convert ROI radii array to a list
                 ROIradiiList.add(ROIradii[k]);
             }
-//            ROIRadius = ROIradii[0];
         } else {
             noAircraftScenario = 0;
         }
@@ -1028,9 +1043,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 try {
                     mServiceClient.disconnectDroneClient();
                     deselectAllAircraft();
+                    mAircraft.clear();
                     noAircraftScenario = 0;
-                    //TODO: enable clear tape
-//                altitudeTapeFragment.clearTape();
+//                    altitudeTapeFragment.clearTape();
                     clearMap();
                     home.clear();
                     for (int i = 0; i < mAircraft.size(); i++) {
@@ -1265,7 +1280,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         map.getUiSettings().setZoomControlsEnabled(false);
 		
 		//Show my location button
-		map.getUiSettings().setMyLocationButtonEnabled(true);
+		map.getUiSettings().setMyLocationButtonEnabled(false);
 		
 		//Enable marker/infowindow listeners
 		map.setOnMarkerClickListener(this);     //Click listener on markers
@@ -1462,15 +1477,28 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 TextView infoBattery = (TextView) v.findViewById(R.id.info_battery);
 
                                 //Set the values in the information windows
-                                infoDistHome.setText("Distance Home: " + String.format("%.1f", mAircraft.get(acNumb).getDistanceHome()) + "m");
+                                infoDistHome.setText("Distance Home: " + String.format("%.0f", mAircraft.get(acNumb).getDistanceHome()) + "m");
                                 infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(acNumb).getAGL()) + "m");
-                                infoBattery.setText("Battery voltage: " + String.valueOf(mAircraft.get(acNumb).getBattVolt()) + "mV");
+                                infoBattery.setText("Battery voltage: " + String.format("%.1f", mAircraft.get(acNumb).getBattVolt() / 1000.0) + "V");
                                 //Current block
-                                if (mAircraft.get(acNumb).getCurrentBlock() == null) {
-                                    infoMode.setText("Current block: " + getResources().getString(R.string.no_current_block_loaded));
+                                if (mAircraft.get(acNumb).getCurrentBlock() != null) {
+                                    if (mAircraft.get(acNumb).getCurrentBlock().equals(getResources().getString(R.string.land_block))) {
+                                        infoMode.setText("Status: " + "LANDING");
+                                    } else if (mAircraft.get(acNumb).getCurrentBlock().equals(getResources().getString(R.string.takeoff_block))) {
+                                        infoMode.setText("Status: " + "TAKE-OFF");
+                                    } else if(mAircraft.get(acNumb).getCurrentBlock().equals(getResources().getString(R.string.go_home_block))) {
+                                        infoMode.setText("Status: " + "GOING HOME");
+                                    } else if (mAircraft.get(acNumb).getCurrentBlock().equals("final")) {
+                                        infoMode.setText("Status: " + "LANDING");
+                                    } else if(mAircraft.get(acNumb).getCurrentBlock().equals("flare")) {
+                                        infoMode.setText("Status: " + "LANDED");
+                                    } else {
+                                        infoMode.setText("Status: " + "normal");
+                                    }
                                 } else {
-                                    infoMode.setText("Current block: " + mAircraft.get(acNumb).getCurrentBlock());
+                                    infoMode.setText("Status: " + "");
                                 }
+
                                 //Task of aircraft
                                 infoTask.setText("Task: " + String.valueOf(mAircraft.get(acNumb).getTaskStatus()));
 
@@ -1616,7 +1644,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 /* TODO: make the initial zoom level correspond with the Region of Interest size (so it does not fill the entire screen) */
                 //Move camera to the home location
-                map.moveCamera(CameraUpdateFactory.newLatLngZoom(home.getHomeLocation(),16.0f));
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(home.getHomeLocation(),initialZoomLevel));
             }
         });
     }
@@ -1657,22 +1685,22 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     //If one or more relay UAVs are active
                     if (!relayAc.isEmpty()) {
                         for (int i = 0; i < relayAc.size(); i++) {
-                            if(mAircraft.get(relayAc.get(i)).getDistanceToWaypoint() <= acCoverageRadius) {
+//                            if(mAircraft.get(relayAc.get(i)).getDistanceToWaypoint() <= acCoverageRadius) {
                                 // Draw the relay communication range circle
                                 CircleOptions relayCircleOptions = new CircleOptions()
                                         .strokeWidth(getResources().getInteger(R.integer.circleStrokeWidth))
                                         .strokeColor(getResources().getColor(R.color.commRange));
-                                if (showMinCommRange) {
-                                    relayCircleOptions.center(mAircraft.get(relayAc.get(i)).getWpLatLng(0));     //Around waypoint
-                                    relayCircleOptions.radius(commRelayRange - (surveillanceCircleRadius));  // In meters
+                                if (showMinCommRange && mAircraft.get(relayAc.get(i)).getDistanceToWaypoint() <= acCoverageRadius) {
+                                    relayCircleOptions.center(mAircraft.get(relayAc.get(i)).getWpLatLng(0));    //Around waypoint
+                                    relayCircleOptions.radius(commRelayRange - (surveillanceCircleRadius));     //In meters
                                 } else {
-                                    relayCircleOptions.center(mAircraft.get(relayAc.get(i)).getLatLng()); //Around aircraft
+                                    relayCircleOptions.center(mAircraft.get(relayAc.get(i)).getLatLng());       //Around aircraft
                                     relayCircleOptions.radius(commRelayRange); // In meters
                                 }
                                 // Get back the relay Circle object
                                 Circle relayCommCircle = map.addCircle(relayCircleOptions);
                                 relayCommCircles.add(relayCommCircle);
-                            }
+//                            }
                         }
                     }
                 }
@@ -1713,7 +1741,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         ROIOverlayList.get(i).remove();
                     }
                 }
-
+                Log.d("TEST",String.valueOf(ROIlocs.size()));
                 for(int n = 0; n < ROIlocs.size(); n++) {
                     //Bitmap and canvas to draw a circle on
                     int circleSize = 300;
@@ -1735,7 +1763,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    ///////* Indicate a region of interest on the map *///////
+    ///////* Indicate the path the surveilance UAV will fly on the map *///////
     private void drawSurveillancePath(final LatLng location, final boolean endDraw) {
         //Call GoogleMaps
         mapFragment.getMapAsync(new OnMapReadyCallback() {
@@ -1842,10 +1870,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 mAircraft.get(acNumber).setBatteryState(mAircraft.get(acNumber).getBattVolt() - battLoss, -1, -1);
 
                 //Assign critical battery status if this level is reached and command aircraft to land
-                if(mAircraft.get(acNumber).getBattVolt()<=getResources().getInteger(R.integer.CriticalBatteryVoltage)) {
+                if(mAircraft.get(acNumber).getBattVolt()<=getResources().getInteger(R.integer.CriticalBatteryVoltage) && !mAircraft.get(acNumber).missionAborted) {
                     mAircraft.get(acNumber).setBatteryCriticalState();
                     //Abort mission (command aircraft to land)
                     abortMission(acNumber);
+                    mAircraft.get(acNumber).missionAborted = true;
                 }
             }
 
@@ -2239,6 +2268,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void forceFinal(int acNumber) {
+        Log.d("FORCE FINAL","ac #"+String.valueOf(acNumber));
         //Activate the final block
         try {
             Bundle carrier = new Bundle();

@@ -527,6 +527,7 @@ public class AltitudeTape extends Fragment {
 
     //Method to remove all labels from the tape
     public void clearTape() {
+        //TODO: enable clear tape
         //Remove all group-, groupselected- and single labels
         removeSingleLabels();
         removeGroupLabels();
