@@ -2,6 +2,7 @@ package com.gcs.fragments;
 
 import com.gcs.R;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -16,8 +17,16 @@ public class PerformanceScoreFragment extends Fragment {
 		return inflater.inflate(R.layout.performance_score, container, false);
 	}
 
-	public void setText(String item) {
+	public void setScore(double performanceScore) {
+
 		TextView textView = (TextView) getView().findViewById(R.id.performanceScoreValue);
-	    textView.setText(item);
+	    textView.setText(String.format("%.1f", performanceScore));
+
+		//Show the score in red if it is lower than 50
+		if(performanceScore<50) {
+			textView.setTextColor(Color.RED);
+		} else {
+			textView.setTextColor(Color.WHITE);
+		}
 	}
 }

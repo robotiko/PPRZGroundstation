@@ -57,6 +57,7 @@ public class AltitudeTape extends Fragment {
 
     //Define the size of the labels and the dragshadow offset
     private static final Point smallLabelDimensions = new Point (80,70);
+    private static final Point largeLabelDimensions = new Point (110,70);
     private static final int dragShadowVerticalOffset = smallLabelDimensions.y*2;
 
 	@Override
@@ -302,10 +303,6 @@ public class AltitudeTape extends Fragment {
         }
         //Check if the aircraft number is present in the group list. If so remove it.
         if(aircraftInGroupList.contains(acNumber) && visibility==View.VISIBLE) {
-////            aircraftInGroupList.clear();
-//            Log.d("TEST",String.valueOf(acNumber));
-//            Log.d("TEST",String.valueOf(aircraftInGroupList));
-//            Log.d("TEST",String.valueOf(aircraftInGroupList.indexOf(acNumber)));
             aircraftInGroupList.remove(aircraftInGroupList.indexOf(acNumber));
         }
 
@@ -372,7 +369,6 @@ public class AltitudeTape extends Fragment {
     //Method to draw group labels on the altitude tape
     public void drawGroupLabel(boolean inConflict, double altitude, String labelCharacters, List<Integer> ac) {
         //Check for labels that do still exist but should be deleted because an aircraft has been added or has has left a group
-
         String[] labelArr = labelCharacters.split(" ");
         outerloop:
         for (String key : stringToLabelIdList.keySet()) {
@@ -421,7 +417,16 @@ public class AltitudeTape extends Fragment {
             }
 
             //Set the parameters of the label (size, vertical location on the tape and its horizontal location)
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(smallLabelDimensions.x,smallLabelDimensions.y);
+            int x = smallLabelDimensions.x;
+            int y = smallLabelDimensions.y;
+
+            //Use a biger label if the group is larger than 4
+            if(ac.size()>4) {
+                x = largeLabelDimensions.x;
+                y = largeLabelDimensions.y;
+            }
+
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(x,y);
             params.topMargin = altitudeToLabelLocation(altitude);
             params.gravity = Gravity.RIGHT;
 
@@ -495,7 +500,7 @@ public class AltitudeTape extends Fragment {
     }
 
     //Method to remove the labels of a group selection
-    private void removeGroupSelectedAircraft() {
+    public void removeGroupSelectedAircraft() {
         for (String key : groupSelectionIdList.keySet()) {
             framelayout.removeView(getView().findViewById(groupSelectionIdList.get(key)));
         }

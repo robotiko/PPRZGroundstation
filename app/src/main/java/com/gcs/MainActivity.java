@@ -415,7 +415,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             for (int i = 0; i < mAircraft.size(); i++) {
                 int acNumber = mAircraft.keyAt(i);
                 //Update current block every 10 seconds
-                if (timeLeft%10==0) {
+                if (timeLeft%10==0 && isConnected) {
                     updateMissionBlocksSelection(acNumber);
                 }
 
@@ -458,7 +458,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 performanceScore = PerformanceCalcHelper.calcPerformance(ROIradiiList, acCoverageRadius, ROIlist, mAircraft, surveyCountScore,halfBatteryVoltage,lowBatteryVoltage);
             }
             //Set the performance score to the text view
-            performanceScoreFragment.setText(String.format("%.1f", performanceScore));
+            performanceScoreFragment.setScore(performanceScore);
 
             /////DATA LOGGING
             if (allWpsLoaded && (timeLeft < scenarioRuntime)) {
@@ -539,7 +539,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         break;
                 }
 
-            } else {
+            } else if(isConnected){
                 switch (type) {
                     case "CONNECTED": {
                         isConnected = true;
@@ -873,7 +873,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     mAircraft.get(acNumber).setCurrentBlock(currentBlock);
 
                     //Update the status of the mission buttons
-                    if(mAircraft.get(acNumber).missionBlocks != null) missionButtons.updateExecutedMissionButton(mAircraft.get(acNumber).missionBlocks.get(currentBlock));
+                    if (mAircraft.get(acNumber).missionBlocks != null)
+                        missionButtons.updateExecutedMissionButton(mAircraft.get(acNumber).missionBlocks.get(currentBlock));
                 } catch (RemoteException e) {
                     Log.e(TAG, "Error while trying to update the mission block selection in the spinner");
                 }
@@ -936,6 +937,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 latLng    = getResources().getStringArray(R.array.latLng_scenario6);
                 batValues = getResources().getIntArray(R.array.iniBatVolt_scenario6);
                 ROIradii  = getResources().getIntArray(R.array.ROIRadii_scenario6);
+            } else if (scenarioNumber == 7) {
+                latLng    = getResources().getStringArray(R.array.latLng_scenario7);
+                batValues = getResources().getIntArray(R.array.iniBatVolt_scenario7);
+                ROIradii  = getResources().getIntArray(R.array.ROIRadii_scenario7);
             }
 
             //Loop over ROIs to put the values in lists
@@ -1043,7 +1048,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 try {
                     mServiceClient.disconnectDroneClient();
                     deselectAllAircraft();
-                    mAircraft.clear();
                     noAircraftScenario = 0;
 //                    altitudeTapeFragment.clearTape();
                     clearMap();
@@ -1060,6 +1064,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             Toast.makeText(getApplicationContext(), "Please select a scenario!", Toast.LENGTH_SHORT).show();
         }
     }
+
 
     /**
      * This runnable object is created such that the update is performed
@@ -1437,6 +1442,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         mAircraft.get(acNumber).acMarker.remove();
                     }
 
+                    Log.d("nullPointerTEST",String.valueOf(mAircraft.get(acNumber).acMarker==null));
+
                     //Add marker to map with the following settings and save it in the aircraft object
                     mAircraft.get(acNumber).acMarker = map.addMarker(new MarkerOptions()
                                     .position(mAircraft.get(acNumber).getLatLng())
@@ -1644,7 +1651,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 /* TODO: make the initial zoom level correspond with the Region of Interest size (so it does not fill the entire screen) */
                 //Move camera to the home location
-                map.moveCamera(CameraUpdateFactory.newLatLngZoom(home.getHomeLocation(),initialZoomLevel));
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(home.getHomeLocation(), initialZoomLevel));
             }
         });
     }
@@ -1741,7 +1748,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         ROIOverlayList.get(i).remove();
                     }
                 }
-                Log.d("TEST",String.valueOf(ROIlocs.size()));
+                Log.d("TEST", String.valueOf(ROIlocs.size()));
                 for(int n = 0; n < ROIlocs.size(); n++) {
                     //Bitmap and canvas to draw a circle on
                     int circleSize = 300;
@@ -1972,8 +1979,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Assign the "RED" status to all aircraft that have a conflict
         if(!conflictingAircraft.isEmpty()) {
             for (int k = 0; k < conflictingAircraft.size(); k += 2) {
-                mAircraft.get(conflictingAircraft.get(k)).setConflictStatusNew(ConflictStatus.RED);
-                mAircraft.get(conflictingAircraft.get(k + 1)).setConflictStatusNew(ConflictStatus.RED);
+                if(mAircraft.get(conflictingAircraft.get(k)).isFlying() && mAircraft.get(conflictingAircraft.get(k+1)).isFlying()) {
+                    mAircraft.get(conflictingAircraft.get(k)).setConflictStatusNew(ConflictStatus.RED);
+                    mAircraft.get(conflictingAircraft.get(k + 1)).setConflictStatusNew(ConflictStatus.RED);
+                } else { //If the aircraft do not fly (yet)
+                    mAircraft.get(conflictingAircraft.get(k)).setConflictStatusNew(ConflictStatus.BLUE);
+                    mAircraft.get(conflictingAircraft.get(k + 1)).setConflictStatusNew(ConflictStatus.BLUE);
+                }
             }
         }
 
@@ -2071,11 +2083,46 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         //Boolean to check if group labels are drawn and if they need to be removed from the tape
         boolean groupLabelsDrawn = false;
 
-        //Check if a certain conflict group is selected. If yes, do not draw the group label but draw single labels on the left side of the tape.
-        if(!groupSelectedAircraft.isEmpty()) {
-            for(int i=0; i< groupSelectedAircraft.size(); i++) {
-                altitudeTapeFragment.drawGroupSelection(mAircraft.get(groupSelectedAircraft.get(i)).getAGL(),mAircraft.get(groupSelectedAircraft.get(i)).getLabelCharacter(),i,groupSelectedAircraft.size(),groupSelectedAircraft.get(i));
+        //Check if all aircraft in the group selection are still in the group
+        for(int k=0; k<groupSelectedAircraft.size(); k++) {
+            boolean inGroup = false;
+            int ac = groupSelectedAircraft.get(k);
+
+            for(int l=0; l<groupList.size(); l++) {
+                if(groupList.get(l).contains(ac)) {
+                    inGroup = true;
+                    break;
+                }
             }
+            if(inGroup==false) {
+                deselectAllAircraft();
+                altitudeTapeFragment.removeGroupSelectedAircraft();
+                break;
+            }
+        }
+
+        //Check if the group selection is smaller than the actual group
+        for(int q=0; q<groupList.size(); q++) {
+            boolean wrong = false;
+            for(int w=0; w<groupSelectedAircraft.size(); w++) {
+                Log.d("tret1",String.valueOf(groupList.get(q).contains(groupSelectedAircraft.get(w))));
+                Log.d("tret2",String.valueOf(!groupSelectedAircraft.containsAll(groupList.get(q))));
+                if(groupList.get(q).contains(groupSelectedAircraft.get(w)) && !groupSelectedAircraft.containsAll(groupList.get(q))) {
+                    wrong = true;
+                    break;
+                }
+            }
+            Log.d("tret*",String.valueOf(wrong));
+            if(wrong) {
+                deselectAllAircraft();
+                altitudeTapeFragment.removeGroupSelectedAircraft();
+                break;
+            }
+        }
+
+        //Check if a certain conflict group is selected. If yes, do not draw the group label but draw single labels on the left side of the tape.
+        for(int i=0; i< groupSelectedAircraft.size(); i++) {
+            altitudeTapeFragment.drawGroupSelection(mAircraft.get(groupSelectedAircraft.get(i)).getAGL(),mAircraft.get(groupSelectedAircraft.get(i)).getLabelCharacter(),i,groupSelectedAircraft.size(),groupSelectedAircraft.get(i));
         }
 
         //Put the grouped labels on the altitude tape
@@ -2096,7 +2143,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 }
 
-                characters = characters.substring(0,groupList.get(k).size()+2);
+                characters = characters.substring(0,characters.length()-1);
                 //Calculate the mean altitude of the aircraft that are in the group
                 double meanAlt = altSum/groupList.get(k).size();
                 //Draw the group label on the tape

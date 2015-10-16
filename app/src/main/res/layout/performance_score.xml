@@ -19,7 +19,7 @@
 	        style="@style/telemetryText"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"  
-	        android:text="@string/telemetry_default_value" />
+	        android:text="@string/performance_default_value" />
 
 	    <TextView
 	        android:id="@+id/PerformanceScoreUnitLabel"

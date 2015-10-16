@@ -7,10 +7,11 @@
 
     <string name="connect_button">Connect</string>
     <string name="disconnect_button">Disconnect</string>
-    
+
     <string name="telemetry_default_value">0.0</string>
+    <string name="performance_default_value">50.0</string>
     <string name="meter_unit">m</string>
-    <string name="performance_score_unit">%</string>
+    <string name="performance_score_unit"></string>
     <string name="scenario_time_unit"></string>
     <string name="scenario_time_value">-</string>
     <string name="scenario_end_text">SCENARIO FINISHED!</string>
@@ -50,6 +51,7 @@
         <item>Scenario 4</item>
         <item>Scenario 5</item>
         <item>Scenario 6</item>
+        <item>Scenario 7</item>
     </string-array>
 
     <!-- Locations of ROI(s)-->
@@ -78,5 +80,8 @@
         <item>51.976637,4.356167</item>    <!-- Region inside home comm range -->
     </string-array>
 
+    <string-array name="latLng_scenario7">
+        <item>51.974280,4.364603</item>    <!-- Region outside home comm range -->
+    </string-array>
 
 </resources>
