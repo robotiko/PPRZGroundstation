@@ -941,6 +941,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 latLng    = getResources().getStringArray(R.array.latLng_scenario7);
                 batValues = getResources().getIntArray(R.array.iniBatVolt_scenario7);
                 ROIradii  = getResources().getIntArray(R.array.ROIRadii_scenario7);
+            } else if (scenarioNumber == 8) {
+                latLng    = getResources().getStringArray(R.array.latLng_scenario8);
+                batValues = getResources().getIntArray(R.array.iniBatVolt_scenario8);
+                ROIradii  = getResources().getIntArray(R.array.ROIRadii_scenario8);
             }
 
             //Loop over ROIs to put the values in lists
@@ -1297,27 +1301,27 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	@Override
     public boolean onMarkerClick(final Marker marker) {
         if(marker.getSnippet().contains("-")){      //Waypoint marker clicked
-            String[] numbers = marker.getSnippet().split("-");
-            int acNumber = Integer.parseInt(numbers[0]);
-            int wpNumber = Integer.parseInt(numbers[1]);
-
-            //Set the number of the selected waypoint (0 for nothing selected)
-            if((wpNumber+1)==selectedWp) { //Deselect waypoint
-                selectedWp = 0;
-                //Set the selection status of the waypoint
-                mAircraft.get(acNumber).setWpSelected(wpNumber, false);
-            } else {
-                if(selectedWp!=0) {
-                    //If another waypoint is selected, deselect it
-                    mAircraft.get(acNumber).setWpSelected(selectedWp-1, false);
-                }
-                selectedWp = wpNumber + 1;
-                //Set the selection status of
-                mAircraft.get(acNumber).setWpSelected(wpNumber, true);
-            }
-
-            //Redraw the waypoints (important for selection status)
-            waypointUpdater(acNumber);
+//            String[] numbers = marker.getSnippet().split("-");
+//            int acNumber = Integer.parseInt(numbers[0]);
+//            int wpNumber = Integer.parseInt(numbers[1]);
+//
+//            //Set the number of the selected waypoint (0 for nothing selected)
+//            if((wpNumber+1)==selectedWp) { //Deselect waypoint
+//                selectedWp = 0;
+//                //Set the selection status of the waypoint
+//                mAircraft.get(acNumber).setWpSelected(wpNumber, false);
+//            } else {
+//                if(selectedWp!=0) {
+//                    //If another waypoint is selected, deselect it
+//                    mAircraft.get(acNumber).setWpSelected(selectedWp-1, false);
+//                }
+//                selectedWp = wpNumber + 1;
+//                //Set the selection status of
+//                mAircraft.get(acNumber).setWpSelected(wpNumber, true);
+//            }
+//
+//            //Redraw the waypoints (important for selection status)
+//            waypointUpdater(acNumber);
         } else if(marker.getSnippet().equals("HOME")) {                 //Home marker clicked
             //Do nothing (yet)
         } else if(!marker.getSnippet().contains("-")) {                 //Aircraft marker clicked

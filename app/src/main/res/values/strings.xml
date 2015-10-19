@@ -52,6 +52,7 @@
         <item>Scenario 5</item>
         <item>Scenario 6</item>
         <item>Scenario 7</item>
+        <item>Scenario 8</item>
     </string-array>
 
     <!-- Locations of ROI(s)-->
@@ -72,7 +73,7 @@
     </string-array>
 
     <string-array name="latLng_scenario5">
-        <item>51.974254,4.364975</item>    <!-- Region outside home comm range -->
+        <item>51.974254,4.364975</item>    <!-- Region partly outside home comm range -->
     </string-array>
 
     <string-array name="latLng_scenario6">
@@ -82,6 +83,11 @@
 
     <string-array name="latLng_scenario7">
         <item>51.974280,4.364603</item>    <!-- Region outside home comm range -->
+    </string-array>
+
+    <string-array name="latLng_scenario8">
+        <item>51.970964,4.356821</item>    <!-- Region inside home comm range -->
+        <item>51.969255,4.368210</item>    <!-- Region outside home comm range -->
     </string-array>
 
 </resources>
