@@ -17,7 +17,6 @@ import android.util.SparseArray;
 import android.widget.TextView;
 
 import com.gcs.R;
-import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polyline;
@@ -59,9 +58,6 @@ public class Aircraft {
     public Marker acMarker;
     public List<Marker> wpMarkers  = new ArrayList<>();
     public List<String> missionBlocks;
-    public GroundOverlay coverageCircle;
-    public static List<Integer> relayAircraft = new ArrayList<>();
-    private static List<LatLng> relayLocations = new ArrayList<>();
 	public Polyline flightTrackPoly;
     private List<LatLng> flightPath = new ArrayList<>();
 	
@@ -71,11 +67,9 @@ public class Aircraft {
     private boolean isLabelCreated       = false;
     private boolean showInfoWindow       = true;
     private boolean batteryCriticalState = false;
-    public boolean missionAborted        = false;
     private float distanceHome           = 0f;
     private String currentBlock;
     private int connectedTo              = 0; //0 is home, higher numbers are aircraft
-    private int commLossBatteryLoss      = 0;
 
     //////////// HEARTBEAT ////////////
     public byte getSysid() { return mHeartbeat.getSysid(); }
@@ -109,8 +103,6 @@ public class Aircraft {
 
     public boolean isConnectionAlive() { return mHeartbeat.heartbeatState != Heartbeat.HeartbeatState.LOST_HEARTBEAT; }
 
-    public boolean hasCommConnection() { return mState.hasCommConnection(); }
-
     //////////// ATTITUDE ////////////
 	public void setRollPitchYaw(double roll, double pitch, double yaw) {
     	mAttitude.setRollPitchYaw(roll, pitch, yaw);
@@ -143,9 +135,7 @@ public class Aircraft {
     	return mAltitude.getAltitude();
     }
     
-    public double getTargetAltitude() {
-    	return mAltitude.getTargetAltitude();
-    }
+    public double getTargetAltitude() { return mAltitude.getTargetAltitude(); }
     
     public double getAGL() {
     	return mAltitude.getAGL();
@@ -185,24 +175,12 @@ public class Aircraft {
         return mBattery.getBattLevel();
     }
 
-    public int getBattCurrent() {
-        return mBattery.getBattCurrent();
-    }
+    public int getBattCurrent() { return mBattery.getBattCurrent(); }
 
-    public double getBattDischarge() {
-        return mBattery.getBattDischarge();
-    }
+    public double getBattDischarge() { return mBattery.getBattDischarge(); }
 
     public void setBatteryState(int battVolt, int battLevel, int battCurrent) {
     	mBattery.setBatteryState(battVolt,battLevel,battCurrent);
-    }
-
-    public void setCommLossBattery(int increment) { commLossBatteryLoss += increment; }
-
-    public void resetCommLossBattery() { commLossBatteryLoss = 0; }
-
-    public int getCommLossBatteryLoss() {
-        return commLossBatteryLoss;
     }
 
     //////////// STATE ////////////
@@ -219,10 +197,6 @@ public class Aircraft {
     public void setConflictStatusNew(ConflictStatus NewStatus) { mState.setConflictStatusNew(NewStatus); }
 
     public ConflictStatus getConflictStatus() { return mState.getConflictStatus(); }
-
-    public void setTaskStatus(TaskStatus taskStatus) { mState.setTaskStatus(taskStatus); }
-
-    public TaskStatus getTaskStatus() { return mState.getTaskStatus(); }
 
     public void setBatteryCriticalState() { batteryCriticalState = true; }
 
@@ -361,77 +335,11 @@ public class Aircraft {
     //Method to calculate the communication signal strength (percentage) of connection with ground station or relay UAVs
     public int getCommunicationSignal(){
 
-        //Define the value at which the signal is considered to be irreceivable and the maximum range
-        double boundaryLevel = context.getResources().getInteger(R.integer.boundaryLevel)/100.0;
-        int maxRange         = context.getResources().getInteger(R.integer.commMaxRange);
-
-        //Dependent on the maximum range and boundary level a scaling factor is calculated for the signal strength calculations
-        double scalingFactor = (1f/maxRange)*(Math.pow((1/boundaryLevel),(1f/4))-1);
-        int signalStrength, relaySignalStrength=0;
-
-        //Signal strength directly with ground station
-        signalStrength = (int) (1 / Math.pow(scalingFactor * distanceHome + 1, 4) * 100);
-
-        if (!relayLocations.isEmpty()){ //If relay aircraft active, see if they provide a better signal strength
-            //Initialize/declare parameters
-            float[] distance = new float[1];
-            float distanceToRelay = maxRange;
-            for(int i=0; i< relayLocations.size(); i++) { //Loop over the available aircraft
-                if(relayAircraft.get(i) != aircraftNumber) { //Prevent connecting with itself
-                    //Check if the aircraft wants to make a connection with a relay aircraft that is connected with the aircraft itself, if so skip iteration
-                    if (chainSelfConnection(aircraftNumber, relayAircraft.get(i))) {
-                        continue;
-                    }
-                    //Calculate distance between aircraft and relay
-                    Location.distanceBetween(getLat(), getLon(), relayLocations.get(i).latitude, relayLocations.get(i).longitude, distance);
-
-                    if (distance[0] < distanceToRelay) { //If the distance is smaller than with another aircraft of the maximum range
-                        distanceToRelay = distance[0];
-                        AcConnectionList.put(aircraftNumber, relayAircraft.get(i));  //Keep track of to which relay the aircraft is connected
-                    }
-                }
-            }
-            //calculate the relay signal strength
-            relaySignalStrength = (int) (1 / Math.pow(scalingFactor * distanceToRelay + 1, 4) * 100);
-        }
-
-        if(relaySignalStrength > signalStrength) { //Check is the relay signal is stronger than that of the ground station
-            signalStrength = relaySignalStrength; //If yes, take relay signal
-        } else {
-            AcConnectionList.put(aircraftNumber,0); //Else keep ground station signal and set the value in the connectinolist back to 0 (=ground station)
-        }
+        //TODO: see if comm signal strength value is received from service. If so, this method can be replaced by that
+        int signalStrength = 0;
         return signalStrength;
     }
 
-    //Method to check if a relay aircraft tries to connect with another relay aircraft that is already connected to the one that is trying
-    private static boolean chainSelfConnection(int aircraftNumber, int otherAcNumber) {
-        //Initiation
-        boolean hasSelfConnection = false;
-        boolean continueCheck = true;
-
-        //Keep looping over the connection chain of relays, if it ends by the trying aircraft the connection is not possible else it ends up at the ground station (0) which means that it can connect
-        while(continueCheck) {
-            int connectedTo = AcConnectionList.get(otherAcNumber);
-
-            if(connectedTo == aircraftNumber) { //If connected to itself
-                hasSelfConnection = true;
-                continueCheck = false;
-            } else if (connectedTo == 0) {     //If connected to home
-                hasSelfConnection = false;
-                continueCheck = false;
-            } else {                          //Continue following the chain
-                otherAcNumber = connectedTo;
-            }
-        }
-        return hasSelfConnection;
-    }
-
-    public static void setRelayList(List<LatLng> relayList) {
-        if(!relayLocations.isEmpty()) {
-            relayLocations.clear();
-        }
-        relayLocations = relayList;
-    }
     
     public int getAltLabelId(){
     	return AltitudeLabelId;
@@ -466,16 +374,6 @@ public class Aircraft {
 
     public float getDistanceHome() {
         return distanceHome;
-    }
-
-    public float getDistanceToWaypoint() {
-        float wpDistance = 2*context.getResources().getInteger(R.integer.acCoverageRadius);;
-        if(waypoints.size()>0) {
-            float[] distance = new float[1];
-            Location.distanceBetween(getLat(), getLon(), getWpLat(0), getWpLon(0), distance);
-            wpDistance =  distance[0];
-        }
-        return wpDistance;
     }
 
     public int getAircraftCount() {

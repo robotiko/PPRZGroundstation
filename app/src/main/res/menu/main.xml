@@ -16,36 +16,10 @@
         android:actionViewClass="android.widget.Spinner" />
 
     <item
-        android:id="@+id/show_coverage"
-        android:orderInCategory="9"
-        android:showAsAction="always"
-        android:title="Coverage"/>
-
-    <item
-        android:id="@+id/show_comm_range"
-        android:orderInCategory="10"
-        android:showAsAction="always"
-        android:title="Communication range"/>
-
-    <item
-        android:id="@+id/show_min_comm_range"
-        android:orderInCategory="10"
-        android:showAsAction="always"
-        android:title="Comm guaranteed"/>
-<!--
-    <item
         android:id="@+id/menu_block_spinner"
         android:showAsAction="always"
         android:orderInCategory="11"
         android:title="block_spinner"
-        android:actionViewClass="android.widget.Spinner" />
--->
-
-    <item
-        android:id="@+id/scenario_spinner"
-        android:showAsAction="always"
-        android:orderInCategory="12"
-        android:title="scenario_spinner"
         android:actionViewClass="android.widget.Spinner" />
 
 </menu>

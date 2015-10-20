@@ -9,7 +9,6 @@ public class CustomState extends State {
     private boolean hasCommConnection = false;
 
     private ConflictStatus conflictStatus = ConflictStatus.GRAY;
-    private TaskStatus taskStatus = TaskStatus.NONE;
 
     public void updateConflictStatus() {
         if(isOnUniqueAltitude){
@@ -29,14 +28,6 @@ public class CustomState extends State {
 
     public ConflictStatus getConflictStatus() {
         return conflictStatus;
-    }
-
-    public void setTaskStatus(TaskStatus taskStatus) {
-        this.taskStatus = taskStatus;
-    }
-
-    public TaskStatus getTaskStatus() {
-        return taskStatus;
     }
 
     public void setHasCommConnection(boolean hasCommConnection) { this.hasCommConnection = hasCommConnection; }
