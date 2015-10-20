@@ -13,13 +13,23 @@ import java.util.List;
 
 public class PerformanceCalcHelper {
 
-    public static final double calcPerformance(List<Integer> ROIradiiList, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft, int surveyCountScore, int halfBatteryVoltage, int lowBatteryVoltage) {
-        float coverageWeight = 50;
-        float CommWeight     = 30;
-        float conflictWeight = 20;
-        float batteryWeight  = 0;
+    private static double scoreSum = 0.0;
+    private static int ticks = 0;
 
-        return ROIcovered(ROIradiiList,acCoverageRadius,ROIList,mAircraft,surveyCountScore)*coverageWeight + LossOfCommunicationCheck(mAircraft)*CommWeight + ConflictCheck(mAircraft)*conflictWeight + BatteryScore(mAircraft,halfBatteryVoltage,lowBatteryVoltage)*batteryWeight; //Percentage;
+    private static double coverageScore, commScore, conflictScore, batteryScore, score;
+
+    public static final double calcPerformance(List<Integer> ROIradiiList, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft, int surveyCountScore, int halfBatteryVoltage, int lowBatteryVoltage) {
+        coverageScore = 50.0 * ROIcovered(ROIradiiList,acCoverageRadius,ROIList,mAircraft,surveyCountScore);
+        commScore     = 30.0 * LossOfCommunicationCheck(mAircraft);
+        conflictScore = 20.0 * ConflictCheck(mAircraft);
+        batteryScore  = 0.0  * BatteryScore(mAircraft, halfBatteryVoltage, lowBatteryVoltage);
+
+        score = coverageScore + commScore + conflictScore + batteryScore;
+
+        scoreSum += score;
+        ticks++;
+
+        return score;
     }
 
     //Calculate the percentage of the Region of Interest (ROI) that is covered by surveillance aircraft
@@ -58,7 +68,7 @@ public class PerformanceCalcHelper {
                         }
                     }
                     //Calculate the total coverage ove the ROI
-                    overlapArea += overlap - doubleOverlap;
+                    overlapArea += (overlap - doubleOverlap)*(ROIradiiList.get(k)/120.0);
                 }
             }
         }
@@ -153,5 +163,9 @@ public class PerformanceCalcHelper {
         }
 
         return batteryScore;
+    }
+
+    public static double getMeanPerfScore() {
+        return scoreSum/ticks;
     }
 }

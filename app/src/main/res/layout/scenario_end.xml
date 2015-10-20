@@ -5,22 +5,25 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content" 
     android:background="@drawable/rectangle"
-    android:visibility="gone"
-    android:gravity="center" >
-    
-    <LinearLayout
-        android:id="@+id/scenarioEndHorizontalLayout"
-       	android:orientation="horizontal"
-       	android:layout_width="fill_parent"
-    	android:layout_height="fill_parent" 
-    	android:gravity="center" >
-		
+    android:layout_gravity="center"
+    android:visibility="gone">
+
 	    <TextView
 	        android:id="@+id/scenarioEndText"
 	        style="@style/telemetryText"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"  
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginTop="40dp"
 	        android:text="@string/scenario_end_text" />
-	    
-    </LinearLayout>
+
+        <TextView
+            android:id="@+id/endScore"
+            style="@style/telemetryText"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/blue"
+            android:layout_marginTop="20dp"
+            android:text="-" />
 </LinearLayout>

@@ -86,7 +86,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	private Handler handler, interfaceUpdateHandler;
 	private final int mInterval        = 1000;                       // milliseconds
     private final long initTime        = System.currentTimeMillis(); // milliseconds
-    private long timeLeft;
+    private long timeLeft = 240;
     private long scenarioStartTime;
 
     //Declaration of the service client
@@ -142,13 +142,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private int batteryFailureAircraft = 0;
     private int scenarioRuntime = 0;
     private int surveyCountScore = 0;
+    private int initialParticipantNumber = 0;
+    private int finalParticipantNumber = 0;
     private float initialZoomLevel = 16.0f;
     private LatLng origMarkerPosition;
     private Circle flightPath, surveillanceBound;
 
     //Declaration of items needed for mission blocks display
-    private MenuItem menuBlockSpinner = null, menuAircraftSpinner = null, menuScenarioSpinner = null;
-    private Spinner blockSpinner, aircraftSpinner, scenarioSpinner;
+    private MenuItem menuBlockSpinner = null, menuAircraftSpinner = null, menuScenarioSpinner = null, menuParticipantSpinner = null;
+    private Spinner blockSpinner, aircraftSpinner, scenarioSpinner, participantSpinner;
     Menu menu;
 
 	@Override
@@ -189,11 +191,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		altitudeTapeFragment     = (AltitudeTape) getSupportFragmentManager().findFragmentById(R.id.altitudeTapeFragment);                 //AltitudeTape fragment
 		missionButtons           = (MissionButtonFragment) getSupportFragmentManager().findFragmentById(R.id.missionButtonFragment);       //MissionButton fragment
         scenarioEndFragment      = (ScenarioEndFragment) getSupportFragmentManager().findFragmentById(R.id.scenarioEndFragment);               //MissionButton fragment
-
-        //Set timer
-        scenarioRuntime = getResources().getInteger(R.integer.scenarioRuntime);
-        timeLeft = scenarioRuntime;
-        scenarioTimeFragment.setTimeLeft(timeLeft);
 
 		// Get the map and register for the ready callback
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -272,6 +269,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         menuScenarioSpinner = menu.findItem(R.id.scenario_spinner);
         scenarioSpinner     = (Spinner) MenuItemCompat.getActionView(menuScenarioSpinner);
 
+        //Participant spinner
+        menuParticipantSpinner = menu.findItem(R.id.participant_spinner);
+        participantSpinner     = (Spinner) MenuItemCompat.getActionView(menuParticipantSpinner);
+
         //Listener on item selection in the spinner
         scenarioSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             //Define what should happen when an item in the spinner is selected
@@ -288,10 +289,31 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        //Listener on item selection in the spinner
+        participantSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            //Define what should happen when an item in the spinner is selected
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                //Set the participant number
+                initialParticipantNumber = position;
+            }
+
+            //Define what should happen if no item is selected in the spinner
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                //Do nothing
+            }
+        });
+
         //Fill the scenario spinner
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.scenario_array, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        scenarioSpinner.setAdapter(adapter);
+        ArrayAdapter<CharSequence> adapter1 = ArrayAdapter.createFromResource(this, R.array.scenario_array, android.R.layout.simple_spinner_item);
+        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        scenarioSpinner.setAdapter(adapter1);
+
+        //Fill the participant spinner
+        ArrayAdapter<CharSequence> adapter2 = ArrayAdapter.createFromResource(this, R.array.participant_array, android.R.layout.simple_spinner_item);
+        adapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        participantSpinner.setAdapter(adapter2);
 
         ////////////////
         this.menu = menu;
@@ -462,7 +484,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             /////DATA LOGGING
             if (allWpsLoaded && (timeLeft < scenarioRuntime)) {
-                LogHelper.dataLogger(initTime, timeLeft, scenarioRuntime, activeScenario, performanceScore, mAircraft);
+                LogHelper.dataLogger(initTime, timeLeft, scenarioRuntime, activeScenario, finalParticipantNumber, performanceScore, mAircraft);
             }
 
             //Restart this updater after the set interval (only if scenario time is left)
@@ -470,6 +492,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 interfaceUpdateHandler.postDelayed(interfaceUpdater, mInterval);
             } else if (timeLeft <= 0) {
                 //Show dialog that scenario is finished
+                scenarioEndFragment.setEndScore(PerformanceCalcHelper.getMeanPerfScore());
                 scenarioEndFragment.setVisibility(View.VISIBLE);
             }
         }
@@ -797,11 +820,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     waypointUpdater(acNumber);
 
                     // Define the home location based on the home waypoint (standard the second waypoint)
-                    if(home.getHomeLocation() == null) {
-                        LatLng newHome = new LatLng(Math.toDegrees(waypoints.get(acNumber).getLat()),Math.toDegrees(waypoints.get(acNumber).getLon()));
-                        home.setHomeLocation(newHome);
-                        drawHomeMarker();
-                    }
+//                    if(home.getHomeLocation() == null) {
+//                        LatLng newHome = new LatLng(Math.toDegrees(waypoints.get(acNumber).getLat()),Math.toDegrees(waypoints.get(acNumber).getLon()));
+//                        home.setHomeLocation(newHome);
+//                        drawHomeMarker();
+//                    }
 
                     //Check if the waypoints of all aircraft have been received and update waypoint button accordingly
                     for(int i=0; i<mAircraft.size(); i++) {
@@ -945,6 +968,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 latLng    = getResources().getStringArray(R.array.latLng_scenario8);
                 batValues = getResources().getIntArray(R.array.iniBatVolt_scenario8);
                 ROIradii  = getResources().getIntArray(R.array.ROIRadii_scenario8);
+            } else if (scenarioNumber == 9) {
+                latLng    = getResources().getStringArray(R.array.latLng_scenario9);
+                batValues = getResources().getIntArray(R.array.iniBatVolt_scenario9);
+                ROIradii  = getResources().getIntArray(R.array.ROIRadii_scenario9);
+            } else if (scenarioNumber == 10) {
+                latLng    = getResources().getStringArray(R.array.latLng_scenario10);
+                batValues = getResources().getIntArray(R.array.iniBatVolt_scenario10);
+                ROIradii  = getResources().getIntArray(R.array.ROIRadii_scenario10);
             }
 
             //Loop over ROIs to put the values in lists
@@ -982,6 +1013,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             for(int k=0; k < ROIradii.length; k++) {
                 ROIradiiList.add(ROIradii[k]);
             }
+
+            //Set timer
+            int[] scenarioTimes = getResources().getIntArray(R.array.scenarioRuntime);
+            scenarioRuntime = scenarioTimes[scenarioNumber-1];
+            timeLeft = scenarioRuntime;
+            scenarioTimeFragment.setTimeLeft(timeLeft);
+
+            //Set home location
+            LatLng newHome = new LatLng(51.972910,4.348599);
+            home.setHomeLocation(newHome);
+            drawHomeMarker();
         } else {
             noAircraftScenario = 0;
         }
@@ -1045,9 +1087,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
     //Connect to the service on button click if no connection was established yet
     public void onButtonRequest(View view) {
-        if(activeScenario>0) {
+        if(activeScenario>0 && initialParticipantNumber >0) {
             if (!isConnected) {
                 connectToDroneClient();
+                //Set participant number
+                finalParticipantNumber = initialParticipantNumber;
             } else {
                 try {
                     mServiceClient.disconnectDroneClient();
@@ -1064,8 +1108,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     Log.e(TAG, "Error while disconnecting", e);
                 }
             }
-        } else {
+        } else if(activeScenario==0) {
             Toast.makeText(getApplicationContext(), "Please select a scenario!", Toast.LENGTH_SHORT).show();
+        } else if(initialParticipantNumber==0) {
+            Toast.makeText(getApplicationContext(), "Please select a participant number!", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -1196,6 +1242,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Notify the user that no aircraft is selected
             Toast.makeText(getApplicationContext(), "No aircraft selected!", Toast.LENGTH_SHORT).show();
         //request takeoff if connected and the mission blocks are loaded
+            Log.d("TO-TEST",String.valueOf(mAircraft.get(selectedAc).missionBlocks != null));
         } else if(isConnected && mAircraft.get(selectedAc).hasCommConnection() && mAircraft.get(selectedAc).missionBlocks != null && !mAircraft.get(selectedAc).getBatteryCriticalState()) {
             try {
                 //Set launch button to active, select the takeoff block and request the service to execute it
@@ -1280,8 +1327,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		//Change the map type to satellite
 		map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
 		
-		//Enable the go to my location button
-		map.setMyLocationEnabled(true);
+		//Show the 'my location' marker
+		map.setMyLocationEnabled(false);
 		
 		//Disable rotation and tilt gestures
 		map.getUiSettings().setRotateGesturesEnabled(false);
@@ -1295,6 +1342,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		map.setOnMarkerClickListener(this);     //Click listener on markers
         map.setOnMarkerDragListener(this);      //Drag listener on markers
         map.setOnInfoWindowClickListener(this); //Click listener on infowindows
+
+//        //Set home location
+//        LatLng newHome = new LatLng(51.972910,4.348599);
+//        home.setHomeLocation(newHome);
+//        drawHomeMarker();
 	}
 
 	/* Marker listener for (de)selection aircraft icons, waypoint marker actions and home marker selection */
@@ -1342,6 +1394,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 mAircraft.get(acNumber).setShowInfoWindow(true);
                 //Update the blocks spinner
 //                updateMissionBlocksSpinner(acNumber);
+                //Redraw communication circles
+                drawCommunicationRange(Aircraft.relayAircraft);
             } else {
                 mAircraft.get(acNumber).setIsSelected(false);
                 selectedAc = 0;
@@ -1445,8 +1499,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     if (mAircraft.get(acNumber).acMarker != null) {
                         mAircraft.get(acNumber).acMarker.remove();
                     }
-
-                    Log.d("nullPointerTEST",String.valueOf(mAircraft.get(acNumber).acMarker==null));
 
                     //Add marker to map with the following settings and save it in the aircraft object
                     mAircraft.get(acNumber).acMarker = map.addMarker(new MarkerOptions()
@@ -1653,7 +1705,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 .draggable(false)
                 );
 
-                /* TODO: make the initial zoom level correspond with the Region of Interest size (so it does not fill the entire screen) */
                 //Move camera to the home location
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(home.getHomeLocation(), initialZoomLevel));
             }
@@ -1696,22 +1747,26 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     //If one or more relay UAVs are active
                     if (!relayAc.isEmpty()) {
                         for (int i = 0; i < relayAc.size(); i++) {
-//                            if(mAircraft.get(relayAc.get(i)).getDistanceToWaypoint() <= acCoverageRadius) {
-                                // Draw the relay communication range circle
-                                CircleOptions relayCircleOptions = new CircleOptions()
-                                        .strokeWidth(getResources().getInteger(R.integer.circleStrokeWidth))
-                                        .strokeColor(getResources().getColor(R.color.commRange));
-                                if (showMinCommRange && mAircraft.get(relayAc.get(i)).getDistanceToWaypoint() <= acCoverageRadius) {
-                                    relayCircleOptions.center(mAircraft.get(relayAc.get(i)).getWpLatLng(0));    //Around waypoint
-                                    relayCircleOptions.radius(commRelayRange - (surveillanceCircleRadius));     //In meters
-                                } else {
-                                    relayCircleOptions.center(mAircraft.get(relayAc.get(i)).getLatLng());       //Around aircraft
-                                    relayCircleOptions.radius(commRelayRange); // In meters
-                                }
-                                // Get back the relay Circle object
-                                Circle relayCommCircle = map.addCircle(relayCircleOptions);
-                                relayCommCircles.add(relayCommCircle);
-//                            }
+                            int color;
+                            if(mAircraft.get(relayAc.get(i)).isSelected()) {
+                                color = getResources().getColor(R.color.commRangeYellow);
+                            } else {
+                                color = getResources().getColor(R.color.commRange);
+                            }
+                            // Draw the relay communication range circle
+                            CircleOptions relayCircleOptions = new CircleOptions()
+                                    .strokeWidth(getResources().getInteger(R.integer.circleStrokeWidth))
+                                    .strokeColor(color);
+                            if (showMinCommRange && mAircraft.get(relayAc.get(i)).getDistanceToWaypoint() <= acCoverageRadius) {
+                                relayCircleOptions.center(mAircraft.get(relayAc.get(i)).getWpLatLng(0));    //Around waypoint
+                                relayCircleOptions.radius(commRelayRange - (surveillanceCircleRadius));     //In meters
+                            } else {
+                                relayCircleOptions.center(mAircraft.get(relayAc.get(i)).getLatLng());       //Around aircraft
+                                relayCircleOptions.radius(commRelayRange); // In meters
+                            }
+                            // Get back the relay Circle object
+                            Circle relayCommCircle = map.addCircle(relayCircleOptions);
+                            relayCommCircles.add(relayCommCircle);
                         }
                     }
                 }
@@ -1752,7 +1807,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         ROIOverlayList.get(i).remove();
                     }
                 }
-                Log.d("TEST", String.valueOf(ROIlocs.size()));
+
                 for(int n = 0; n < ROIlocs.size(); n++) {
                     //Bitmap and canvas to draw a circle on
                     int circleSize = 300;

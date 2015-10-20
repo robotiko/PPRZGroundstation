@@ -21,6 +21,8 @@
 
     <item name="commRange" type="color">0x5500ff00</item>
 
+    <item name="commRangeYellow" type="color">0x80ffff00</item>
+
     <item name="coverageGreen" type="color">0x4000ff00</item>
 
     <item name="coverageYellow" type="color">0x40ffff00</item>

@@ -74,7 +74,7 @@ public class Aircraft {
     public boolean missionAborted        = false;
     private float distanceHome           = 0f;
     private String currentBlock;
-    private int connectedTo              = 0; //0 is home, higher numbers are aircraft
+//    private int connectedTo              = 0; //0 is home, higher numbers are aircraft
     private int commLossBatteryLoss      = 0;
 
     //////////// HEARTBEAT ////////////
@@ -521,9 +521,9 @@ public class Aircraft {
     //////////////////////////////////////////////////////
     private Bitmap AC_Icon, baseIcon;
     private int iconHeight = 0;
-    private static BitmapDrawable  arrowRed, arrowBlue, arrowGray, batteryGreen, batteryYellow, batteryRed, commFull, commMid, commLow, commEmpty;
+    private static BitmapDrawable  arrowRed, arrowBlue, arrowGray, batteryGreen, batteryYellow, batteryOrange, batteryRed, commFull, commMid, commLow, commEmpty;
     private static int resolution, protectedZoneAlpha, sideOffsetArrow, batteryVertLocation, batteryHorLocation, batteryScaling, commVertLocation,
-                       commHorLocation, commScaling, halfBat, lowBat, halfComm, lowComm, NoComm, colorRED, colorBLUE, colorGRAY, colorYELLOW;
+                       commHorLocation, commScaling, quartBat, halfBat, lowBat, halfComm, lowComm, NoComm, colorRED, colorBLUE, colorGRAY, colorYELLOW;
     private static boolean firstTimeDrawing = true;
     private BitmapDrawable iconArrow, batteryIcon, communicationIcon;
 
@@ -552,8 +552,9 @@ public class Aircraft {
         commScaling			= context.getResources().getInteger(R.integer.CommScaling);
 
         //Get the battery icon levels
-        halfBat = context.getResources().getInteger(R.integer.HalfBatteryVoltage);
-        lowBat  = context.getResources().getInteger(R.integer.LowBatteryVoltage);
+        quartBat = context.getResources().getInteger(R.integer.QuartBatteryVoltage);
+        halfBat  = context.getResources().getInteger(R.integer.HalfBatteryVoltage);
+        lowBat   = context.getResources().getInteger(R.integer.LowBatteryVoltage);
 
         //Get the communication icon levels
         halfComm = context.getResources().getInteger(R.integer.HalfCommunicationSignal);
@@ -568,6 +569,7 @@ public class Aircraft {
         //Battery icons
         batteryGreen  = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(), R.drawable.battery_icon_green));
         batteryYellow = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(), R.drawable.battery_icon_yellow));
+        batteryOrange = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(), R.drawable.battery_icon_orange));
         batteryRed    = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(), R.drawable.battery_icon_red));
 
         //Communication icons
@@ -658,13 +660,13 @@ public class Aircraft {
 ////////////////////////////////////////////////
 
         //Determine which battery icon to draw
-        if(mBattery.getBattVolt()  > halfBat) { //high battery level
+        if(mBattery.getBattVolt()  > quartBat) { //high battery level
             batteryIcon = batteryGreen;
-        }
-        else if (halfBat >= mBattery.getBattVolt() && mBattery.getBattVolt()  > lowBat) { //middle battery level
+        } else if(quartBat >= mBattery.getBattVolt() && mBattery.getBattVolt() > halfBat) {
             batteryIcon = batteryYellow;
-        }
-        else { //low battery level
+        } else if (halfBat >= mBattery.getBattVolt() && mBattery.getBattVolt()  > lowBat) { //middle battery level
+            batteryIcon = batteryOrange;
+        } else { //low battery level
             batteryIcon = batteryRed;
         }
 

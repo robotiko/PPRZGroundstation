@@ -18,20 +18,23 @@ public class ScenarioTimeFragment extends Fragment {
 	}
 
 	public void setTimeLeft(long timeLeft) {
-		TextView textView = (TextView) getView().findViewById(R.id.scenarioTimeValue);
         if(timeLeft < getResources().getInteger(R.integer.orangeTime) && timeLeft >= getResources().getInteger(R.integer.redTime)) {
-            textView.setTextColor(getResources().getColor(R.color.orange));
+            setColor(getResources().getColor(R.color.orange));
         } else if(timeLeft<getResources().getInteger(R.integer.redTime)) {
-            textView.setTextColor(Color.RED);
+            setColor(Color.RED);
         } else if (timeLeft<=0){
-            textView.setTextColor(Color.YELLOW);
+            setColor(Color.YELLOW);
         }
         //Set value to textview
-		textView.setText(String.valueOf(timeLeft/60) + ":" + String.format("%02d", timeLeft%60));
+        TextView textView = (TextView) getView().findViewById(R.id.scenarioTimeValue);
+        textView.setText(String.valueOf(timeLeft/60) + ":" + String.format("%02d", timeLeft%60));
 	}
 
     public void setColor(int color) {
-        TextView textView = (TextView) getView().findViewById(R.id.scenarioTimeValue);
-        textView.setTextColor(color);
+        TextView textViewvalue = (TextView) getView().findViewById(R.id.scenarioTimeValue);
+        TextView textViewunit  = (TextView) getView().findViewById(R.id.scenarioTimeUnitLabel);
+
+        textViewvalue.setTextColor(color);
+        textViewunit.setTextColor(color);
     }
 }

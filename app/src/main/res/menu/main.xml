@@ -42,6 +42,13 @@
 -->
 
     <item
+        android:id="@+id/participant_spinner"
+        android:showAsAction="always"
+        android:orderInCategory="12"
+        android:title="Participant_spinner"
+        android:actionViewClass="android.widget.Spinner" />
+
+    <item
         android:id="@+id/scenario_spinner"
         android:showAsAction="always"
         android:orderInCategory="12"

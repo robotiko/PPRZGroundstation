@@ -12,7 +12,7 @@
     <string name="performance_default_value">50.0</string>
     <string name="meter_unit">m</string>
     <string name="performance_score_unit"></string>
-    <string name="scenario_time_unit"></string>
+    <string name="scenario_time_unit">m</string>
     <string name="scenario_time_value">-</string>
     <string name="scenario_end_text">SCENARIO FINISHED!</string>
 
@@ -44,7 +44,7 @@
     <!-- //////////// SCENARIO SETTINGS //////////// -->
     <!-- Array containing strings for scenario spinner -->
     <string-array name="scenario_array">
-        <item>Select a scenario</item>
+        <item>Scenario number</item>
         <item>Scenario 1</item>
         <item>Scenario 2</item>
         <item>Scenario 3</item>
@@ -53,6 +53,22 @@
         <item>Scenario 6</item>
         <item>Scenario 7</item>
         <item>Scenario 8</item>
+        <item>Scenario 9</item>
+        <item>Scenario 10</item>
+    </string-array>
+
+    <string-array name="participant_array">
+        <item>Participant number</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
     </string-array>
 
     <!-- Locations of ROI(s)-->
@@ -62,32 +78,47 @@
 
     <string-array name="latLng_scenario2">
         <item>51.970964,4.356821</item>     <!-- Region inside home comm range -->
+        <item>51.974768,4.356118</item>     <!-- Region inside home comm range -->
     </string-array>
 
     <string-array name="latLng_scenario3">
         <item>51.974254,4.364975</item>    <!-- Region partly inside home comm range -->
     </string-array>
 
+    <!--TODO: finish scenario 4-->
     <string-array name="latLng_scenario4">
+        <item>51.966380,4.375541</item>    <!-- Region outside home comm range -->
+        <item>51.965023,4.325513</item>    <!-- Region outside home comm range -->
+
+    </string-array>
+
+    <!-- ******************* TEST SCENARIOS ******************* -->
+    <string-array name="latLng_scenario5">
         <item>51.974751,4.380150</item>    <!-- Region outside home comm range -->
     </string-array>
 
-    <string-array name="latLng_scenario5">
-        <item>51.974254,4.364975</item>    <!-- Region partly outside home comm range -->
-    </string-array>
-
     <string-array name="latLng_scenario6">
-        <item>51.974280,4.364603</item>    <!-- Region outside home comm range -->
-        <item>51.976637,4.356167</item>    <!-- Region inside home comm range -->
+        <item>51.974254,4.364975</item>    <!-- Region partly outside home comm range -->
     </string-array>
 
     <string-array name="latLng_scenario7">
         <item>51.974280,4.364603</item>    <!-- Region outside home comm range -->
+        <item>51.976637,4.356167</item>    <!-- Region inside home comm range -->
     </string-array>
 
     <string-array name="latLng_scenario8">
+        <item>51.974280,4.364603</item>    <!-- Region outside home comm range -->
+    </string-array>
+
+    <string-array name="latLng_scenario9">
         <item>51.970964,4.356821</item>    <!-- Region inside home comm range -->
         <item>51.969255,4.368210</item>    <!-- Region outside home comm range -->
+    </string-array>
+
+    <!--TODO: finish scenario 10-->
+    <string-array name="latLng_scenario10">
+        <item>51.970964,4.356821</item>
+        <item>51.969255,4.368210</item>
     </string-array>
 
 </resources>
