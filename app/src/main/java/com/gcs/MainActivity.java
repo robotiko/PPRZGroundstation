@@ -175,15 +175,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             //Define what should happen when an item in the spinner is selected
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                try {
-                    //Take the selected block index and send it to the service
-                    Bundle carrier = new Bundle();
-                    carrier.putString("TYPE", "BLOCK_SELECTED");
-                    carrier.putShort("SEQ",(short) position);
-                    //TODO: check if selecteAc is right
-                    mServiceClient.onCallback(carrier,selectedAc);
-                } catch (RemoteException e) {
-                    Log.e(TAG,"Error while sending mission block spinner selection to the service");
+                if(selectedAc!=0) {
+                    try {
+                        //Take the selected block index and send it to the service
+                        Bundle carrier = new Bundle();
+                        carrier.putString("TYPE", "BLOCK_SELECTED");
+                        carrier.putShort("SEQ", (short) position);
+                        //TODO: check if selecteAc is right
+                        mServiceClient.onCallback(carrier, selectedAc);
+                    } catch (RemoteException e) {
+                        Log.e(TAG, "Error while sending mission block spinner selection to the service");
+                    }
                 }
             }
 
@@ -286,9 +288,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             //Draw the communication range on the map
-            if (isConnected) {
-                drawCommunicationRange();
-            }
+//            if (isConnected) {
+//                drawCommunicationRange();
+//            }
 
             //check for altitude and course conflicts
             checkConflicts();
@@ -355,21 +357,15 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     	@Override
         public void onEvent(String type, int acNumber) {
-            //Instantiate a new aircraft object if the aircraft
-            // number does not exist in the list
-
+            //Instantiate a new aircraft object if the aircraft number does not exist in the list
             if(acNumber!=-1 && mAircraft.get(acNumber)==null) {
-                Log.d("testje",String.valueOf(acNumber));
                 mAircraft.put(acNumber, new Aircraft(getApplicationContext(),acNumber));
-                //Set the initial battery values (dependent on scenario number)
-                mAircraft.get(acNumber).setBatteryState(initialBatList.get(acNumber-1),-1,-1);
                 //Make sure the aircraft spinner will be updated
                 updateAircraftSpinner = true;
             }
 
             //Switch that catches messages that contain a sysId of -1, to prevent nullpointers while using getAttribute()
             if(acNumber==-1) {
-                Log.d("TEST",String.valueOf(type));
                 switch (type) {
                     case "CONNECTED": {
                         isConnected = true;
@@ -452,6 +448,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     }
 
                     case "CURRENT_BLOCK_UPDATED": {
+                        Log.d("TEST","currentBlockReceived");
                         updateMissionBlocksSelection(acNumber);
                         break;
                     }
@@ -624,13 +621,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             public void run() {
                 try {
                     //Get a list of waypoint objects from the service
-                    Bundle carrier = mServiceClient.getAttribute("WAYPOINTS",acNumber);
+                    Bundle carrier = mServiceClient.getAttribute("WAYPOINTS", acNumber);
                     carrier.setClassLoader(Waypoint.class.getClassLoader());
                     List<Waypoint> waypoints = carrier.getParcelableArrayList("WAYPOINTS");
 
                     //Clear the waypoint list if the aircraft already has waypoint data
                     if (mAircraft.get(acNumber).getNumberOfWaypoints() > 0) {
                         mAircraft.get(acNumber).clearWpList();
+                    }
+
+                    //Only take the survey waypoint (wp number 3)
+                    for(int i=1; i<waypoints.size(); i++) {
+                        mAircraft.get(acNumber).addWaypoint(Math.toDegrees(waypoints.get(i).getLat()), Math.toDegrees(waypoints.get(i).getLon()), waypoints.get(i).getAlt(), (short) waypoints.get(i).getSeq(), waypoints.get(i).getTargetSys(), waypoints.get(i).getTargetComp());
                     }
 
                     //Call the method that shows the waypoints on the map
@@ -671,17 +673,33 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     Bundle carrier = mServiceClient.getAttribute("BLOCKS", acNumber);
                     mAircraft.get(acNumber).missionBlocks = carrier.getStringArrayList("BLOCKS");
 
-                    //Check if the blocks of all aircraft have been received and update blocks button accordingly
-                    for(int i=0; i<mAircraft.size(); i++) {
+                    //Request current block
+                    requestCurrentBlock(acNumber);
+
+                    //Check if the blocks of all aircraft have been received and update blocks button and spinner accordingly
+                    for (int i = 0; i < mAircraft.size(); i++) {
                         int key = mAircraft.keyAt(i);
-                        if(mAircraft.get(key).missionBlocks == null) break;
-                        if(i==mAircraft.size()-1) missionButtons.updateBlocksButton(true);
+                        if (mAircraft.get(key).missionBlocks == null) break;
+                        if (i == mAircraft.size() - 1) {
+                            missionButtons.updateBlocksButton(true);
+                            updateMissionBlocksSpinner(acNumber);
+                        }
                     }
                 } catch (RemoteException e) {
                     Log.e(TAG, "Error while updating mission blocks");
                 }
             }
         });
+    }
+
+    private void requestCurrentBlock(int acNumber) {
+        try {
+            Bundle requestCarrier = new Bundle();
+            requestCarrier.putString("TYPE","REQUEST_CURRENT_BLOCK");
+            mServiceClient.onCallback(requestCarrier, acNumber);
+        } catch(RemoteException e) {
+            Log.d(TAG, "Error while requesting current block");
+        }
     }
 
     //Method to update the mission block dropdown menu
@@ -992,8 +1010,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             try {
                 Bundle carrier = new Bundle();
                 carrier.putString("TYPE", "REQUEST_ALL_WP_LISTS");
-                mServiceClient.onCallback(carrier,-1); //acNumber input is set to -1 as no specific input is needed: waypointlists of all aircraft will be sent
-
+                mServiceClient.onCallback(carrier, -1); //acNumber input is set to -1 as no specific input is needed: waypointlists of all aircraft will be sent
+                Log.d("TEST", "wp-request");
                 Toast.makeText(getApplicationContext(), "Refreshing Waypoints.", Toast.LENGTH_SHORT).show();
             } catch (RemoteException e) {
                 Log.e(TAG, "Error while requesting waypoints");
