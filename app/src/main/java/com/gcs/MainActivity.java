@@ -357,7 +357,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         public void onEvent(String type, int acNumber) {
             //Instantiate a new aircraft object if the aircraft
             // number does not exist in the list
-            Log.d("TEST",String.valueOf(acNumber));
+
             if(acNumber!=-1 && mAircraft.get(acNumber)==null) {
                 Log.d("testje",String.valueOf(acNumber));
                 mAircraft.put(acNumber, new Aircraft(getApplicationContext(),acNumber));
@@ -369,6 +369,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
             //Switch that catches messages that contain a sysId of -1, to prevent nullpointers while using getAttribute()
             if(acNumber==-1) {
+                Log.d("TEST",String.valueOf(type));
                 switch (type) {
                     case "CONNECTED": {
                         isConnected = true;
@@ -756,6 +757,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             serverPortList.add(ports[i]);
             sysIdList.add(ids[i]);
         }
+
 
         Bundle extraParams = new Bundle();
         ConnectionParameter connParams;
