@@ -15,7 +15,6 @@ import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
 import android.view.Gravity;
@@ -53,7 +52,7 @@ public class AltitudeTape extends Fragment {
     private boolean groupSelected = false, targetCreated = false;
     private double flightCeiling, groundLevel, MSA; //[m]
     private int draggedLabel, textGravity, backgroundImg, yellowLabel, blueLabel, grayLabel, redLabel, LargeBlueLabel, LargeRedLabel
-             ,groundLevelTape, flightCeilingTape, relayAltitude, surveillanceAltitude;
+             ,groundLevelTape, flightCeilingTape;
 
     //Define the size of the labels and the dragshadow offset
     private static final Point smallLabelDimensions = new Point (80,70);
@@ -87,9 +86,6 @@ public class AltitudeTape extends Fragment {
         groundLevel   = getResources().getInteger(R.integer.groundLevel);
         MSA           = getResources().getInteger(R.integer.MSA);
 
-        relayAltitude        = getResources().getInteger(R.integer.relayAltitude);
-        surveillanceAltitude = getResources().getInteger(R.integer.surveillanceAltitude);
-
         //Handle to the altitude tape view
         ImageView altitudeTape = (ImageView) getView().findViewById(R.id.altitudeTapeView);
 
@@ -105,8 +101,6 @@ public class AltitudeTape extends Fragment {
         int horOffset   = (int)(0.2*outerWidth);
 
         int MSAheight = (int)((1-(float)MSA/(flightCeiling-groundLevel))*outerHeight);
-        int relayHeight = (int)((1-(float)relayAltitude/(flightCeiling-groundLevel))*outerHeight);
-        int surveyHeight = (int)((1-(float)surveillanceAltitude/(flightCeiling-groundLevel))*outerHeight);
 
         Bitmap bitmap = Bitmap.createBitmap(100,outerHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
@@ -132,8 +126,7 @@ public class AltitudeTape extends Fragment {
         textPaint.setTextAlign(Paint.Align.CENTER);
         canvas.drawText("MSA", outerWidth / 2, MSAheight, textPaint);
         textPaint.setTextSize(18);
-        canvas.drawText("RELAY", outerWidth/2, relayHeight, textPaint);
-        canvas.drawText("SURV", outerWidth/2, surveyHeight, textPaint);
+        canvas.drawText(String.valueOf((int)flightCeiling)+"m", outerWidth / 2, (float)(flightCeiling-vertOffset+10), textPaint);
 
         BitmapDrawable drawable = new BitmapDrawable(getResources(), bitmap);
         altitudeTape.setBackground(drawable);
@@ -522,17 +515,14 @@ public class AltitudeTape extends Fragment {
     }
 
     public void removeSingleLabels() {
-//        if(labelList.size()!=0) {
-            for(int i=0; i<labelList.size(); i++) {
-                framelayout.removeView(getView().findViewById(labelList.get(labelList.keyAt(i))));
-            }
-            labelList.clear();
-//        }
+        for(int i=0; i<labelList.size(); i++) {
+            framelayout.removeView(getView().findViewById(labelList.get(labelList.keyAt(i))));
+        }
+        labelList.clear();
     }
 
     //Method to remove all labels from the tape
     public void clearTape() {
-        //TODO: enable clear tape
         //Remove all group-, groupselected- and single labels
         removeSingleLabels();
         removeGroupLabels();
@@ -592,12 +582,7 @@ public class AltitudeTape extends Fragment {
 	private void setTargetAltitude(int aircraftNumber,float dropLocation) {
         //The altitude to which the user commands the aircraft to go to
 		double dropAltitude = labelLocationToAltitude(dropLocation);
-
         //Set the new target altitude to the service
-        if(Math.abs(dropAltitude-surveillanceAltitude)<Math.abs(dropAltitude - relayAltitude)) {
-            ((MainActivity) getActivity()).changeCurrentWpAltitude(aircraftNumber,surveillanceAltitude);
-        } else {
-            ((MainActivity) getActivity()).changeCurrentWpAltitude(aircraftNumber,relayAltitude);
-        }
+        ((MainActivity) getActivity()).changeCurrentWpAltitude(aircraftNumber,dropAltitude);
 	}
 }

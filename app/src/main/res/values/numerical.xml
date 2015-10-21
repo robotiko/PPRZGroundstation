@@ -9,10 +9,6 @@
     <integer name="horizontalSeparationStandard">1500</integer> <!-- tenths of meters -->
     <integer name="surveillanceCircleRadius">500</integer>      <!-- tenths of meters -->
 
-    <!-- Standard altitudes -->
-    <integer name="surveillanceAltitude">40</integer>           <!-- meters -->
-    <integer name="relayAltitude">60</integer>                  <!-- meters -->
-
     <!-- Communication signal parameters -->
     <integer name="commMaxRange">1000</integer>                 <!-- meters -->
 

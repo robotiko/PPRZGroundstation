@@ -14,7 +14,6 @@ import com.aidllib.core.model.Battery;
 import com.aidllib.core.model.Position;
 import com.gcs.core.ConflictStatus;
 import com.gcs.core.Home;
-import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -66,7 +65,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -105,16 +103,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private ArrayList<Integer>        sameLevelAircraft     = new ArrayList<>();
     private ArrayList<List<Integer>>  groupList             = new ArrayList<>();
     private List<Integer>             groupSelectedAircraft = new ArrayList<>();
-    private List<Circle>              relayCommCircles      = new ArrayList<>();
-    private List<Integer>             initialBatList        = new ArrayList<>();
 
 	public Home home;
 
     private float verticalSeparationStandard, horizontalSeparationStandard;
     private int commMaxRange, singleLabelVisibility;
-    private int selectedAc = 0;                     //Set to 0 if none serves as relay (yet)
+    private int selectedAc = 0;
     private int selectedWp = 0;
-//    private float initialZoomLevel;
 
     //Declaration of items needed for mission blocks display
     private MenuItem menuBlockSpinner = null, menuAircraftSpinner = null;
@@ -140,7 +135,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         verticalSeparationStandard = getResources().getInteger(R.integer.verticalSeparationStandard)/10f;       //(Divided by 10 to convert to meters)
         horizontalSeparationStandard = getResources().getInteger(R.integer.horizontalSeparationStandard)/10f;                                //(Divided by 10 to convert to meters)
         commMaxRange = getResources().getInteger(R.integer.commMaxRange);                                                   //meters
-//        initialZoomLevel = (float) (getResources().getInteger(R.integer.initialZoomLevel)/10.0);
 
         // Instantiate home object
 		home = new Home();
@@ -461,7 +455,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     };
 
     ////////UPDATE METHODS FOR AIRCRAFT DATA
-
     /**
      * This runnable object is created to update the waypoint list on waypoint received message
      */
@@ -630,17 +623,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         mAircraft.get(acNumber).clearWpList();
                     }
 
-                    //Only take the survey waypoint (wp number 3)
-                    for(int i=1; i<waypoints.size(); i++) {
+                    //Set the waypoints to the aircraft. (Skip the first two; dummy and home)
+                    for(int i=2; i<waypoints.size(); i++) {
                         mAircraft.get(acNumber).addWaypoint(Math.toDegrees(waypoints.get(i).getLat()), Math.toDegrees(waypoints.get(i).getLon()), waypoints.get(i).getAlt(), (short) waypoints.get(i).getSeq(), waypoints.get(i).getTargetSys(), waypoints.get(i).getTargetComp());
                     }
 
                     //Call the method that shows the waypoints on the map
                     waypointUpdater(acNumber);
 
-                    // Define the home location based on the home waypoint (standard the second waypoint)
+                    // Define the home location based on the home waypoint (standard the second waypoint (#1))
                     if(home.getHomeLocation() == null) {
-                        LatLng newHome = new LatLng(Math.toDegrees(waypoints.get(acNumber).getLat()),Math.toDegrees(waypoints.get(acNumber).getLon()));
+                        LatLng newHome = new LatLng(Math.toDegrees(waypoints.get(1).getLat()),Math.toDegrees(waypoints.get(1).getLon()));
                         home.setHomeLocation(newHome);
                         drawHomeMarker();
                     }
@@ -813,8 +806,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             try {
                 mServiceClient.disconnectDroneClient();
                 deselectAllAircraft();
-//                noAircraftScenario = 0;
-//                    altitudeTapeFragment.clearTape();
                 clearMap();
                 home.clear();
                 for (int i = 0; i < mAircraft.size(); i++) {
@@ -1231,7 +1222,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 //Get handles to the textviews
                                 TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
                                 TextView infoAlt = (TextView) v.findViewById(R.id.info_alt);
-                                TextView infoTask = (TextView) v.findViewById(R.id.info_task);
                                 TextView infoMode = (TextView) v.findViewById(R.id.info_mode);
                                 TextView infoBattery = (TextView) v.findViewById(R.id.info_battery);
 
@@ -1311,7 +1301,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 markerPaint.setTextAlign(Paint.Align.CENTER);
 
                 //Draw the aircraft label on the waypoint marker
-                markerCanvas.drawText(mAircraft.get(acNumber).getLabelCharacter() + mAircraft.get(acNumber).getWpSeq(i), wpMarkerBitmap.getWidth() / 2, wpMarkerBitmap.getHeight() / 2 + 4, markerPaint);
+                markerCanvas.drawText(mAircraft.get(acNumber).getLabelCharacter() + (mAircraft.get(acNumber).getWpSeq(i)-1), wpMarkerBitmap.getWidth() / 2, wpMarkerBitmap.getHeight() / 2 + 4, markerPaint);
 
                 //Add waypoint marker to map
                 Marker wpMarker = map.addMarker(new MarkerOptions()
@@ -1346,7 +1336,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 );
 
                 //Move camera to the home location
-//                map.moveCamera(CameraUpdateFactory.newLatLngZoom(home.getHomeLocation(), initialZoomLevel));
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(home.getHomeLocation(), (float) (getResources().getInteger(R.integer.initialZoomLevel)/10.0)));
             }
         });
@@ -1362,15 +1351,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 //Remove the communication range circle around home if it was drawn before
                 if (home.homeCommCircle != null) {
                     home.homeCommCircle.remove();
-                }
-                //Remove the communication range circle around the relay aircraft if it was drawn before
-                if (!relayCommCircles.isEmpty()) {
-                    //Remove all circles
-                    for(int i=0; i< relayCommCircles.size(); i++) {
-                        relayCommCircles.get(i).remove();
-                    }
-                    //Clear the list
-                    relayCommCircles.clear();
                 }
 
                 //Add the home communication range circle to the map
@@ -1592,14 +1572,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         for(int q=0; q<groupList.size(); q++) {
             boolean wrong = false;
             for(int w=0; w<groupSelectedAircraft.size(); w++) {
-                Log.d("tret1",String.valueOf(groupList.get(q).contains(groupSelectedAircraft.get(w))));
-                Log.d("tret2",String.valueOf(!groupSelectedAircraft.containsAll(groupList.get(q))));
                 if(groupList.get(q).contains(groupSelectedAircraft.get(w)) && !groupSelectedAircraft.containsAll(groupList.get(q))) {
                     wrong = true;
                     break;
                 }
             }
-            Log.d("tret*",String.valueOf(wrong));
+
             if(wrong) {
                 deselectAllAircraft();
                 altitudeTapeFragment.removeGroupSelectedAircraft();
@@ -1764,7 +1742,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if(!mAircraft.get(acNumber).getWpLatLngList().isEmpty()) {
             double groundLevel = mAircraft.get(acNumber).getAltitude() - mAircraft.get(acNumber).getAGL();
             double wpAltitude = groundLevel + AGL;
-            int wpNumber = 0;
+            int wpNumber = selectedWp-1;
 
             Toast.makeText(getApplicationContext(), "Altitude of WP " + String.valueOf(wpNumber) + " to " + String.format("%.1f", wpAltitude) + " m", Toast.LENGTH_SHORT).show();
 
@@ -1772,7 +1750,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             try {
                 Bundle carrier = new Bundle();
                 carrier.putString("TYPE", "WRITE_WP");
-                carrier.putParcelable("WP", new Waypoint((float) Math.toRadians(mAircraft.get(acNumber).getWpLat(wpNumber)), (float) Math.toRadians(mAircraft.get(acNumber).getWpLon(wpNumber)), (float) (wpAltitude + 14), mAircraft.get(acNumber).getWpSeq(wpNumber), mAircraft.get(acNumber).getWpTargetSys(wpNumber), mAircraft.get(acNumber).getWpTargetComp(wpNumber)));
+                carrier.putParcelable("WP", new Waypoint((float) Math.toRadians(mAircraft.get(acNumber).getWpLat(wpNumber)), (float) Math.toRadians(mAircraft.get(acNumber).getWpLon(wpNumber)), (float) (wpAltitude), mAircraft.get(acNumber).getWpSeq(wpNumber), mAircraft.get(acNumber).getWpTargetSys(wpNumber), mAircraft.get(acNumber).getWpTargetComp(wpNumber)));
                 mServiceClient.onCallback(carrier, acNumber);
             } catch (RemoteException e) {
                 Log.e(TAG, "Error while sending waypoint to the service");
