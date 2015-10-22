@@ -85,11 +85,9 @@
         <item>51.974254,4.364975</item>    <!-- Region partly inside home comm range -->
     </string-array>
 
-    <!--TODO: finish scenario 4-->
     <string-array name="latLng_scenario4">
         <item>51.966380,4.375541</item>    <!-- Region outside home comm range -->
-        <item>51.965023,4.325513</item>    <!-- Region outside home comm range -->
-
+        <item>51.963298,4.318288</item>    <!-- Region outside home comm range -->
     </string-array>
 
     <!-- ******************* TEST SCENARIOS ******************* -->
@@ -98,7 +96,9 @@
     </string-array>
 
     <string-array name="latLng_scenario6">
-        <item>51.974254,4.364975</item>    <!-- Region partly outside home comm range -->
+        <item>51.974254,4.364975</item>    <!-- Region outside home comm range -->
+        <item>51.962660,4.350000</item>    <!-- Region outside home comm range -->
+
     </string-array>
 
     <string-array name="latLng_scenario7">

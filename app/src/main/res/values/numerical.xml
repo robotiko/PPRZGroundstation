@@ -90,11 +90,10 @@
         <item>240</item>                                     <!-- ROI 1 -->
     </integer-array>
 
-    <!--TODO: finish scenario 4-->
     <!-- Scenario 4 -->
     <integer-array name="iniBatVolt_scenario4"><!-- 12400 mV is max -->
-        <item>11000</item>                                   <!-- ac1 milliVolt -->
-        <item>11800</item>                                   <!-- ac2 milliVolt -->
+        <item>11300</item>                                   <!-- ac1 milliVolt -->
+        <item>10800</item>                                   <!-- ac2 milliVolt -->
         <item>12400</item>                                   <!-- ac3 milliVolt -->
     </integer-array>
     <integer-array name="ROIRadii_scenario4"><!-- meters -->
@@ -115,9 +114,11 @@
     <integer-array name="iniBatVolt_scenario6"><!-- 12400 mV is max -->
         <item>11100</item>                                   <!-- ac1 milliVolt -->
         <item>12400</item>                                   <!-- ac2 milliVolt -->
+        <item>11100</item>                                   <!-- ac3 milliVolt -->
     </integer-array>
     <integer-array name="ROIRadii_scenario6"><!-- meters -->
         <item>120</item>                                     <!-- ROI 1 -->
+        <item>120</item>                                     <!-- ROI 2 -->
     </integer-array>
 
     <integer-array name="iniBatVolt_scenario7"><!-- 12400 mV is max -->
@@ -167,7 +168,7 @@
         <item>480</item>                                       <!-- scenario 1 -->
         <item>480</item>                                       <!-- scenario 2 -->
         <item>480</item>                                       <!-- scenario 3 -->
-        <item>240</item>                                       <!-- scenario 4 -->
+        <item>210</item>                                       <!-- scenario 4 -->
         <item>240</item>                                       <!-- scenario 5 -->
         <item>240</item>                                       <!-- scenario 6 -->
         <item>240</item>                                       <!-- scenario 7 -->
@@ -182,7 +183,7 @@
         <item>2</item>                                       <!-- scenario 3 -->
         <item>3</item>                                       <!-- scenario 4 -->
         <item>3</item>                                       <!-- scenario 5 -->
-        <item>2</item>                                       <!-- scenario 6 -->
+        <item>3</item>                                       <!-- scenario 6 -->
         <item>3</item>                                       <!-- scenario 7 -->
         <item>4</item>                                       <!-- scenario 8 -->
         <item>3</item>                                       <!-- scenario 9 -->
@@ -215,26 +216,13 @@
         <item>0</item>                                       <!-- scenario 10 -->
     </integer-array>
 
-    <integer-array name="surveyCountScoreScenario">
-        <item>1</item>                                       <!-- scenario 1 -->
-        <item>2</item>                                       <!-- scenario 2 -->
-        <item>1</item>                                       <!-- scenario 3 -->
-        <item>2</item>                                       <!-- scenario 4 -->
-        <item>1</item>                                       <!-- scenario 5 -->
-        <item>1</item>                                       <!-- scenario 6 -->
-        <item>2</item>                                       <!-- scenario 7 -->
-        <item>3</item>                                       <!-- scenario 8 -->
-        <item>2</item>                                       <!-- scenario 9 -->
-        <item>4</item>                                       <!-- scenario 10 -->
-    </integer-array>
-
     <integer-array name="initialZoomLevels"> <!-- value = zoomlevel*10-->
         <item>150</item>                                     <!-- scenario 1 -->
         <item>150</item>                                     <!-- scenario 2 -->
         <item>150</item>                                     <!-- scenario 3 -->
         <item>145</item>                                     <!-- scenario 4 -->
         <item>145</item>                                     <!-- scenario 5 -->
-        <item>150</item>                                     <!-- scenario 6 -->
+        <item>145</item>                                     <!-- scenario 6 -->
         <item>150</item>                                     <!-- scenario 7 -->
         <item>150</item>                                     <!-- scenario 8 -->
         <item>150</item>                                     <!-- scenario 9 -->

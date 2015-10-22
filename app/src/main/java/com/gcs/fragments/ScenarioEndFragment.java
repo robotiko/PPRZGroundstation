@@ -27,6 +27,8 @@ public class ScenarioEndFragment extends Fragment {
 
     public void setEndScore(double score) {
         TextView textview = (TextView) getView().findViewById(R.id.endScore);
-        textview.setText("Average score: " + String.format("%.1f",score));
+        if(score<0) textview.setTextColor(Color.RED);
+        if(score>0) textview.setTextColor(Color.GREEN);
+        textview.setText("Score: " + String.format("%.1f",score));
     }
 }

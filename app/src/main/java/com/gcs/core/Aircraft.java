@@ -322,7 +322,13 @@ public class Aircraft {
 	
 	public double getWpLon(int wpNumber) { return waypoints.get(wpNumber).getLon(); }
 	
-	public LatLng getWpLatLng(int wpNumber) { return new LatLng(waypoints.get(wpNumber).getLat(),waypoints.get(wpNumber).getLon()); }
+	public LatLng getWpLatLng(int wpNumber) {
+        LatLng wp = null;
+        if(wpNumber<waypoints.size()) {
+            wp = new LatLng(waypoints.get(wpNumber).getLat(),waypoints.get(wpNumber).getLon());
+        }
+        return wp;
+    }
 
     public List<LatLng> getWpLatLngList() {
         List<LatLng> points  = new ArrayList<>();

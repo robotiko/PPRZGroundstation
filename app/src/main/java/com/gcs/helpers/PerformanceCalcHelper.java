@@ -9,31 +9,36 @@ import com.gcs.core.ConflictStatus;
 import com.gcs.core.TaskStatus;
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PerformanceCalcHelper {
 
-    private static double scoreSum = 0.0;
-    private static int ticks = 0;
+    private static double totalScore = 0;
 
-    private static double coverageScore, commScore, conflictScore, batteryScore, score;
+    private static double coverageScore, commScore, conflictScore, score;
 
-    public static final double calcPerformance(List<Integer> ROIradiiList, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft, int surveyCountScore, int halfBatteryVoltage, int lowBatteryVoltage) {
-        coverageScore = 50.0 * ROIcovered(ROIradiiList,acCoverageRadius,ROIList,mAircraft,surveyCountScore);
-        commScore     = 30.0 * LossOfCommunicationCheck(mAircraft);
-        conflictScore = 20.0 * ConflictCheck(mAircraft);
-        batteryScore  = 0.0  * BatteryScore(mAircraft, halfBatteryVoltage, lowBatteryVoltage);
+    public static final List<Double> calcPerformance(List<Integer> ROIradiiList, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft) {
 
-        score = coverageScore + commScore + conflictScore + batteryScore;
+        //Calculate the score components
+        coverageScore = 1 * ROIcovered(ROIradiiList,acCoverageRadius,ROIList,mAircraft);
+        commScore     = 2 * LossOfCommunicationCheck(mAircraft);
+        conflictScore = 1 * ConflictCheck(mAircraft);
 
-        scoreSum += score;
-        ticks++;
+        //Summation of the score components
+        score = coverageScore-commScore-conflictScore;
+        totalScore += score;
 
-        return score;
+        //Prepare to output the scores
+        ArrayList<Double> returnList = new ArrayList<>();
+        returnList.add(score);
+        returnList.add(totalScore);
+
+        return returnList;
     }
 
     //Calculate the percentage of the Region of Interest (ROI) that is covered by surveillance aircraft
-    private final static double ROIcovered(List<Integer> ROIradiiList, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft, int surveyCountScore){
+    private final static double ROIcovered(List<Integer> ROIradiiList, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft){
         //Area that can be covered by an aircraft
         double coverArea = acCoverageRadius*acCoverageRadius*Math.PI;
 
@@ -73,7 +78,7 @@ public class PerformanceCalcHelper {
             }
         }
         //Coverage percentage (percentage of area that is maximally possible to be covered)
-        double score = overlapArea/(coverArea*surveyCountScore);
+        double score = overlapArea/coverArea;
         if (Double.isNaN(score)) score = 0;
         return score;
     }
@@ -111,9 +116,9 @@ public class PerformanceCalcHelper {
         return overlapArea;
     }
 
-    //Calculate the percentage of aircraft that have connection with the ground station
-    private final static double LossOfCommunicationCheck(SparseArray<Aircraft> mAircraft) {
-        float numberOfAircraft = mAircraft.size();
+    //Determine the number of aircraft without communication connection with the ground station
+    private final static int LossOfCommunicationCheck(SparseArray<Aircraft> mAircraft) {
+        int numberOfAircraft = mAircraft.size();
         int activeAircraft = 0;
 
         //Loop over aircraft in system
@@ -123,11 +128,11 @@ public class PerformanceCalcHelper {
                 activeAircraft++;
             }
         }
-        return activeAircraft/numberOfAircraft;
+        return numberOfAircraft-activeAircraft;
     }
 
-    //Calculate the percentage of aircraft that have conflict
-    private final static double ConflictCheck(SparseArray<Aircraft> mAircraft) {
+    //Calculate the number of aircraft that are in conflict
+    private final static int ConflictCheck(SparseArray<Aircraft> mAircraft) {
         int noConflictAircraft = mAircraft.size();
 
         //Loop over aircraft in system
@@ -137,9 +142,7 @@ public class PerformanceCalcHelper {
                 noConflictAircraft--;
             }
         }
-        double conflictScore = 1.0;
-        if (noConflictAircraft>0) conflictScore = 0;
-        return conflictScore;
+        return noConflictAircraft;
     }
 
     private final static double BatteryScore(SparseArray<Aircraft> mAircraft,int halfBatteryVoltage, int lowBatteryVoltage) {
@@ -165,7 +168,7 @@ public class PerformanceCalcHelper {
         return batteryScore;
     }
 
-    public static double getMeanPerfScore() {
-        return scoreSum/ticks;
+    public static double getTotalScore() {
+        return totalScore;
     }
 }
