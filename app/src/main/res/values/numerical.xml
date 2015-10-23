@@ -15,7 +15,7 @@
 
     <!--****************** ICON/MAP DRAWING ******************-->
     <!-- Initial zoom level of map -->
-    <integer name="initialZoomLevel">160</integer>              <!-- =zoom level*10 -->
+    <integer name="initialZoomLevel">185</integer>              <!-- =zoom level*10 -->
 
     <!-- Battery values -->
     <integer name="HalfBatteryLevel">50</integer>               <!-- percentage -->
@@ -49,7 +49,7 @@
     <integer name="connectionType">0</integer>	                <!-- 0 = UDP connection -->
 
     <integer-array name="udp_ports">                            <!-- udp port numbers-->
-        <item>5001</item>
+        <item>5000</item>
     </integer-array>
 
     <integer-array name="system_ids">                           <!-- system id numbers-->

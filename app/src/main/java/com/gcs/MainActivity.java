@@ -44,7 +44,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -74,7 +76,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Declaration of handlers and definition of time and time steps
 	private Handler handler, interfaceUpdateHandler;
-	private final int mInterval        = 1000;                       // milliseconds
+//	private final int mInterval        = 1000;                       // milliseconds
+	private final int mInterval        = 500;                       // milliseconds
     private final long initTime        = System.currentTimeMillis(); // milliseconds
 
     //Declaration of the service client
@@ -625,7 +628,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     //Set the waypoints to the aircraft. (Skip the first two; dummy and home)
                     for(int i=2; i<waypoints.size(); i++) {
-                        mAircraft.get(acNumber).addWaypoint(Math.toDegrees(waypoints.get(i).getLat()), Math.toDegrees(waypoints.get(i).getLon()), waypoints.get(i).getAlt(), (short) waypoints.get(i).getSeq(), waypoints.get(i).getTargetSys(), waypoints.get(i).getTargetComp());
+                        mAircraft.get(acNumber).addWaypoint(waypoints.get(i).getLat(), waypoints.get(i).getLon(), waypoints.get(i).getAlt(), (short) waypoints.get(i).getSeq(), waypoints.get(i).getTargetSys(), waypoints.get(i).getTargetComp());
                     }
 
                     //Call the method that shows the waypoints on the map
@@ -633,7 +636,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     // Define the home location based on the home waypoint (standard the second waypoint (#1))
                     if(home.getHomeLocation() == null) {
-                        LatLng newHome = new LatLng(Math.toDegrees(waypoints.get(1).getLat()),Math.toDegrees(waypoints.get(1).getLon()));
+                        LatLng newHome = new LatLng(waypoints.get(1).getLat(),waypoints.get(1).getLon());
                         home.setHomeLocation(newHome);
                         drawHomeMarker();
                     }
@@ -1002,7 +1005,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 Bundle carrier = new Bundle();
                 carrier.putString("TYPE", "REQUEST_ALL_WP_LISTS");
                 mServiceClient.onCallback(carrier, -1); //acNumber input is set to -1 as no specific input is needed: waypointlists of all aircraft will be sent
-                Log.d("TEST", "wp-request");
                 Toast.makeText(getApplicationContext(), "Refreshing Waypoints.", Toast.LENGTH_SHORT).show();
             } catch (RemoteException e) {
                 Log.e(TAG, "Error while requesting waypoints");
@@ -1044,6 +1046,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		map.setOnMarkerClickListener(this);     //Click listener on markers
         map.setOnMarkerDragListener(this);      //Drag listener on markers
         map.setOnInfoWindowClickListener(this); //Click listener on infowindows
+
+        //Go to current location
+		LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+		Criteria criteria = new Criteria();
+		String provider = locationManager.getBestProvider(criteria, true);
+		Location myLocation = locationManager.getLastKnownLocation(provider);
+		LatLng currentLocation =  new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, (float) (getResources().getInteger(R.integer.initialZoomLevel)/10.0)));
 	}
 
 	/* Marker listener for (de)selection aircraft icons, waypoint marker actions and home marker selection */
@@ -1130,7 +1140,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         try {
             Bundle carrier = new Bundle();
             carrier.putString("TYPE", "WRITE_WP");
-            carrier.putParcelable("WP", new Waypoint((float) Math.toRadians(newPosition.latitude), (float) Math.toRadians(newPosition.longitude), mAircraft.get(acNumber).getWpAlt(wpNumber), mAircraft.get(acNumber).getWpSeq(wpNumber), mAircraft.get(acNumber).getWpTargetSys(wpNumber), mAircraft.get(acNumber).getWpTargetComp(wpNumber)));
+            carrier.putParcelable("WP", new Waypoint((float) newPosition.latitude, (float) newPosition.longitude, mAircraft.get(acNumber).getWpAlt(wpNumber), mAircraft.get(acNumber).getWpSeq(wpNumber), mAircraft.get(acNumber).getWpTargetSys(wpNumber), mAircraft.get(acNumber).getWpTargetComp(wpNumber)));
             mServiceClient.onCallback(carrier, acNumber);
         } catch (RemoteException e) {
             Log.e(TAG, "Error while sending waypoint to the service");
