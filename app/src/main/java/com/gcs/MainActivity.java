@@ -2103,6 +2103,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             for(int k = 0; k < groupList.size(); k++) {
                 Collections.sort(groupList.get(k));
             }
+            Log.d("LIST",String.valueOf(groupList));
         }
     }
 

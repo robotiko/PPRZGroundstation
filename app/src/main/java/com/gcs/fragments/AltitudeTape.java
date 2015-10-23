@@ -301,6 +301,11 @@ public class AltitudeTape extends Fragment {
         if (labelList.get(labelId)==null) {
             labelList.put(labelId, acNumber);
         }
+
+        //Check if the aircraft label is present in a grouplabel, if so remove the group label
+//        Log.d("VISIBILITY",labelCharacter+String.valueOf(visibility));
+        if(visibility==View.VISIBLE) leftoverLabelCheck(labelCharacter);
+
         //Check if the aircraft number is present in the group list. If so remove it.
         if(aircraftInGroupList.contains(acNumber) && visibility==View.VISIBLE) {
             aircraftInGroupList.remove(aircraftInGroupList.indexOf(acNumber));
@@ -368,6 +373,7 @@ public class AltitudeTape extends Fragment {
 
     //Method to draw group labels on the altitude tape
     public void drawGroupLabel(boolean inConflict, double altitude, String labelCharacters, List<Integer> ac) {
+        Log.d("labels",String.valueOf(stringToLabelIdList));
         //Check for labels that do still exist but should be deleted because an aircraft has been added or has has left a group
         String[] labelArr = labelCharacters.split(" ");
         outerloop:
@@ -381,6 +387,7 @@ public class AltitudeTape extends Fragment {
                         }
                         if(i==keyArr.length-1) {
                             framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
+                            labelIdToStringList.remove(stringToLabelIdList.get(key));
                             stringToLabelIdList.remove(key);
                             break outerloop;
                         }
@@ -497,6 +504,21 @@ public class AltitudeTape extends Fragment {
         groupSelectLabelList.clear();
         removeGroupSelectedAircraft();
         ((MainActivity) getActivity()).deselectAllAircraft();
+    }
+
+    private void leftoverLabelCheck(String labelCharacter) {
+        //Check if single labels are present in a leftover group label
+        for(String key:stringToLabelIdList.keySet()) {
+            if(key.contains(labelCharacter)) {
+                //Remove the view from the tape
+                framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
+                //Remove label references from lists
+                stringToLabelIdList.remove(key);
+            }
+        }
+
+        //TODO: make sure labelIdToStringList is not growing
+//        Log.d("CONTAINSlabelIdToSt",String.valueOf(labelIdToStringList));//Growing
     }
 
     //Method to remove the labels of a group selection

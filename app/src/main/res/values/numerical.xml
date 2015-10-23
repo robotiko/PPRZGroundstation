@@ -153,14 +153,18 @@
 
     <!--TODO: finish scenario 10-->
     <integer-array name="iniBatVolt_scenario10"><!-- 12400 mV is max -->
-        <item>10700</item>                                   <!-- ac1 milliVolt -->
-        <item>10700</item>                                   <!-- ac2 milliVolt -->
-        <item>10700</item>                                   <!-- ac3 milliVolt -->
+        <item>12400</item>                                   <!-- ac1 milliVolt -->
+        <item>12400</item>                                   <!-- ac2 milliVolt -->
+        <item>12400</item>                                   <!-- ac3 milliVolt -->
         <item>10700</item>                                   <!-- ac4 milliVolt -->
+        <item>12400</item>                                   <!-- ac5 milliVolt -->
+        <item>12400</item>                                   <!-- ac6 milliVolt -->
     </integer-array>
     <integer-array name="ROIRadii_scenario10"><!-- meters -->
         <item>120</item>                                     <!-- ROI 1 -->
-        <item>250</item>                                     <!-- ROI 2 -->
+        <item>240</item>                                     <!-- ROI 2 -->
+        <item>120</item>                                     <!-- ROI 3 -->
+        <item>240</item>                                     <!-- ROI 4 -->
     </integer-array>
 
     <!-- //////////// SCENARIO LIST SETTINGS //////////// -->
@@ -187,7 +191,7 @@
         <item>3</item>                                       <!-- scenario 7 -->
         <item>4</item>                                       <!-- scenario 8 -->
         <item>3</item>                                       <!-- scenario 9 -->
-        <item>4</item>                                       <!-- scenario 10 -->
+        <item>6</item>                                       <!-- scenario 10 -->
     </integer-array>
 
     <integer-array name="batteryFailureTime">   <!--Time before end of scenario, 0=not applicable  -->
@@ -200,7 +204,7 @@
         <item>180</item>                                     <!-- scenario 7 -->
         <item>0</item>                                       <!-- scenario 8 -->
         <item>0</item>                                       <!-- scenario 9 -->
-        <item>0</item>                                       <!-- scenario 10 -->
+        <item>240</item>                                     <!-- scenario 10 -->
     </integer-array>
 
     <integer-array name="batteryFailureAircraft">   <!-- 0=none -->
@@ -213,7 +217,7 @@
         <item>2</item>                                       <!-- scenario 7 -->
         <item>0</item>                                       <!-- scenario 8 -->
         <item>0</item>                                       <!-- scenario 9 -->
-        <item>0</item>                                       <!-- scenario 10 -->
+        <item>3</item>                                       <!-- scenario 10 -->
     </integer-array>
 
     <integer-array name="initialZoomLevels"> <!-- value = zoomlevel*10-->
@@ -226,7 +230,7 @@
         <item>150</item>                                     <!-- scenario 7 -->
         <item>150</item>                                     <!-- scenario 8 -->
         <item>150</item>                                     <!-- scenario 9 -->
-        <item>150</item>                                     <!-- scenario 10 -->
+        <item>145</item>                                     <!-- scenario 10 -->
     </integer-array>
 
     <!--****************** CONNECTION SETTINGS ******************-->
