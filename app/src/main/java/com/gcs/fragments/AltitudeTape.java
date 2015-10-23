@@ -30,7 +30,10 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AltitudeTape extends Fragment {
@@ -399,6 +402,7 @@ public class AltitudeTape extends Fragment {
                         }
                         if(j==labelArr.length-1) {
                             framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
+                            labelIdToStringList.remove(stringToLabelIdList.get(key));
                             stringToLabelIdList.remove(key);
                             break outerloop;
                         }
@@ -516,6 +520,19 @@ public class AltitudeTape extends Fragment {
                 stringToLabelIdList.remove(key);
             }
         }
+
+        //Remove duplicates from label lists
+        Set<String> set = new HashSet<>(labelIdToStringList.values());
+        if(labelIdToStringList.size()>set.size()) { //If there are duplicates
+            for(String label:set) {
+                Log.d("TEST",label+"-"+String.valueOf(Collections.frequency(labelIdToStringList.values(),label)));
+            }
+        }
+
+        Log.d("ORIG-SET",String.valueOf(labelIdToStringList.size())+String.valueOf(set.size()));
+        //If so count occurances of Strings
+        //The ones with more than 1 should delete the lowest ints in the hashmap
+
 
         //TODO: make sure labelIdToStringList is not growing
 //        Log.d("CONTAINSlabelIdToSt",String.valueOf(labelIdToStringList));//Growing
