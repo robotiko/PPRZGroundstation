@@ -137,21 +137,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private int selectedAc = 0;                     //Set to 0 if none serves as relay (yet)
     private double currentPerformanceScore = 0.0;
     private double totalPerformanceScore = 0.0;
-//    private int selectedWp = 0;
     private int activeScenario = 0;
     private int noAircraftScenario = 0;
     private int batteryFailureTime = 0;
     private int batteryFailureAircraft = 0;
     private int scenarioRuntime = 0;
-//    private int surveyCountScore = 0;
     private int initialParticipantNumber = 0;
     private int finalParticipantNumber = 0;
     private float initialZoomLevel = 16.0f;
     private Circle flightPath, surveillanceBound;
 
     //Declaration of items needed for mission blocks display
-    private MenuItem menuBlockSpinner = null, menuAircraftSpinner = null, menuScenarioSpinner = null, menuParticipantSpinner = null;
-    private Spinner blockSpinner, aircraftSpinner, scenarioSpinner, participantSpinner;
+    private MenuItem menuAircraftSpinner = null, menuScenarioSpinner = null, menuParticipantSpinner = null;
+    private Spinner aircraftSpinner, scenarioSpinner, participantSpinner;
     Menu menu;
 
 	@Override
@@ -206,38 +204,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
-
-//        //Temporary setting of aircraft number
-//        final int acNumber = 1;
-
-//        ////////////BLOCKS SPINNER////////////
-//        //Set up the spinner in the action bar for the mission block which can be loaded from the service and create a handle
-//        menuBlockSpinner = menu.findItem(R.id.menu_block_spinner);
-//        blockSpinner = (Spinner) MenuItemCompat.getActionView(menuBlockSpinner);
-//
-//        //Listener on item selection in the block spinner
-//        blockSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//
-//            //Define what should happen when an item in the spinner is selected
-//            @Override
-//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-//                try {
-//                    //Take the selected block index and send it to the service
-//                    Bundle carrier = new Bundle();
-//                    carrier.putString("TYPE", "BLOCK_SELECTED");
-//                    carrier.putShort("SEQ",(short)position);
-//                    mServiceClient.onCallback(carrier,acNumber);
-//                } catch (RemoteException e) {
-//                    Log.e(TAG,"Error while sending mission block spinner selection to the service");
-//                }
-//            }
-//
-//            //Define what should happen if no item is selected in the spinner
-//            @Override
-//            public void onNothingSelected(AdapterView<?> parent) {
-//                //Do nothing
-//            }
-//        });
 
         ////////////AIRCRAFT SPINNER////////////
         //Set up the spinner in the action bar for the aircraft and create a handle
@@ -874,17 +840,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    //Method to update the mission block dropdown menu
-//    private void updateMissionBlocksSpinner(int acNumber) {
-//        if(mAircraft.get(acNumber).missionBlocks != null) {
-//            //Create an array adapter with the mission block names
-//            ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, mAircraft.get(acNumber).missionBlocks);
-//            spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//            //Apply the array adapter to the block spinner to update the blocks in the dropdown menu
-//            blockSpinner.setAdapter(spinnerArrayAdapter);
-//        }
-//    }
-
     //Method to update the selected block in the dropdown menu to the active one
     private void updateMissionBlocksSelection(final int acNumber) {
         handler.post(new Runnable() {
@@ -894,10 +849,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     // Get current block
                     Bundle carrier = mServiceClient.getAttribute("CURRENT_BLOCK", acNumber);
                     int currentBlock = carrier.getInt("CURRENT_BLOCK");
-                    Log.d("CURRENT_BLOCK", String.valueOf(currentBlock));
-
-                    //Update the Mission block spinner selection
-                    //                    blockSpinner.setSelection(currentBlock);
 
                     //Set current block to aircraft
                     mAircraft.get(acNumber).setCurrentBlock(currentBlock);
@@ -1101,7 +1052,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     mServiceClient.disconnectDroneClient();
                     deselectAllAircraft();
                     noAircraftScenario = 0;
-//                    altitudeTapeFragment.clearTape();
+                    altitudeTapeFragment.clearTape();
                     clearMap();
                     home.clear();
                     for (int i = 0; i < mAircraft.size(); i++) {
@@ -1118,7 +1069,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             Toast.makeText(getApplicationContext(), "Please select a participant number!", Toast.LENGTH_SHORT).show();
         }
     }
-
 
     /**
      * This runnable object is created such that the update is performed
@@ -1500,9 +1450,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     if (mAircraft.get(acNumber).acMarker != null) {
                         mAircraft.get(acNumber).acMarker.remove();
                     }
-
-                    Log.d("nullTestMarker", String.valueOf(map == null));
-                    //TODO: add if statement around marker drawing (if(map!=null))
 
                     //Add marker to map with the following settings and save it in the aircraft object
                     Marker marker = map.addMarker(new MarkerOptions()
@@ -2181,8 +2128,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         for(int q=0; q<groupList.size(); q++) {
             boolean wrong = false;
             for(int w=0; w<groupSelectedAircraft.size(); w++) {
-                Log.d("tret1",String.valueOf(groupList.get(q).contains(groupSelectedAircraft.get(w))));
-                Log.d("tret2",String.valueOf(!groupSelectedAircraft.containsAll(groupList.get(q))));
                 if(groupList.get(q).contains(groupSelectedAircraft.get(w)) && !groupSelectedAircraft.containsAll(groupList.get(q))) {
                     wrong = true;
                     break;
@@ -2265,9 +2210,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             selectedAc = 0;
             aircraftSpinner.setSelection(0);
         }
-
-        //Update the blocks spinner
-//        updateMissionBlocksSpinner(aircraftNumber);
 
         //Update the mission buttons
         updateMissionButtons();
@@ -2368,7 +2310,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             //Deselect the waypoint
-//            selectedWp = 0;
             mAircraft.get(acNumber).setWpSelected(wpNumber, false);
             //Set the waypoint status to be updating
             mAircraft.get(acNumber).setWpUpdating(wpNumber);

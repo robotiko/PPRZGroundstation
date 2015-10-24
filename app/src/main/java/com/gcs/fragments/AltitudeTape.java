@@ -135,7 +135,7 @@ public class AltitudeTape extends Fragment {
         textPaint.setTextAlign(Paint.Align.CENTER);
         canvas.drawText("MSA", outerWidth / 2, MSAheight, textPaint);
         textPaint.setTextSize(18);
-        canvas.drawText("RELAY", outerWidth/2, relayHeight, textPaint);
+        canvas.drawText("RELAY", outerWidth / 2, relayHeight, textPaint);
         canvas.drawText("SURV", outerWidth/2, surveyHeight, textPaint);
 
         BitmapDrawable drawable = new BitmapDrawable(getResources(), bitmap);
@@ -520,22 +520,6 @@ public class AltitudeTape extends Fragment {
                 stringToLabelIdList.remove(key);
             }
         }
-
-        //Remove duplicates from label lists
-        Set<String> set = new HashSet<>(labelIdToStringList.values());
-        if(labelIdToStringList.size()>set.size()) { //If there are duplicates
-            for(String label:set) {
-                Log.d("TEST",label+"-"+String.valueOf(Collections.frequency(labelIdToStringList.values(),label)));
-            }
-        }
-
-        Log.d("ORIG-SET",String.valueOf(labelIdToStringList.size())+String.valueOf(set.size()));
-        //If so count occurances of Strings
-        //The ones with more than 1 should delete the lowest ints in the hashmap
-
-
-        //TODO: make sure labelIdToStringList is not growing
-//        Log.d("CONTAINSlabelIdToSt",String.valueOf(labelIdToStringList));//Growing
     }
 
     //Method to remove the labels of a group selection
@@ -548,30 +532,27 @@ public class AltitudeTape extends Fragment {
 
     //Method called from mainactivity if no group labels are drawn. Then if there are still labelId's in the list, remove them from the view and list.
     public void removeGroupLabels() {
-        if(!stringToLabelIdList.isEmpty()) {
-            for (String key : stringToLabelIdList.keySet()) {
-                framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
-            }
-
-            //Clear the lists that contain information about aircraft groups
-            stringToLabelIdList.clear();
-            labelIdToStringList.clear();
-            aircraftInGroupList.clear();
+//        if(!stringToLabelIdList.isEmpty()) {
+        for (String key : stringToLabelIdList.keySet()) {
+            framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
         }
+
+        //Clear the lists that contain information about aircraft groups
+        stringToLabelIdList.clear();
+        labelIdToStringList.clear();
+        aircraftInGroupList.clear();
+//        }
     }
 
     public void removeSingleLabels() {
-//        if(labelList.size()!=0) {
             for(int i=0; i<labelList.size(); i++) {
                 framelayout.removeView(getView().findViewById(labelList.get(labelList.keyAt(i))));
             }
             labelList.clear();
-//        }
     }
 
     //Method to remove all labels from the tape
     public void clearTape() {
-        //TODO: enable clear tape
         //Remove all group-, groupselected- and single labels
         removeSingleLabels();
         removeGroupLabels();
