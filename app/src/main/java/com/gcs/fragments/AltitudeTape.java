@@ -35,8 +35,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AltitudeTape extends Fragment {
 
     //Declaration of layouts and views
-	private FrameLayout framelayout;
-	private View rootView, targetLabel;
+    private FrameLayout framelayout;
+    private View rootView, targetLabel;
     private TextView label, groupLabel, groupSelectionLabel;
 
     //Declaration of lists and arrays
@@ -217,7 +217,7 @@ public class AltitudeTape extends Fragment {
 			public boolean onLongClick(View v) {
 
                 //Create a DragShadowBuilder
-	            ClipData data = ClipData.newPlainText("", "");
+                ClipData data = ClipData.newPlainText("", "");
                 myDragShadowBuilder myShadow = new myDragShadowBuilder(tv);
 
                 //Reference for the ondrag method to know which label is being dragged (used in the onDragListener)
@@ -294,6 +294,10 @@ public class AltitudeTape extends Fragment {
         if (labelList.get(labelId)==null) {
             labelList.put(labelId, acNumber);
         }
+
+        //Check if the aircraft label is present in a grouplabel, if so remove the group label
+        if(visibility==View.VISIBLE) leftoverLabelCheck(labelCharacter);
+
         //Check if the aircraft number is present in the group list. If so remove it.
         if(aircraftInGroupList.contains(acNumber) && visibility==View.VISIBLE) {
             aircraftInGroupList.remove(aircraftInGroupList.indexOf(acNumber));
@@ -374,6 +378,7 @@ public class AltitudeTape extends Fragment {
                         }
                         if(i==keyArr.length-1) {
                             framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
+                            labelIdToStringList.remove(stringToLabelIdList.get(key));
                             stringToLabelIdList.remove(key);
                             break outerloop;
                         }
@@ -385,6 +390,7 @@ public class AltitudeTape extends Fragment {
                         }
                         if(j==labelArr.length-1) {
                             framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
+                            labelIdToStringList.remove(stringToLabelIdList.get(key));
                             stringToLabelIdList.remove(key);
                             break outerloop;
                         }
@@ -492,6 +498,19 @@ public class AltitudeTape extends Fragment {
         ((MainActivity) getActivity()).deselectAllAircraft();
     }
 
+    //Check for labels on the tape of which the group does not exist anymore
+    private void leftoverLabelCheck(String labelCharacter) {
+        //Check if single labels are present in a leftover group label
+        for(String key:stringToLabelIdList.keySet()) {
+            if(key.contains(labelCharacter)) {
+                //Remove the view from the tape
+                framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
+                //Remove label references from lists
+                stringToLabelIdList.remove(key);
+            }
+        }
+    }
+
     //Method to remove the labels of a group selection
     public void removeGroupSelectedAircraft() {
         for (String key : groupSelectionIdList.keySet()) {
@@ -502,16 +521,14 @@ public class AltitudeTape extends Fragment {
 
     //Method called from mainactivity if no group labels are drawn. Then if there are still labelId's in the list, remove them from the view and list.
     public void removeGroupLabels() {
-        if(!stringToLabelIdList.isEmpty()) {
-            for (String key : stringToLabelIdList.keySet()) {
-                framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
-            }
-
-            //Clear the lists that contain information about aircraft groups
-            stringToLabelIdList.clear();
-            labelIdToStringList.clear();
-            aircraftInGroupList.clear();
+        for (String key : stringToLabelIdList.keySet()) {
+            framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
         }
+
+        //Clear the lists that contain information about aircraft groups
+        stringToLabelIdList.clear();
+        labelIdToStringList.clear();
+        aircraftInGroupList.clear();
     }
 
     public void removeSingleLabels() {
