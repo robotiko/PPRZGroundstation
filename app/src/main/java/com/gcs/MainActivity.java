@@ -85,7 +85,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Declaration of handlers and definition of time and time steps
 	private Handler handler, interfaceUpdateHandler;
-	private final int mInterval        = 1000;                       // milliseconds
+	private final int mInterval        = 500;                       // milliseconds
     private final long initTime        = System.currentTimeMillis(); // milliseconds
     private long timeLeft = 240;
     private long scenarioStartTime;
@@ -515,7 +515,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 //Make sure the aircraft spinner will be updated
                 updateAircraftSpinner = true;
             }
-
+            Log.d("Bericht",type);
             //Switch that catches messages that contain a sysId of -1, to prevent nullpointers while using getAttribute()
             if(acNumber==-1) {
                 switch (type) {
@@ -551,6 +551,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     case "DISCONNECTED": {
                         isConnected = false;
                         updateConnectButton();
+                        removeInterfaceObjects();
                         break;
                     }
 
@@ -1050,15 +1051,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             } else {
                 try {
                     mServiceClient.disconnectDroneClient();
-                    deselectAllAircraft();
-                    noAircraftScenario = 0;
-                    altitudeTapeFragment.clearTape();
-                    clearMap();
-                    home.clear();
-                    for (int i = 0; i < mAircraft.size(); i++) {
-                        mAircraft.get(mAircraft.keyAt(i)).clearFlightPath();
-                    }
-                    missionButtons.deactivateButtons();
                 } catch (RemoteException e) {
                     Log.e(TAG, "Error while disconnecting", e);
                 }
@@ -1295,11 +1287,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		map.setOnMarkerClickListener(this);     //Click listener on markers
         map.setOnMarkerDragListener(this);      //Drag listener on markers
         map.setOnInfoWindowClickListener(this); //Click listener on infowindows
-
-//        //Set home location
-//        LatLng newHome = new LatLng(51.972910,4.348599);
-//        home.setHomeLocation(newHome);
-//        drawHomeMarker();
 	}
 
 	/* Marker listener for (de)selection aircraft icons, waypoint marker actions and home marker selection */
@@ -1451,6 +1438,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                         mAircraft.get(acNumber).acMarker.remove();
                     }
 
+                    Log.d("NULLPOINTER",String.valueOf(map==null));
+
                     //Add marker to map with the following settings and save it in the aircraft object
                     Marker marker = map.addMarker(new MarkerOptions()
                                     .position(mAircraft.get(acNumber).getLatLng())
@@ -1488,7 +1477,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 TextView infoDistHome = (TextView) v.findViewById(R.id.info_dist_home);
                                 TextView infoAlt = (TextView) v.findViewById(R.id.info_alt);
                                 TextView infoTask = (TextView) v.findViewById(R.id.info_task);
-                                TextView infoMode = (TextView) v.findViewById(R.id.info_mode);
+//                                TextView infoMode = (TextView) v.findViewById(R.id.info_mode);
                                 TextView infoBattery = (TextView) v.findViewById(R.id.info_battery);
 
                                 //Set the values in the information windows
@@ -1496,23 +1485,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                                 infoAlt.setText("Altitude: " + String.format("%.1f", mAircraft.get(acNumb).getAGL()) + "m");
                                 infoBattery.setText("Battery voltage: " + String.format("%.1f", mAircraft.get(acNumb).getBattVolt() / 1000.0) + "V");
                                 //Current block
-                                if (mAircraft.get(acNumb).getCurrentBlock() != null) {
-                                    if (mAircraft.get(acNumb).getCurrentBlock().equals(getResources().getString(R.string.land_block))) {
-                                        infoMode.setText("Status: " + "LANDING");
-                                    } else if (mAircraft.get(acNumb).getCurrentBlock().equals(getResources().getString(R.string.takeoff_block))) {
-                                        infoMode.setText("Status: " + "TAKE-OFF");
-                                    } else if(mAircraft.get(acNumb).getCurrentBlock().equals(getResources().getString(R.string.go_home_block))) {
-                                        infoMode.setText("Status: " + "GOING HOME");
-                                    } else if (mAircraft.get(acNumb).getCurrentBlock().equals("final")) {
-                                        infoMode.setText("Status: " + "LANDING");
-                                    } else if(mAircraft.get(acNumb).getCurrentBlock().equals("flare")) {
-                                        infoMode.setText("Status: " + "LANDED");
-                                    } else {
-                                        infoMode.setText("Status: normal");
-                                    }
-                                } else {
-                                    infoMode.setText("Status: " + "");
-                                }
+//                                if (mAircraft.get(acNumb).getCurrentBlock() != null) {
+//                                    if (mAircraft.get(acNumb).getCurrentBlock().equals(getResources().getString(R.string.land_block))) {
+//                                        infoMode.setText("Status: " + "LANDING");
+//                                    } else if (mAircraft.get(acNumb).getCurrentBlock().equals(getResources().getString(R.string.takeoff_block))) {
+//                                        infoMode.setText("Status: " + "TAKE-OFF");
+//                                    } else if(mAircraft.get(acNumb).getCurrentBlock().equals(getResources().getString(R.string.go_home_block))) {
+//                                        infoMode.setText("Status: " + "GOING HOME");
+//                                    } else if (mAircraft.get(acNumb).getCurrentBlock().equals("final")) {
+//                                        infoMode.setText("Status: " + "LANDING");
+//                                    } else if(mAircraft.get(acNumb).getCurrentBlock().equals("flare")) {
+//                                        infoMode.setText("Status: " + "LANDED");
+//                                    } else {
+//                                        infoMode.setText("Status: normal");
+//                                    }
+//                                } else {
+//                                    infoMode.setText("Status: " + "");
+//                                }
 
                                 //Task of aircraft
                                 infoTask.setText("Task: " + String.valueOf(mAircraft.get(acNumb).getTaskStatus()));
@@ -1878,26 +1867,26 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    /////////////////////////CLASS METHODS/////////////////////////
+    /////////////////////////OTHER METHODS/////////////////////////
 
     //Method to update the battery values based UAV tasks and scenario settings
     private void updateScenarioBatteryValues() {
         if (activeScenario != 0) {
             for (int i = 0; i < mAircraft.size(); i++) {
                 int acNumber = mAircraft.keyAt(i);
-                int battLoss = 0;
+                double battLoss = 0.0;
                 if (mAircraft.get(acNumber).getTaskStatus().equals(TaskStatus.RELAY)) {
-                    battLoss = getResources().getInteger(R.integer.relayBatRate) + mAircraft.get(acNumber).getCommLossBatteryLoss();
+                    battLoss = getResources().getInteger(R.integer.relayBatRate)/(1000.0/mInterval) + mAircraft.get(acNumber).getCommLossBatteryLoss();
                     mAircraft.get(acNumber).resetCommLossBattery();
                 } else if (mAircraft.get(acNumber).hasCommConnection() && mAircraft.get(acNumber).isFlying()) {
-                    battLoss = getResources().getInteger(R.integer.surveillanceBatRate) + mAircraft.get(acNumber).getCommLossBatteryLoss();
+                    battLoss = getResources().getInteger(R.integer.surveillanceBatRate)/(1000.0/mInterval) + mAircraft.get(acNumber).getCommLossBatteryLoss();
                     mAircraft.get(acNumber).resetCommLossBattery();
                 } else if (mAircraft.get(acNumber).isFlying()){
-                    mAircraft.get(acNumber).setCommLossBattery(getResources().getInteger(R.integer.surveillanceBatRate));
+                    mAircraft.get(acNumber).setCommLossBattery(getResources().getInteger(R.integer.surveillanceBatRate)/(1000.0/mInterval));
                 }
 
                 //Set the new battery value
-                mAircraft.get(acNumber).setBatteryState(mAircraft.get(acNumber).getBattVolt() - battLoss, -1, -1);
+                mAircraft.get(acNumber).setBatteryState((int)(mAircraft.get(acNumber).getBattVolt() - battLoss), -1, -1);
 
                 //Assign critical battery status if this level is reached and command aircraft to land
                 if(mAircraft.get(acNumber).getBattVolt()<=getResources().getInteger(R.integer.CriticalBatteryVoltage) && !mAircraft.get(acNumber).missionAborted) {
@@ -2097,6 +2086,20 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         float[] distance = new float[1];
         Location.distanceBetween(point1.latitude, point1.longitude, point2.latitude, point2.longitude, distance);
         return distance[0];
+    }
+
+    private void removeInterfaceObjects() {
+        deselectAllAircraft();
+        noAircraftScenario = 0;
+        altitudeTapeFragment.clearTape();
+        clearMap();
+        home.clear();
+        for (int i = 0; i < mAircraft.size(); i++) {
+            int acNumber = mAircraft.keyAt(i);
+            mAircraft.get(acNumber).clearFlightPath();
+            setIsLabelCreated(false, acNumber);
+        }
+        missionButtons.deactivateButtons();
     }
 
 	/////////////////////////ALTITUDE TAPE/////////////////////////

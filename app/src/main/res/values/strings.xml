@@ -115,12 +115,10 @@
         <item>51.969255,4.368210</item>    <!-- Region outside home comm range -->
     </string-array>
 
-    <!--TODO: finish scenario 10-->
     <string-array name="latLng_scenario10">
-        <item>51.970964,4.356821</item>
+        <!--<item>51.970964,4.356821</item>-->
         <item>51.962787,4.378442</item>
         <item>51.975773,4.360048</item>
-        <item>51.978304,4.376025</item>
     </string-array>
 
 </resources>

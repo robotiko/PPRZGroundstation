@@ -34,7 +34,7 @@ public class Aircraft {
     public final int aircraftNumber;
     private final String labelCharacter;
     private static int aircraftCount = 0;
-    private static final int maxFlightPathSize = 20;
+    private static final int maxFlightPathSize = 30;
     private static SparseArray<Integer> AcConnectionList = new SparseArray<>();
 
     //Constructor in which the total aircraft count is updated and the label character is determined
@@ -75,7 +75,7 @@ public class Aircraft {
     private float distanceHome           = 0f;
     private String currentBlock;
 //    private int connectedTo              = 0; //0 is home, higher numbers are aircraft
-    private int commLossBatteryLoss      = 0;
+    private double commLossBatteryLoss      = 0.0;
 
     //////////// HEARTBEAT ////////////
     public byte getSysid() { return mHeartbeat.getSysid(); }
@@ -197,11 +197,11 @@ public class Aircraft {
     	mBattery.setBatteryState(battVolt,battLevel,battCurrent);
     }
 
-    public void setCommLossBattery(int increment) { commLossBatteryLoss += increment; }
+    public void setCommLossBattery(double increment) { commLossBatteryLoss += increment; }
 
-    public void resetCommLossBattery() { commLossBatteryLoss = 0; }
+    public void resetCommLossBattery() { commLossBatteryLoss = 0.0; }
 
-    public int getCommLossBatteryLoss() {
+    public double getCommLossBatteryLoss() {
         return commLossBatteryLoss;
     }
 
@@ -511,10 +511,10 @@ public class Aircraft {
             if(flightPath.size()==maxFlightPathSize) {
                 flightPath.remove(0);
             }
-            if(flightPath.isEmpty() || !newPoint.equals(flightPath.get(flightPath.size()-1))) {
+//            if(flightPath.isEmpty() || !newPoint.equals(flightPath.get(flightPath.size()-1))) {
                 //Add point to list
                 flightPath.add(newPoint);
-            }
+//            }
         }
     }
 

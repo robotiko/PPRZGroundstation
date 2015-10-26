@@ -151,7 +151,6 @@
         <item>250</item>                                     <!-- ROI 2 -->
     </integer-array>
 
-    <!--TODO: finish scenario 10-->
     <integer-array name="iniBatVolt_scenario10"><!-- 12400 mV is max -->
         <item>12400</item>                                   <!-- ac1 milliVolt -->
         <item>12400</item>                                   <!-- ac2 milliVolt -->
@@ -161,10 +160,9 @@
         <item>12400</item>                                   <!-- ac6 milliVolt -->
     </integer-array>
     <integer-array name="ROIRadii_scenario10"><!-- meters -->
-        <item>120</item>                                     <!-- ROI 1 -->
+        <!--<item>120</item>                                     &lt;!&ndash; ROI 1 &ndash;&gt;-->
         <item>240</item>                                     <!-- ROI 2 -->
         <item>120</item>                                     <!-- ROI 3 -->
-        <item>240</item>                                     <!-- ROI 4 -->
     </integer-array>
 
     <!-- //////////// SCENARIO LIST SETTINGS //////////// -->

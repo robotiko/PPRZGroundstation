@@ -30,10 +30,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AltitudeTape extends Fragment {
@@ -135,7 +132,7 @@ public class AltitudeTape extends Fragment {
         textPaint.setTextAlign(Paint.Align.CENTER);
         canvas.drawText("MSA", outerWidth / 2, MSAheight, textPaint);
         textPaint.setTextSize(18);
-        canvas.drawText("RELAY", outerWidth / 2, relayHeight, textPaint);
+        canvas.drawText("RELAY", outerWidth / 2, relayHeight+25, textPaint);
         canvas.drawText("SURV", outerWidth/2, surveyHeight, textPaint);
 
         BitmapDrawable drawable = new BitmapDrawable(getResources(), bitmap);
@@ -306,7 +303,6 @@ public class AltitudeTape extends Fragment {
         }
 
         //Check if the aircraft label is present in a grouplabel, if so remove the group label
-//        Log.d("VISIBILITY",labelCharacter+String.valueOf(visibility));
         if(visibility==View.VISIBLE) leftoverLabelCheck(labelCharacter);
 
         //Check if the aircraft number is present in the group list. If so remove it.
@@ -532,7 +528,6 @@ public class AltitudeTape extends Fragment {
 
     //Method called from mainactivity if no group labels are drawn. Then if there are still labelId's in the list, remove them from the view and list.
     public void removeGroupLabels() {
-//        if(!stringToLabelIdList.isEmpty()) {
         for (String key : stringToLabelIdList.keySet()) {
             framelayout.removeView(getView().findViewById(stringToLabelIdList.get(key)));
         }
@@ -541,7 +536,6 @@ public class AltitudeTape extends Fragment {
         stringToLabelIdList.clear();
         labelIdToStringList.clear();
         aircraftInGroupList.clear();
-//        }
     }
 
     public void removeSingleLabels() {
@@ -557,6 +551,7 @@ public class AltitudeTape extends Fragment {
         removeSingleLabels();
         removeGroupLabels();
         removeGroupSelectedAircraft();
+        //TODO: check if all labels are indeed removed (label A seems to remain on there)
     }
 
     //Method to draw the target altitude on the altitude tape
