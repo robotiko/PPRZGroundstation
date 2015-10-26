@@ -1052,8 +1052,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 		Criteria criteria = new Criteria();
 		String provider = locationManager.getBestProvider(criteria, true);
 		Location myLocation = locationManager.getLastKnownLocation(provider);
-		LatLng currentLocation =  new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, (float) (getResources().getInteger(R.integer.initialZoomLevel)/10.0)));
+        if(myLocation!=null) {
+		    LatLng currentLocation =  new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, (float) (getResources().getInteger(R.integer.initialZoomLevel) / 10.0)));
+        }
 	}
 
 	/* Marker listener for (de)selection aircraft icons, waypoint marker actions and home marker selection */
