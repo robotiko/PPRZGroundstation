@@ -336,7 +336,7 @@ public class Aircraft {
     public int getCommunicationSignal(){
 
         //TODO: see if comm signal strength value is received from service. If so, this method can be replaced by that
-        int signalStrength = 0;
+        int signalStrength = 100;
         return signalStrength;
     }
 

@@ -628,7 +628,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     //Set the waypoints to the aircraft. (Skip the first two; dummy and home)
                     for(int i=2; i<waypoints.size(); i++) {
-                        mAircraft.get(acNumber).addWaypoint(waypoints.get(i).getLat(), waypoints.get(i).getLon(), waypoints.get(i).getAlt(), (short) waypoints.get(i).getSeq(), waypoints.get(i).getTargetSys(), waypoints.get(i).getTargetComp());
+//                        mAircraft.get(acNumber).addWaypoint(waypoints.get(i).getLat(), waypoints.get(i).getLon(), waypoints.get(i).getAlt(), (short) waypoints.get(i).getSeq(), waypoints.get(i).getTargetSys(), waypoints.get(i).getTargetComp());
+                        mAircraft.get(acNumber).addWaypoint(Math.toDegrees(waypoints.get(i).getLat()), Math.toDegrees(waypoints.get(i).getLon()), waypoints.get(i).getAlt(), (short) waypoints.get(i).getSeq(), waypoints.get(i).getTargetSys(), waypoints.get(i).getTargetComp());
                     }
 
                     //Call the method that shows the waypoints on the map
@@ -636,7 +637,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     // Define the home location based on the home waypoint (standard the second waypoint (#1))
                     if(home.getHomeLocation() == null) {
-                        LatLng newHome = new LatLng(waypoints.get(1).getLat(),waypoints.get(1).getLon());
+                        LatLng newHome = new LatLng(Math.toDegrees(waypoints.get(1).getLat()),Math.toDegrees(waypoints.get(1).getLon()));
                         home.setHomeLocation(newHome);
                         drawHomeMarker();
                     }
@@ -1048,13 +1049,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         map.setOnInfoWindowClickListener(this); //Click listener on infowindows
 
         //Go to current location
-		LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-		Criteria criteria = new Criteria();
-		String provider = locationManager.getBestProvider(criteria, true);
-		Location myLocation = locationManager.getLastKnownLocation(provider);
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        String provider = locationManager.getBestProvider(criteria, true);
+        Location myLocation = locationManager.getLastKnownLocation(provider);
         if(myLocation!=null) {
-		    LatLng currentLocation =  new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, (float) (getResources().getInteger(R.integer.initialZoomLevel) / 10.0)));
+            LatLng currentLocation =  new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, (float) (getResources().getInteger(R.integer.initialZoomLevel)/10.0)));
         }
 	}
 
