@@ -1,11 +1,6 @@
 
 .gradle
-.idea/misc.xml
-.idea/modules.xml
-.idea/vcs.xml
-.idea/workspace.xml
-.idea/libraries
-.idea/runConfigurations.xml
+.idea/
 local.properties
 app.iml
 /*/build/
