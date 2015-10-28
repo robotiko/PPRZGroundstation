@@ -805,7 +805,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     //Connect to the service on button click if no connection was established yet
     public void onButtonRequest(View view) {
         if (!isConnected) {
-            connectToDroneClient();
+            try {
+                connectToDroneClient();
+            } catch (Throwable e) {
+                Toast.makeText(getApplicationContext(), "Could not connect to Paparazzi Services", Toast.LENGTH_SHORT).show();
+                Log.e(TAG,"Service not available");
+            }
         } else {
             try {
                 mServiceClient.disconnectDroneClient();
