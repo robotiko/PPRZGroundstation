@@ -21,6 +21,7 @@ public class PerformanceCalcHelper {
     public static final List<Double> calcPerformance(List<Integer> ROIradiiList, int acCoverageRadius, List<LatLng> ROIList, SparseArray<Aircraft> mAircraft) {
 
         //Calculate the score components
+        //TODO: tune these score weights for a good punishments on problems
         coverageScore = 1 * ROIcovered(ROIradiiList,acCoverageRadius,ROIList,mAircraft);
         commScore     = 2 * LossOfCommunicationCheck(mAircraft);
         conflictScore = 1 * ConflictCheck(mAircraft);
