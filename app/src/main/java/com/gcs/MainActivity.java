@@ -1359,15 +1359,23 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMarkerDrag(Marker marker) {
+        boolean relay = false;
         //Show a circle that indicates the path the aircraft will follow
-        drawSurveillancePath(marker.getPosition(), false);
+        if(marker.getSnippet().contains("-")) {      //Waypoint marker clicked
+            String[] numbers = marker.getSnippet().split("-");
+            int acNumber = Integer.parseInt(numbers[0]);
+            if(mAircraft.get(acNumber).getTaskStatus().equals(TaskStatus.RELAY)) {
+                relay = true;
+            }
+        }
+        drawSurveillancePath(marker.getPosition(),relay,false);
     }
 
     //Action implementation on end of marker (waypoint) drag
     @Override
     public void onMarkerDragEnd(Marker marker) {
         //Hide the flight path circle
-        drawSurveillancePath(marker.getPosition(),true);
+        drawSurveillancePath(marker.getPosition(),false,true);
         //Get the marker snippet to extract the aircraft- and waypoint number
         String[] numbers = marker.getSnippet().split("-");
         int acNumber = Integer.parseInt(numbers[0]);
@@ -1761,6 +1769,14 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     circlePaint.setFlags(Paint.ANTI_ALIAS_FLAG);
                     circleCanvas.drawCircle(circleSize / 2, circleSize / 2, circleSize / 2, circlePaint);
 
+                    Paint circleBorderPaint = new Paint();
+                    circleBorderPaint.setStyle(Paint.Style.STROKE);
+                    circleBorderPaint.setStrokeWidth(1.5f);
+                    circleBorderPaint.setColor(Color.WHITE);
+                    circleBorderPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+
+                    circleCanvas.drawCircle(circleSize/2, circleSize/2, circleSize/2, circleBorderPaint);
+
                     //Indicate weight of ROI
                     Paint textPaint = new Paint();
                     textPaint.setColor(Color.WHITE);
@@ -1773,6 +1789,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                     GroundOverlayOptions ROI = new GroundOverlayOptions()
                             .image(BitmapDescriptorFactory.fromBitmap(baseIcon))
+
                             .position(ROIlocs.get(n), ROIradiiList.get(n) * 2, ROIradiiList.get(n) * 2); //m
                     GroundOverlay ROIOverlay = map.addGroundOverlay(ROI);
                     //Save groundoverlay in a list
@@ -1783,7 +1800,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     ///////* Indicate the path the surveilance UAV will fly on the map *///////
-    private void drawSurveillancePath(final LatLng location, final boolean endDraw) {
+    private void drawSurveillancePath(final LatLng location,final boolean relayStatus, final boolean endDraw) {
         //Call GoogleMaps
         mapFragment.getMapAsync(new OnMapReadyCallback() {
             @Override
@@ -1807,7 +1824,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             .center(location)
                             .strokeWidth(getResources().getInteger(R.integer.circleStrokeWidth))
                             .strokeColor(getResources().getColor(R.color.surveillancePath))
-                            .radius(surveillanceCircleRadius+2); // In meters
+                            .radius(surveillanceCircleRadius+3); // In meters
 
                     // Get back the relay Circle object
                     flightPath = map.addCircle(flightPathOptions);
@@ -1821,14 +1838,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     // Get back the surveillance Circle object
                     surveillanceBound = map.addCircle(boundOptions);
 
-                    CircleOptions relayCircleOptions = new CircleOptions()
-                            .center(location)
-                            .radius(commRelayRange - surveillanceCircleRadius)
-                            .strokeWidth(getResources().getInteger(R.integer.circleStrokeWidth))
-                            .strokeColor(getResources().getColor(R.color.surveillancePath));
+                    if(relayStatus) {
+                        CircleOptions relayCircleOptions = new CircleOptions()
+                                .center(location)
+                                .radius(commRelayRange - surveillanceCircleRadius)
+                                .strokeWidth(getResources().getInteger(R.integer.circleStrokeWidth))
+                                .strokeColor(getResources().getColor(R.color.surveillancePath));
 
-                    //Get back the relay circle object
-                    relayBound = map.addCircle(relayCircleOptions);
+                        //Get back the relay circle object
+                        relayBound = map.addCircle(relayCircleOptions);
+                    }
                 }
             }
         });

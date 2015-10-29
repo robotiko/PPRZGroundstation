@@ -202,7 +202,7 @@
         <item>180</item>                                     <!-- scenario 7 -->
         <item>0</item>                                       <!-- scenario 8 -->
         <item>0</item>                                       <!-- scenario 9 -->
-        <item>240</item>                                     <!-- scenario 10 -->
+        <item>0</item>                                       <!-- scenario 10 -->
     </integer-array>
 
     <integer-array name="batteryFailureAircraft">   <!-- 0=none -->
@@ -215,7 +215,7 @@
         <item>2</item>                                       <!-- scenario 7 -->
         <item>0</item>                                       <!-- scenario 8 -->
         <item>0</item>                                       <!-- scenario 9 -->
-        <item>3</item>                                       <!-- scenario 10 -->
+        <item>0</item>                                       <!-- scenario 10 -->
     </integer-array>
 
     <integer-array name="initialZoomLevels"> <!-- value = zoomlevel*10-->
