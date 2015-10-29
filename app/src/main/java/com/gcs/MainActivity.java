@@ -145,7 +145,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private int initialParticipantNumber = 0;
     private int finalParticipantNumber = 0;
     private float initialZoomLevel = 16.0f;
-    private Circle flightPath, surveillanceBound;
+    private Circle flightPath, surveillanceBound, relayBound;
 
     //Declaration of items needed for mission blocks display
     private MenuItem menuAircraftSpinner = null, menuScenarioSpinner = null, menuParticipantSpinner = null;
@@ -1797,6 +1797,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     surveillanceBound.remove();
                     surveillanceBound = null;
                 }
+                if(relayBound != null) {
+                    relayBound.remove();
+                    relayBound = null;
+                }
                 //Draw circles
                 if(!endDraw) {
                     CircleOptions flightPathOptions = new CircleOptions()
@@ -1812,10 +1816,19 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                             .center(location)
                             .strokeWidth(getResources().getInteger(R.integer.circleStrokeWidth))
                             .strokeColor(getResources().getColor(R.color.surveillancePath))
-                            .radius(acCoverageRadius+3); // In meters
+                            .radius(acCoverageRadius + 3); // In meters
 
-                    // Get back the relay Circle object
+                    // Get back the surveillance Circle object
                     surveillanceBound = map.addCircle(boundOptions);
+
+                    CircleOptions relayCircleOptions = new CircleOptions()
+                            .center(location)
+                            .radius(commRelayRange - surveillanceCircleRadius)
+                            .strokeWidth(getResources().getInteger(R.integer.circleStrokeWidth))
+                            .strokeColor(getResources().getColor(R.color.surveillancePath));
+
+                    //Get back the relay circle object
+                    relayBound = map.addCircle(relayCircleOptions);
                 }
             }
         });
