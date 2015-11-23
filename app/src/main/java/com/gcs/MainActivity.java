@@ -232,14 +232,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 case R.id.action_settings:
                     return true;
                 case R.id.send_selected_block:
-                    try {
-                        //Take the selected block index and send it to the service
-                        Bundle carrier = new Bundle();
-                        carrier.putString("TYPE", "BLOCK_SELECTED");
-                        carrier.putShort("SEQ", (short) selectedBlock);
-                        mServiceClient.onCallback(carrier, selectedAc);
-                    } catch (RemoteException e) {
-                        Log.e(TAG, "Error while sending mission block spinner selection to the service");
+                    if(selectedAc!=0) {
+                        try {
+                            //Take the selected block index and send it to the service
+                            Bundle carrier = new Bundle();
+                            carrier.putString("TYPE", "BLOCK_SELECTED");
+                            carrier.putShort("SEQ", (short) selectedBlock);
+                            mServiceClient.onCallback(carrier, selectedAc);
+                        } catch (RemoteException e) {
+                            Log.e(TAG, "Error while sending mission block spinner selection to the service");
+                        }
                     }
                     return true;
             }
