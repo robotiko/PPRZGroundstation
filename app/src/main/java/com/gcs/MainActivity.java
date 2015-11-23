@@ -76,7 +76,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     //Declaration of handlers and definition of time and time steps
 	private Handler handler, interfaceUpdateHandler;
-//	private final int mInterval        = 1000;                       // milliseconds
 	private final int mInterval        = 500;                       // milliseconds
     private final long initTime        = System.currentTimeMillis(); // milliseconds
 
@@ -113,6 +112,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private int commMaxRange, singleLabelVisibility;
     private int selectedAc = 0;
     private int selectedWp = 0;
+    private int selectedBlock = 0;
 
     //Declaration of items needed for mission blocks display
     private MenuItem menuBlockSpinner = null, menuAircraftSpinner = null;
@@ -173,16 +173,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if(selectedAc!=0) {
-                    try {
-                        //Take the selected block index and send it to the service
-                        Bundle carrier = new Bundle();
-                        carrier.putString("TYPE", "BLOCK_SELECTED");
-                        carrier.putShort("SEQ", (short) position);
-                        //TODO: check if selecteAc is right
-                        mServiceClient.onCallback(carrier, selectedAc);
-                    } catch (RemoteException e) {
-                        Log.e(TAG, "Error while sending mission block spinner selection to the service");
-                    }
+                    selectedBlock  = position;
+//                    try {
+//                        //Take the selected block index and send it to the service
+//                        Bundle carrier = new Bundle();
+//                        carrier.putString("TYPE", "BLOCK_SELECTED");
+//                        carrier.putShort("SEQ", (short) position);
+//                        mServiceClient.onCallback(carrier, selectedAc);
+//                    } catch (RemoteException e) {
+//                        Log.e(TAG, "Error while sending mission block spinner selection to the service");
+//                    }
                 }
             }
 
@@ -230,6 +230,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         if(isConnected) {
             switch (item.getItemId()) {
                 case R.id.action_settings:
+                    return true;
+                case R.id.send_selected_block:
+                    try {
+                        //Take the selected block index and send it to the service
+                        Bundle carrier = new Bundle();
+                        carrier.putString("TYPE", "BLOCK_SELECTED");
+                        carrier.putShort("SEQ", (short) selectedBlock);
+                        mServiceClient.onCallback(carrier, selectedAc);
+                    } catch (RemoteException e) {
+                        Log.e(TAG, "Error while sending mission block spinner selection to the service");
+                    }
                     return true;
             }
         }

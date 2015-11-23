@@ -22,4 +22,10 @@
         android:title="block_spinner"
         android:actionViewClass="android.widget.Spinner" />
 
+    <item
+        android:id="@+id/send_selected_block"
+        android:orderInCategory="12"
+        android:showAsAction="always"
+        android:title="Send Selected Block"/>
+
 </menu>
